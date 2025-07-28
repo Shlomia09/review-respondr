@@ -1,14 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Debug: Check environment variables
+// Get environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key exists:', !!supabaseAnonKey);
+// Create a mock client if environment variables are missing
+const createMockClient = () => ({
+  auth: {
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+    signUp: () => Promise.reject(new Error('Supabase not configured')),
+    signInWithPassword: () => Promise.reject(new Error('Supabase not configured')),
+    signOut: () => Promise.resolve({ error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+  }
+});
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please ensure your Supabase integration is properly connected in Lovable.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : createMockClient();
