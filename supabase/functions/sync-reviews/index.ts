@@ -91,10 +91,11 @@ async function getOAuthUrl(platform: string, userId: string) {
         throw new Error('Google Client ID not configured');
       }
       
-      // Updated scopes for Google My Business API
+      // Updated scopes for Google Business Profile API (new API)
       const scopes = [
-        'https://www.googleapis.com/auth/plus.business.manage',
-        'https://www.googleapis.com/auth/business.manage'
+        'https://www.googleapis.com/auth/business.manage',
+        'https://www.googleapis.com/auth/businessprofileperformance',
+        'https://www.googleapis.com/auth/plus.business.manage'
       ].join(' ');
       
       oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -313,47 +314,132 @@ async function fetchGoogleBusinesses(accessToken: string) {
   console.log('🔍 Fetching Google businesses with access token length:', accessToken.length);
   
   try {
-    // Use Google Business Profile API instead of deprecated My Business API
-    console.log('📞 Calling Google Business Profile API for accounts...');
-    const accountsResponse = await fetch('https://businessprofileperformance.googleapis.com/v1/locations:search', {
-      method: 'POST',
+    // Try Google My Business Account Management API first
+    console.log('📞 Calling Google My Business Account Management API...');
+    const accountsResponse = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        pageSize: 100
-      })
     });
 
-    console.log('📊 Google API Response Status:', accountsResponse.status);
+    console.log('📊 Accounts API Response Status:', accountsResponse.status);
     
     if (!accountsResponse.ok) {
       const errorText = await accountsResponse.text();
-      console.error('❌ Google Business Profile API error status:', accountsResponse.status);
-      console.error('❌ Google Business Profile API error body:', errorText);
+      console.error('❌ Accounts API error status:', accountsResponse.status);
+      console.error('❌ Accounts API error body:', errorText);
       
-      // Fallback to old method
-      console.log('🔄 Trying fallback method with old API...');
-      return await fetchGoogleBusinessesOldAPI(accessToken);
+      // Try alternative Business Profile API
+      console.log('🔄 Trying Google Business Profile API...');
+      return await fetchGoogleBusinessesNewAPI(accessToken);
     }
 
     const accountsData = await accountsResponse.json();
-    console.log('📊 Google API Response Data:', JSON.stringify(accountsData, null, 2));
+    console.log('📊 Accounts API Response Data:', JSON.stringify(accountsData, null, 2));
     
     const businesses = [];
 
-    if (accountsData.locations) {
-      for (const location of accountsData.locations) {
-        businesses.push({
-          id: location.name,
-          name: location.title || location.displayName || location.name,
-          address: location.storefrontAddress?.addressLines?.join(', ') || 'No address'
-        });
+    if (accountsData.accounts) {
+      for (const account of accountsData.accounts) {
+        console.log(`📍 Processing account: ${account.name}`);
+        
+        // Get locations for each account using Business Information API
+        try {
+          const locationsResponse = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          console.log(`📊 Locations API Response Status for ${account.name}:`, locationsResponse.status);
+
+          if (locationsResponse.ok) {
+            const locationsData = await locationsResponse.json();
+            console.log(`📊 Locations Data for ${account.name}:`, JSON.stringify(locationsData, null, 2));
+            
+            if (locationsData.locations) {
+              for (const location of locationsData.locations) {
+                businesses.push({
+                  id: location.name,
+                  name: location.title || location.displayName || location.name,
+                  address: location.storefrontAddress?.addressLines?.join(', ') || 'No address',
+                  account: account.accountName || account.name
+                });
+              }
+            }
+          } else {
+            const locErrorText = await locationsResponse.text();
+            console.error(`❌ Locations API error for ${account.name}:`, locErrorText);
+          }
+        } catch (locError) {
+          console.error(`❌ Error fetching locations for ${account.name}:`, locError);
+        }
       }
     }
 
-    console.log('✅ Found businesses:', businesses.length);
+    console.log('✅ Found businesses with old API:', businesses.length);
+    return businesses;
+  } catch (error) {
+    console.error('❌ Error with old API, trying new API:', error);
+    // Fallback to new API
+    return await fetchGoogleBusinessesNewAPI(accessToken);
+  }
+}
+
+// New Google Business Profile API
+async function fetchGoogleBusinessesNewAPI(accessToken: string) {
+  try {
+    console.log('📞 Using new Google Business Profile API...');
+    
+    // First try to get user's business accounts
+    const accountsResponse = await fetch('https://businessprofileperformance.googleapis.com/v1/accounts', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📊 New API Accounts Response Status:', accountsResponse.status);
+
+    if (!accountsResponse.ok) {
+      const errorText = await accountsResponse.text();
+      console.error('❌ New API Accounts error:', errorText);
+      return [];
+    }
+
+    const accountsData = await accountsResponse.json();
+    console.log('📊 New API Accounts Data:', JSON.stringify(accountsData, null, 2));
+    
+    const businesses = [];
+
+    if (accountsData.accounts) {
+      for (const account of accountsData.accounts) {
+        // Get locations for this account
+        const locationsResponse = await fetch(`${account.name}/locations`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (locationsResponse.ok) {
+          const locationsData = await locationsResponse.json();
+          if (locationsData.locations) {
+            for (const location of locationsData.locations) {
+              businesses.push({
+                id: location.name,
+                name: location.title || location.displayName || location.name,
+                address: location.storefrontAddress?.addressLines?.join(', ') || 'No address'
+              });
+            }
+          }
+        }
+      }
+    }
+
+    console.log('✅ New API found businesses:', businesses.length);
     return businesses;
   } catch (error) {
     console.error('❌ Error fetching Google businesses:', error);
