@@ -84,19 +84,68 @@ serve(async (req) => {
       <html>
         <head>
           <title>Connection Successful</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8f9fa;">
-          <h2 style="color: #28a745;">Connection Successful!</h2>
-          <p>This window will close automatically...</p>
-          <script>
-            console.log('Sending postMessage:', {success: true, platform: '${platform}'});
-            if (window.opener && !window.opener.closed) {
-              window.opener.postMessage({success: true, platform: '${platform}'}, '*');
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: #f8f9fa;
+              margin: 0;
             }
+            .success {
+              color: #28a745;
+              font-size: 24px;
+              margin-bottom: 16px;
+            }
+            .message {
+              color: #666;
+              font-size: 16px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="success">✅ התחברות הושלמה בהצלחה!</div>
+          <div class="message">החלון ייסגר אוטומטית...</div>
+          <script>
+            console.log('=== OAuth Callback Success ===');
+            console.log('Platform:', '${platform}');
+            console.log('Sending postMessage to parent window...');
+            
+            // Multiple attempts to send the message
+            function sendMessage() {
+              const message = {success: true, platform: '${platform}'};
+              console.log('Sending message:', message);
+              
+              if (window.opener && !window.opener.closed) {
+                window.opener.postMessage(message, '*');
+                console.log('Message sent to opener');
+              } else {
+                console.log('No opener window available');
+              }
+              
+              // Also try parent in case it's in an iframe
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage(message, '*');
+                console.log('Message sent to parent');
+              }
+            }
+            
+            // Send immediately
+            sendMessage();
+            
+            // Send again after a short delay
+            setTimeout(sendMessage, 100);
+            setTimeout(sendMessage, 500);
+            
+            // Close window after delay
             setTimeout(() => {
-              console.log('Attempting to close window');
-              window.close();
-            }, 1000);
+              console.log('Closing window...');
+              try {
+                window.close();
+              } catch (e) {
+                console.log('Could not close window:', e);
+              }
+            }, 1500);
           </script>
         </body>
       </html>

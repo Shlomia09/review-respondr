@@ -137,11 +137,18 @@ const PlatformConnection = () => {
       if (error) throw error;
 
       // Open OAuth popup window
+      console.log('Opening popup for platform:', platform);
       const popup = window.open(
         data.oauth_url,
         `oauth_${platform}`,
         'width=500,height=600,scrollbars=yes,resizable=yes'
       );
+      
+      if (!popup) {
+        throw new Error('Failed to open popup window. Please allow popups for this site.');
+      }
+      
+      console.log('Popup opened successfully');
 
       // Listen for messages from popup
       const messageListener = (event: MessageEvent) => {
