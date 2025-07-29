@@ -143,11 +143,51 @@ const PlatformConnection = () => {
         'width=500,height=600,scrollbars=yes,resizable=yes'
       );
 
-      // Listen for OAuth completion
+      // Listen for messages from popup
+      const messageListener = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin && !event.origin.includes('supabase.co')) {
+          return;
+        }
+
+        if (event.data.success && event.data.platform === platform) {
+          // Connection successful
+          setPlatforms(prev => prev.map(p => 
+            p.id === platform 
+              ? { ...p, connected: true, lastSync: new Date().toISOString() }
+              : p
+          ));
+          
+          toast({
+            title: "התחברות הושלמה",
+            description: `התחברת בהצלחה ל${platform === 'google' ? 'גוגל' : 'פייסבוק'}`,
+          });
+
+          // Close popup and cleanup
+          popup?.close();
+          window.removeEventListener('message', messageListener);
+          clearInterval(checkClosed);
+        } else if (event.data.error) {
+          // Connection failed
+          toast({
+            title: "שגיאה בהתחברות",
+            description: event.data.error,
+            variant: "destructive",
+          });
+          
+          popup?.close();
+          window.removeEventListener('message', messageListener);
+          clearInterval(checkClosed);
+        }
+      };
+
+      window.addEventListener('message', messageListener);
+
+      // Fallback: Listen for OAuth completion by checking if window is closed
       const checkClosed = setInterval(() => {
         if (popup?.closed) {
           clearInterval(checkClosed);
-          // Check if connection was successful
+          window.removeEventListener('message', messageListener);
+          // Check if connection was successful as fallback
           setTimeout(() => {
             checkConnectionStatus(platform);
           }, 1000);
