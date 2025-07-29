@@ -126,34 +126,68 @@ const PlatformConnection = () => {
 
   const handleOAuthConnect = async (platform: string) => {
     try {
-      // Handle OAuth connection flow
+      // Get OAuth URL from edge function
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
-          action: 'oauth_connect',
+          action: 'get_oauth_url',
           platform: platform
         }
       });
 
       if (error) throw error;
 
-      setPlatforms(prev => prev.map(p => 
-        p.id === platform 
-          ? { ...p, connected: true, lastSync: new Date().toISOString() }
-          : p
-      ));
+      // Open OAuth popup window
+      const popup = window.open(
+        data.oauth_url,
+        `oauth_${platform}`,
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      );
 
-      setShowConfig(null);
+      // Listen for OAuth completion
+      const checkClosed = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkClosed);
+          // Check if connection was successful
+          setTimeout(() => {
+            checkConnectionStatus(platform);
+          }, 1000);
+        }
+      }, 1000);
 
-      toast({
-        title: "Platform Connected",
-        description: `Successfully connected to ${platforms.find(p => p.id === platform)?.name}`,
-      });
     } catch (error: any) {
       toast({
         title: "Connection Failed",
-        description: error.message || "Failed to connect to platform",
+        description: error.message || "Failed to initiate OAuth connection",
         variant: "destructive",
       });
+    }
+  };
+
+  const checkConnectionStatus = async (platformId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'check_connection',
+          platform: platformId
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.connected) {
+        setPlatforms(prev => prev.map(p => 
+          p.id === platformId 
+            ? { ...p, connected: true, lastSync: new Date().toISOString() }
+            : p
+        ));
+
+        toast({
+          title: "Platform Connected",
+          description: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to check connection status:', error);
     }
   };
 

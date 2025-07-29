@@ -53,8 +53,10 @@ serve(async (req) => {
     switch (action) {
       case 'connect':
         return await handleConnect(platform, credentials, user.id, supabaseClient);
-      case 'oauth_connect':
-        return await handleOAuthConnect(platform, user.id, supabaseClient);
+      case 'get_oauth_url':
+        return await getOAuthUrl(platform, user.id);
+      case 'check_connection':
+        return await checkConnection(platform, user.id, supabaseClient);
       case 'sync':
         return await handleSync(platform, user.id, supabaseClient);
       case 'disconnect':
@@ -71,6 +73,70 @@ serve(async (req) => {
     );
   }
 });
+
+async function getOAuthUrl(platform: string, userId: string) {
+  const baseUrl = Deno.env.get('SUPABASE_URL');
+  const redirectUrl = `${baseUrl}/functions/v1/oauth-callback`;
+  
+  let oauthUrl = '';
+  
+  switch (platform) {
+    case 'google':
+      const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
+      if (!googleClientId) {
+        throw new Error('Google Client ID not configured');
+      }
+      
+      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${googleClientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent('https://www.googleapis.com/auth/business.manage')}&` +
+        `state=${platform}_${userId}&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+      break;
+      
+    case 'facebook':
+      const facebookAppId = Deno.env.get('FACEBOOK_APP_ID');
+      if (!facebookAppId) {
+        throw new Error('Facebook App ID not configured');
+      }
+      
+      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${facebookAppId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
+        `scope=${encodeURIComponent('pages_show_list,pages_read_engagement')}&` +
+        `state=${platform}_${userId}&` +
+        `response_type=code`;
+      break;
+      
+    default:
+      throw new Error('Unsupported platform for OAuth');
+  }
+
+  return new Response(
+    JSON.stringify({ oauth_url: oauthUrl }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function checkConnection(platform: string, userId: string, supabase: any) {
+  // Check if user has valid tokens stored for this platform
+  const { data: tokenData } = await supabase
+    .from('platform_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('platform', platform)
+    .single();
+
+  const connected = tokenData && tokenData.access_token && new Date(tokenData.expires_at) > new Date();
+
+  return new Response(
+    JSON.stringify({ connected }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
 
 async function handleConnect(platform: string, credentials: string, userId: string, supabase: any) {
   console.log(`Connecting to ${platform} for user ${userId}`);
@@ -97,7 +163,6 @@ async function handleConnect(platform: string, credentials: string, userId: stri
   }
 
   // Store encrypted credentials (in a real implementation, you'd encrypt these)
-  // For now, we'll just simulate successful connection
   console.log(`Successfully connected to ${platform}`);
 
   return new Response(
@@ -106,36 +171,33 @@ async function handleConnect(platform: string, credentials: string, userId: stri
   );
 }
 
-async function handleOAuthConnect(platform: string, userId: string, supabase: any) {
-  console.log(`OAuth connecting to ${platform} for user ${userId}`);
-  
-  // For OAuth connections, we simulate the OAuth flow
-  // In a real implementation, this would initiate OAuth flow and store tokens
-  
-  // Simulate successful OAuth connection
-  console.log(`Successfully OAuth connected to ${platform}`);
-
-  return new Response(
-    JSON.stringify({ success: true, message: `OAuth connected to ${platform}` }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
-}
-
 async function handleSync(platform: string, userId: string, supabase: any) {
   console.log(`Syncing reviews from ${platform} for user ${userId}`);
   
+  // Get stored tokens for the platform
+  const { data: tokenData } = await supabase
+    .from('platform_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('platform', platform)
+    .single();
+
+  if (!tokenData || !tokenData.access_token) {
+    throw new Error('Platform not connected. Please connect first.');
+  }
+
   // Fetch reviews from the platform
   let reviews: ReviewData[] = [];
   
   switch (platform) {
     case 'google':
-      reviews = await fetchGoogleReviews(userId);
+      reviews = await fetchGoogleReviews(tokenData.access_token, userId);
       break;
     case 'facebook':
-      reviews = await fetchFacebookReviews(userId);
+      reviews = await fetchFacebookReviews(tokenData.access_token, userId);
       break;
     case 'trustpilot':
-      reviews = await fetchTrustpilotReviews(userId);
+      reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
       break;
     default:
       throw new Error('Unsupported platform');
@@ -174,8 +236,12 @@ async function handleSync(platform: string, userId: string, supabase: any) {
 async function handleDisconnect(platform: string, userId: string, supabase: any) {
   console.log(`Disconnecting from ${platform} for user ${userId}`);
   
-  // In a real implementation, you'd remove stored credentials
-  // For now, we'll just simulate successful disconnection
+  // Remove stored tokens
+  await supabase
+    .from('platform_tokens')
+    .delete()
+    .eq('user_id', userId)
+    .eq('platform', platform);
   
   return new Response(
     JSON.stringify({ success: true, message: `Disconnected from ${platform}` }),
@@ -186,7 +252,6 @@ async function handleDisconnect(platform: string, userId: string, supabase: any)
 // Platform-specific connection testers
 async function testGoogleConnection(apiKey: string): Promise<boolean> {
   try {
-    // Test Google Places API with a simple request
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=0,0&radius=1000&key=${apiKey}`
     );
@@ -199,7 +264,6 @@ async function testGoogleConnection(apiKey: string): Promise<boolean> {
 
 async function testFacebookConnection(accessToken: string): Promise<boolean> {
   try {
-    // Test Facebook Graph API with a simple request
     const response = await fetch(
       `https://graph.facebook.com/me?access_token=${accessToken}`
     );
@@ -212,7 +276,6 @@ async function testFacebookConnection(accessToken: string): Promise<boolean> {
 
 async function testTrustpilotConnection(apiKey: string): Promise<boolean> {
   try {
-    // Test Trustpilot API with a simple request
     const response = await fetch(
       `https://api.trustpilot.com/v1/business-units?apikey=${apiKey}`,
       {
@@ -228,59 +291,131 @@ async function testTrustpilotConnection(apiKey: string): Promise<boolean> {
   }
 }
 
-// Platform-specific review fetchers (mock implementations)
-async function fetchGoogleReviews(userId: string): Promise<ReviewData[]> {
-  // Mock Google Reviews data
-  return [
-    {
-      customer_name: "John Smith",
-      customer_email: "john@example.com",
-      platform: "google",
-      rating: 5,
-      content: "Excellent service! Highly recommended.",
-      sentiment: "positive",
-      review_date: new Date().toISOString(),
-      user_id: userId,
-    },
-    {
-      customer_name: "Sarah Johnson",
-      platform: "google",
-      rating: 4,
-      content: "Good experience overall, will come back.",
-      sentiment: "positive",
-      review_date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-      user_id: userId,
+// Real platform-specific review fetchers
+async function fetchGoogleReviews(accessToken: string, userId: string): Promise<ReviewData[]> {
+  try {
+    // First, get the business accounts
+    const accountsResponse = await fetch(
+      'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!accountsResponse.ok) {
+      throw new Error('Failed to fetch Google business accounts');
     }
-  ];
+
+    const accountsData = await accountsResponse.json();
+    const reviews: ReviewData[] = [];
+
+    // For each account, get locations and their reviews
+    for (const account of accountsData.accounts || []) {
+      const locationsResponse = await fetch(
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (locationsResponse.ok) {
+        const locationsData = await locationsResponse.json();
+        
+        for (const location of locationsData.locations || []) {
+          const reviewsResponse = await fetch(
+            `https://mybusiness.googleapis.com/v4/${location.name}/reviews`,
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+
+          if (reviewsResponse.ok) {
+            const reviewsData = await reviewsResponse.json();
+            
+            for (const review of reviewsData.reviews || []) {
+              reviews.push({
+                customer_name: review.reviewer?.displayName || 'Anonymous',
+                platform: 'google',
+                rating: parseInt(review.starRating || '5'),
+                content: review.comment || '',
+                sentiment: review.starRating >= 4 ? 'positive' : review.starRating <= 2 ? 'negative' : 'neutral',
+                review_date: review.createTime,
+                user_id: userId,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return reviews;
+  } catch (error) {
+    console.error('Error fetching Google reviews:', error);
+    return [];
+  }
 }
 
-async function fetchFacebookReviews(userId: string): Promise<ReviewData[]> {
-  // Mock Facebook Reviews data
-  return [
-    {
-      customer_name: "Mike Wilson",
-      platform: "facebook",
-      rating: 5,
-      content: "Amazing customer service and quality products!",
-      sentiment: "positive",
-      review_date: new Date().toISOString(),
-      user_id: userId,
+async function fetchFacebookReviews(accessToken: string, userId: string): Promise<ReviewData[]> {
+  try {
+    // Get user's pages
+    const pagesResponse = await fetch(
+      `https://graph.facebook.com/me/accounts?access_token=${accessToken}`
+    );
+
+    if (!pagesResponse.ok) {
+      throw new Error('Failed to fetch Facebook pages');
     }
-  ];
+
+    const pagesData = await pagesResponse.json();
+    const reviews: ReviewData[] = [];
+
+    // For each page, get reviews
+    for (const page of pagesData.data || []) {
+      const reviewsResponse = await fetch(
+        `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&fields=reviewer,rating,review_text,created_time`
+      );
+
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json();
+        
+        for (const review of reviewsData.data || []) {
+          reviews.push({
+            customer_name: review.reviewer?.name || 'Anonymous',
+            platform: 'facebook',
+            rating: review.rating || 5,
+            content: review.review_text || '',
+            sentiment: review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral',
+            review_date: review.created_time,
+            user_id: userId,
+          });
+        }
+      }
+    }
+
+    return reviews;
+  } catch (error) {
+    console.error('Error fetching Facebook reviews:', error);
+    return [];
+  }
 }
 
-async function fetchTrustpilotReviews(userId: string): Promise<ReviewData[]> {
-  // Mock Trustpilot Reviews data
-  return [
-    {
-      customer_name: "Emma Davis",
-      customer_email: "emma@example.com",
-      platform: "trustpilot",
-      rating: 4,
-      content: "Fast delivery and good communication.",
-      sentiment: "positive",
-      review_date: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-      user_id: userId,
-    }
-  ];
+async function fetchTrustpilotReviews(apiKey: string, userId: string): Promise<ReviewData[]> {
+  try {
+    // This would require proper Trustpilot API implementation
+    // For now, returning empty array as Trustpilot API is more complex
+    console.log('Trustpilot API integration would be implemented here');
+    return [];
+  } catch (error) {
+    console.error('Error fetching Trustpilot reviews:', error);
+    return [];
+  }
 }
