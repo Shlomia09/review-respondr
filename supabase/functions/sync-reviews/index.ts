@@ -309,11 +309,31 @@ async function selectBusiness(platform: string, businessId: string, userId: stri
 }
 
 async function fetchGoogleBusinesses(accessToken: string) {
-  console.log('🔍 Fetching Google businesses with access token length:', accessToken.length);
+  console.log('🔍 Starting fetchGoogleBusinesses...');
+  console.log('🔑 Access token length:', accessToken.length);
+  
+  // First test if token is valid by getting user info
+  try {
+    console.log('🧪 Testing token validity...');
+    const tokenTestResponse = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + accessToken);
+    console.log('🧪 Token test response status:', tokenTestResponse.status);
+    
+    if (tokenTestResponse.ok) {
+      const userInfo = await tokenTestResponse.json();
+      console.log('✅ Token is valid for user:', userInfo.email);
+    } else {
+      const errorText = await tokenTestResponse.text();
+      console.error('❌ Token is invalid:', errorText);
+      return [];
+    }
+  } catch (tokenError) {
+    console.error('❌ Error testing token:', tokenError);
+    return [];
+  }
   
   try {
-    // Try Google My Business Account Management API first
-    console.log('📞 Calling Google My Business Account Management API...');
+    // Try simple accounts listing first  
+    console.log('📞 Calling accounts API...');
     const accountsResponse = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -321,72 +341,132 @@ async function fetchGoogleBusinesses(accessToken: string) {
       },
     });
 
-    console.log('📊 Accounts API Response Status:', accountsResponse.status);
+    console.log('📊 Accounts Response Status:', accountsResponse.status);
+    console.log('📊 Accounts Response Headers:', JSON.stringify([...accountsResponse.headers.entries()]));
     
     if (!accountsResponse.ok) {
       const errorText = await accountsResponse.text();
       console.error('❌ Accounts API error status:', accountsResponse.status);
       console.error('❌ Accounts API error body:', errorText);
-      
-      // Try alternative Business Profile API
-      console.log('🔄 Trying Google Business Profile API...');
-      return await fetchGoogleBusinessesNewAPI(accessToken);
+      console.log('🔄 Trying Business Profile API instead...');
+      return await fetchGoogleBusinessProfileAPI(accessToken);
     }
 
     const accountsData = await accountsResponse.json();
-    console.log('📊 Accounts API Response Data:', JSON.stringify(accountsData, null, 2));
+    console.log('📊 Raw Accounts Data:', JSON.stringify(accountsData, null, 2));
+    
+    if (!accountsData.accounts || accountsData.accounts.length === 0) {
+      console.log('⚠️ No accounts found in response');
+      console.log('🔄 Trying Business Profile API instead...');
+      return await fetchGoogleBusinessProfileAPI(accessToken);
+    }
     
     const businesses = [];
 
-    if (accountsData.accounts) {
-      for (const account of accountsData.accounts) {
-        console.log(`📍 Processing account: ${account.name}`);
+    for (const account of accountsData.accounts) {
+      console.log(`📍 Processing account: ${account.name}`);
+      
+      // Try to get locations for this account
+      try {
+        const locationUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`;
+        console.log(`📞 Calling locations URL: ${locationUrl}`);
         
-        // Get locations for each account using Business Information API
-        try {
-          const locationsResponse = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`, {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
+        const locationsResponse = await fetch(locationUrl, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-          console.log(`📊 Locations API Response Status for ${account.name}:`, locationsResponse.status);
+        console.log(`📊 Locations Response Status for ${account.name}:`, locationsResponse.status);
 
-          if (locationsResponse.ok) {
-            const locationsData = await locationsResponse.json();
-            console.log(`📊 Locations Data for ${account.name}:`, JSON.stringify(locationsData, null, 2));
-            
-            if (locationsData.locations) {
-              for (const location of locationsData.locations) {
-                businesses.push({
-                  id: location.name,
-                  name: location.title || location.displayName || location.name,
-                  address: location.storefrontAddress?.addressLines?.join(', ') || 'No address',
-                  account: account.accountName || account.name
-                });
-              }
+        if (locationsResponse.ok) {
+          const locationsData = await locationsResponse.json();
+          console.log(`📊 Locations Data for ${account.name}:`, JSON.stringify(locationsData, null, 2));
+          
+          if (locationsData.locations && locationsData.locations.length > 0) {
+            for (const location of locationsData.locations) {
+              businesses.push({
+                id: location.name,
+                name: location.title || location.displayName || location.name,
+                address: location.storefrontAddress?.addressLines?.join(', ') || 'No address',
+                account: account.accountName || account.name
+              });
+              console.log(`✅ Added business: ${location.title || location.displayName || location.name}`);
             }
           } else {
-            const locErrorText = await locationsResponse.text();
-            console.error(`❌ Locations API error for ${account.name}:`, locErrorText);
+            console.log(`⚠️ No locations found for account: ${account.name}`);
           }
-        } catch (locError) {
-          console.error(`❌ Error fetching locations for ${account.name}:`, locError);
+        } else {
+          const locErrorText = await locationsResponse.text();
+          console.error(`❌ Locations API error for ${account.name}:`, locErrorText);
         }
+      } catch (locError) {
+        console.error(`❌ Error fetching locations for ${account.name}:`, locError);
       }
     }
 
-    console.log('✅ Found businesses with old API:', businesses.length);
+    console.log(`✅ Total businesses found: ${businesses.length}`);
     return businesses;
   } catch (error) {
-    console.error('❌ Error with old API, trying new API:', error);
-    // Fallback to new API
-    return await fetchGoogleBusinessesNewAPI(accessToken);
+    console.error('❌ Error in fetchGoogleBusinesses:', error);
+    console.log('🔄 Trying Business Profile API as fallback...');
+    return await fetchGoogleBusinessProfileAPI(accessToken);
   }
 }
 
-// New Google Business Profile API
+// Google Business Profile API (newest API)
+async function fetchGoogleBusinessProfileAPI(accessToken: string) {
+  try {
+    console.log('📞 Using Google Business Profile API...');
+    
+    // Try to get locations directly using the newer API
+    const locationsResponse = await fetch('https://businessprofileperformance.googleapis.com/v1/locations:search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        searchFilter: {}  // This searches for all locations the user has access to
+      })
+    });
+
+    console.log('📊 Business Profile API Response Status:', locationsResponse.status);
+
+    if (!locationsResponse.ok) {
+      const errorText = await locationsResponse.text();
+      console.error('❌ Business Profile API error:', errorText);
+      console.log('🔄 Trying fallback method...');
+      return await fetchGoogleBusinessesOldAPI(accessToken);
+    }
+
+    const locationsData = await locationsResponse.json();
+    console.log('📊 Business Profile API Data:', JSON.stringify(locationsData, null, 2));
+    
+    const businesses = [];
+
+    if (locationsData.locations && locationsData.locations.length > 0) {
+      for (const location of locationsData.locations) {
+        businesses.push({
+          id: location.name,
+          name: location.title || location.displayName || location.name,
+          address: location.storefrontAddress?.addressLines?.join(', ') || 'No address'
+        });
+        console.log(`✅ Added business from Profile API: ${location.title || location.displayName || location.name}`);
+      }
+    } else {
+      console.log('⚠️ No locations found in Business Profile API response');
+    }
+
+    console.log(`✅ Business Profile API found businesses: ${businesses.length}`);
+    return businesses;
+  } catch (error) {
+    console.error('❌ Error with Business Profile API:', error);
+    console.log('🔄 Trying fallback method...');
+    return await fetchGoogleBusinessesOldAPI(accessToken);
+}
+
 async function fetchGoogleBusinessesNewAPI(accessToken: string) {
   try {
     console.log('📞 Using new Google Business Profile API...');
