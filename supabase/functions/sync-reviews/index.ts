@@ -25,28 +25,30 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    );
-
     // Get the authorization header from the request
     const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      supabaseClient.auth.setSession({
-        access_token: authHeader.replace('Bearer ', ''),
-        refresh_token: '',
-      });
+    if (!authHeader) {
+      throw new Error('Authorization header is required');
     }
 
-    const { action, platform, credentials } = await req.json();
+    // Create Supabase client with service role for admin operations
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Verify the JWT token and get user
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
+    
     if (userError || !user) {
       console.error('Authentication error:', userError);
-      throw new Error('Authentication required');
+      throw new Error('Invalid authentication token');
     }
+
+    console.log('Authenticated user:', user.id);
+
+    const { action, platform, credentials } = await req.json();
 
     switch (action) {
       case 'connect':
