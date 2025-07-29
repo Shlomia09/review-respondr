@@ -126,8 +126,11 @@ const PlatformConnection = () => {
   };
 
   const handleOAuthConnect = async (platform: string) => {
+    console.log('🚀 Starting OAuth connection for:', platform);
+    
     try {
       // Get OAuth URL from edge function
+      console.log('📞 Calling sync-reviews for OAuth URL...');
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'get_oauth_url',
@@ -135,10 +138,15 @@ const PlatformConnection = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error getting OAuth URL:', error);
+        throw error;
+      }
+
+      console.log('📋 OAuth URL received:', data.oauth_url);
 
       // Open OAuth popup window
-      console.log('Opening popup for platform:', platform);
+      console.log('🪟 Opening popup for platform:', platform);
       const popup = window.open(
         data.oauth_url,
         `oauth_${platform}`,
@@ -146,10 +154,11 @@ const PlatformConnection = () => {
       );
       
       if (!popup) {
+        console.error('❌ Failed to open popup');
         throw new Error('Failed to open popup window. Please allow popups for this site.');
       }
       
-      console.log('Popup opened successfully');
+      console.log('✅ Popup opened successfully');
 
       // Listen for messages from popup
       const messageListener = (event: MessageEvent) => {
@@ -210,24 +219,26 @@ const PlatformConnection = () => {
         }
       }, 1000);
 
-      // Additional fallback - check connection after 30 seconds regardless
+      // Additional fallback - check connection after 10 seconds
       setTimeout(() => {
-        console.log('⏰ 30-second timeout - checking connection status');
+        console.log('⏰ 10-second fallback - checking connection status');
         checkConnectionStatus(platform);
-      }, 30000);
+      }, 10000);
 
-      // Even more aggressive fallback - check connection every 5 seconds for 30 seconds
+      // Even more aggressive fallback - check connection every 3 seconds for 30 seconds
       const connectionCheckInterval = setInterval(() => {
         console.log('🔄 Periodic connection check for platform:', platform);
         checkConnectionStatus(platform);
-      }, 5000);
+      }, 3000);
 
       // Stop periodic checks after 30 seconds
       setTimeout(() => {
+        console.log('⏰ Stopping periodic checks');
         clearInterval(connectionCheckInterval);
       }, 30000);
 
     } catch (error: any) {
+      console.error('❌ OAuth connection error:', error);
       toast({
         title: "Connection Failed",
         description: error.message || "Failed to initiate OAuth connection",
