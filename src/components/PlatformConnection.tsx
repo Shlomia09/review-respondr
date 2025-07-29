@@ -214,36 +214,46 @@ const PlatformConnection = () => {
 
       window.addEventListener('message', messageListener);
 
+      // Enhanced fallback: Aggressively check for OAuth completion
+      const connectionCheckInterval = setInterval(async () => {
+        console.log('🔄 Checking OAuth completion...');
+        
+        try {
+          const { data } = await supabase.functions.invoke('sync-reviews', {
+            body: { 
+              action: 'check_connection',
+              platform: platform
+            }
+          });
+
+          if (data?.connected) {
+            console.log('✅ OAuth completed - connection detected! Fetching businesses...');
+            clearInterval(connectionCheckInterval);
+            cleanup();
+            
+            // Fetch businesses immediately when connection is detected
+            fetchBusinessesForSelection(platform);
+          }
+        } catch (error) {
+          console.error('Error checking connection:', error);
+        }
+      }, 2000); // Check every 2 seconds
+
       // Fallback: Listen for OAuth completion by checking if window is closed
       checkClosedRef.current = setInterval(() => {
         if (popup?.closed) {
-          console.log('🔍 Popup closed manually - checking connection status as fallback');
+          console.log('🔍 Popup closed manually - cleaning up');
           cleanup();
-          
-          // Check if connection was successful as fallback
-          setTimeout(() => {
-            checkConnectionStatus(platform);
-          }, 1000);
+          clearInterval(connectionCheckInterval);
         }
       }, 1000);
 
-      // Additional fallback - check connection after 10 seconds
+      // Stop all checks after 60 seconds
       setTimeout(() => {
-        console.log('⏰ 10-second fallback - checking connection status');
-        checkConnectionStatus(platform);
-      }, 10000);
-
-      // Even more aggressive fallback - check connection every 3 seconds for 30 seconds
-      const connectionCheckInterval = setInterval(() => {
-        console.log('🔄 Periodic connection check for platform:', platform);
-        checkConnectionStatus(platform);
-      }, 3000);
-
-      // Stop periodic checks after 30 seconds
-      setTimeout(() => {
-        console.log('⏰ Stopping periodic checks');
+        console.log('⏰ Stopping all OAuth checks');
         clearInterval(connectionCheckInterval);
-      }, 30000);
+        cleanup();
+      }, 60000);
 
     } catch (error: any) {
       console.error('❌ OAuth connection error:', error);
