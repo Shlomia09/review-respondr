@@ -145,12 +145,12 @@ const PlatformConnection = () => {
 
       console.log('📋 OAuth URL received:', data.oauth_url);
 
-      // Open OAuth popup window
+      // Open OAuth popup window with proper permissions
       console.log('🪟 Opening popup for platform:', platform);
       const popup = window.open(
         data.oauth_url,
         `oauth_${platform}`,
-        'width=500,height=600,scrollbars=yes,resizable=yes'
+        'width=500,height=600,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=no'
       );
       
       if (!popup) {
