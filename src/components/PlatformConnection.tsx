@@ -216,6 +216,17 @@ const PlatformConnection = () => {
         checkConnectionStatus(platform);
       }, 30000);
 
+      // Even more aggressive fallback - check connection every 5 seconds for 30 seconds
+      const connectionCheckInterval = setInterval(() => {
+        console.log('🔄 Periodic connection check for platform:', platform);
+        checkConnectionStatus(platform);
+      }, 5000);
+
+      // Stop periodic checks after 30 seconds
+      setTimeout(() => {
+        clearInterval(connectionCheckInterval);
+      }, 30000);
+
     } catch (error: any) {
       toast({
         title: "Connection Failed",
