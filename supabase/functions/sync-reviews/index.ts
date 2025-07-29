@@ -313,7 +313,60 @@ async function fetchGoogleBusinesses(accessToken: string) {
   console.log('🔍 Fetching Google businesses with access token length:', accessToken.length);
   
   try {
-    console.log('📞 Calling Google My Business Account Management API...');
+    // Use Google Business Profile API instead of deprecated My Business API
+    console.log('📞 Calling Google Business Profile API for accounts...');
+    const accountsResponse = await fetch('https://businessprofileperformance.googleapis.com/v1/locations:search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pageSize: 100
+      })
+    });
+
+    console.log('📊 Google API Response Status:', accountsResponse.status);
+    
+    if (!accountsResponse.ok) {
+      const errorText = await accountsResponse.text();
+      console.error('❌ Google Business Profile API error status:', accountsResponse.status);
+      console.error('❌ Google Business Profile API error body:', errorText);
+      
+      // Fallback to old method
+      console.log('🔄 Trying fallback method with old API...');
+      return await fetchGoogleBusinessesOldAPI(accessToken);
+    }
+
+    const accountsData = await accountsResponse.json();
+    console.log('📊 Google API Response Data:', JSON.stringify(accountsData, null, 2));
+    
+    const businesses = [];
+
+    if (accountsData.locations) {
+      for (const location of accountsData.locations) {
+        businesses.push({
+          id: location.name,
+          name: location.title || location.displayName || location.name,
+          address: location.storefrontAddress?.addressLines?.join(', ') || 'No address'
+        });
+      }
+    }
+
+    console.log('✅ Found businesses:', businesses.length);
+    return businesses;
+  } catch (error) {
+    console.error('❌ Error fetching Google businesses:', error);
+    // Fallback to old API
+    console.log('🔄 Trying fallback method due to error...');
+    return await fetchGoogleBusinessesOldAPI(accessToken);
+  }
+}
+
+// Fallback function using old API
+async function fetchGoogleBusinessesOldAPI(accessToken: string) {
+  try {
+    console.log('📞 Using old My Business Account Management API...');
     const response = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -321,17 +374,17 @@ async function fetchGoogleBusinesses(accessToken: string) {
       },
     });
 
-    console.log('📊 Google API Response Status:', response.status);
-    console.log('📊 Google API Response Headers:', Object.fromEntries(response.headers.entries()));
+    console.log('📊 Old API Response Status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Google businesses API error status:', response.status);
-      console.error('❌ Google businesses API error body:', errorText);
+      console.error('❌ Old API error status:', response.status);
+      console.error('❌ Old API error body:', errorText);
       return [];
     }
 
     const data = await response.json();
+    console.log('📊 Old API Response Data:', JSON.stringify(data, null, 2));
     const businesses = [];
 
     if (data.accounts) {
@@ -360,9 +413,10 @@ async function fetchGoogleBusinesses(accessToken: string) {
       }
     }
 
+    console.log('✅ Old API found businesses:', businesses.length);
     return businesses;
   } catch (error) {
-    console.error('Error fetching Google businesses:', error);
+    console.error('❌ Error with old API:', error);
     return [];
   }
 }
