@@ -116,36 +116,56 @@ serve(async (req) => {
               const message = {success: true, platform: '${platform}'};
               console.log('Sending message:', message);
               
+              // Try window.opener first
               if (window.opener && !window.opener.closed) {
-                window.opener.postMessage(message, '*');
-                console.log('Message sent to opener');
+                try {
+                  window.opener.postMessage(message, '*');
+                  console.log('Message sent to opener');
+                } catch (e) {
+                  console.log('Error sending to opener:', e);
+                }
               } else {
                 console.log('No opener window available');
               }
               
               // Also try parent in case it's in an iframe
-              if (window.parent && window.parent !== window) {
-                window.parent.postMessage(message, '*');
-                console.log('Message sent to parent');
+              try {
+                if (window.parent && window.parent !== window) {
+                  window.parent.postMessage(message, '*');
+                  console.log('Message sent to parent');
+                }
+              } catch (e) {
+                console.log('Error sending to parent:', e);
+              }
+              
+              // Try to update the opener directly if possible
+              try {
+                if (window.opener && window.opener.location && window.opener.location.reload) {
+                  window.opener.location.reload();
+                  console.log('Reloaded opener window');
+                }
+              } catch (e) {
+                console.log('Could not reload opener:', e);
               }
             }
             
-            // Send immediately
+            // Send immediately and multiple times
             sendMessage();
-            
-            // Send again after a short delay
             setTimeout(sendMessage, 100);
             setTimeout(sendMessage, 500);
+            setTimeout(sendMessage, 1000);
             
-            // Close window after delay
+            // Force close window
             setTimeout(() => {
-              console.log('Closing window...');
+              console.log('Force closing window...');
               try {
                 window.close();
               } catch (e) {
                 console.log('Could not close window:', e);
+                // Try to hide the window content
+                document.body.innerHTML = '<div style="text-align:center;padding:50px;color:#28a745;font-size:18px;">✅ ההתחברות הושלמה!<br><small>אנא סגור חלון זה ידנית אם הוא לא נסגר אוטומטית</small></div>';
               }
-            }, 1500);
+            }, 2000);
           </script>
         </body>
       </html>

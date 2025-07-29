@@ -236,6 +236,7 @@ const PlatformConnection = () => {
   };
 
   const checkConnectionStatus = async (platformId: string) => {
+    console.log('🔍 Checking connection status for:', platformId);
     try {
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
@@ -246,7 +247,9 @@ const PlatformConnection = () => {
 
       if (error) throw error;
 
+      console.log('Connection check result:', data);
       if (data.connected) {
+        console.log('✅ Platform is connected - updating UI');
         setPlatforms(prev => prev.map(p => 
           p.id === platformId 
             ? { ...p, connected: true, lastSync: new Date().toISOString() }
@@ -254,9 +257,14 @@ const PlatformConnection = () => {
         ));
 
         toast({
-          title: "Platform Connected",
-          description: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}`,
+          title: "התחברות הושלמה",
+          description: `התחברת בהצלחה ל${platformId === 'google' ? 'גוגל' : 'פייסבוק'}`,
         });
+        
+        // Close the modal if it's open
+        setShowConfig(null);
+      } else {
+        console.log('❌ Platform is not connected');
       }
     } catch (error: any) {
       console.error('Failed to check connection status:', error);

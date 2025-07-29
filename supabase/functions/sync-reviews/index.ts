@@ -48,7 +48,7 @@ serve(async (req) => {
 
     console.log('Authenticated user:', user.id);
 
-    const { action, platform, credentials } = await req.json();
+    const { action, platform, credentials, businessId } = await req.json();
 
     switch (action) {
       case 'connect':
@@ -57,6 +57,10 @@ serve(async (req) => {
         return await getOAuthUrl(platform, user.id);
       case 'check_connection':
         return await checkConnection(platform, user.id, supabaseClient);
+      case 'get_businesses':
+        return await getBusinesses(platform, user.id, supabaseClient);
+      case 'select_business':
+        return await selectBusiness(platform, businessId, user.id, supabaseClient);
       case 'sync':
         return await handleSync(platform, user.id, supabaseClient);
       case 'disconnect':
@@ -253,6 +257,128 @@ async function handleDisconnect(platform: string, userId: string, supabase: any)
     JSON.stringify({ success: true, message: `Disconnected from ${platform}` }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
+}
+
+async function getBusinesses(platform: string, userId: string, supabase: any) {
+  console.log(`Getting businesses for ${platform} for user ${userId}`);
+  
+  // Get stored tokens for the platform
+  const { data: tokenData } = await supabase
+    .from('platform_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('platform', platform)
+    .single();
+
+  if (!tokenData || !tokenData.access_token) {
+    throw new Error('Platform not connected. Please connect first.');
+  }
+
+  let businesses = [];
+  
+  if (platform === 'google') {
+    businesses = await fetchGoogleBusinesses(tokenData.access_token);
+  } else if (platform === 'facebook') {
+    businesses = await fetchFacebookBusinesses(tokenData.access_token);
+  }
+
+  return new Response(
+    JSON.stringify({ businesses }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function selectBusiness(platform: string, businessId: string, userId: string, supabase: any) {
+  console.log(`Selecting business ${businessId} for ${platform} for user ${userId}`);
+  
+  // Update the platform_tokens record with the selected business
+  const { error: updateError } = await supabase
+    .from('platform_tokens')
+    .update({ business_id: businessId })
+    .eq('user_id', userId)
+    .eq('platform', platform);
+
+  if (updateError) {
+    console.error('Error updating business selection:', updateError);
+    throw new Error('Failed to select business');
+  }
+
+  return new Response(
+    JSON.stringify({ success: true }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function fetchGoogleBusinesses(accessToken: string) {
+  try {
+    const response = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Google businesses API error:', await response.text());
+      return [];
+    }
+
+    const data = await response.json();
+    const businesses = [];
+
+    if (data.accounts) {
+      for (const account of data.accounts) {
+        // Get locations for each account
+        const locationsResponse = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (locationsResponse.ok) {
+          const locationsData = await locationsResponse.json();
+          if (locationsData.locations) {
+            for (const location of locationsData.locations) {
+              businesses.push({
+                id: location.name,
+                name: location.title || location.name,
+                address: location.storefrontAddress?.addressLines?.join(', ') || 'No address',
+                account: account.accountName || account.name
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return businesses;
+  } catch (error) {
+    console.error('Error fetching Google businesses:', error);
+    return [];
+  }
+}
+
+async function fetchFacebookBusinesses(accessToken: string) {
+  try {
+    const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+    
+    if (!response.ok) {
+      console.error('Facebook businesses API error:', await response.text());
+      return [];
+    }
+
+    const data = await response.json();
+    return data.data?.map((page: any) => ({
+      id: page.id,
+      name: page.name,
+      category: page.category || 'Business'
+    })) || [];
+  } catch (error) {
+    console.error('Error fetching Facebook businesses:', error);
+    return [];
+  }
+
 }
 
 // Platform-specific connection testers
