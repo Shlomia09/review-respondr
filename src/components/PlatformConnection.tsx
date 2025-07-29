@@ -48,6 +48,7 @@ const PlatformConnection = () => {
   ]);
 
   const [showConfig, setShowConfig] = useState<string | null>(null);
+  const [showBusinessSelect, setShowBusinessSelect] = useState<{platform: string, businesses: any[]} | null>(null);
   const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [syncing, setSyncing] = useState<string | null>(null);
   const { toast } = useToast();
@@ -161,21 +162,10 @@ const PlatformConnection = () => {
         
         // Accept messages from any HTTPS origin for OAuth callback
         if (event.data && event.data.success && event.data.platform === platform) {
-          console.log('✅ Success message received - updating UI');
+          console.log('✅ Success message received - fetching businesses');
           
-          // Connection successful - update UI
-          setPlatforms(prev => prev.map(p => 
-            p.id === platform 
-              ? { ...p, connected: true, lastSync: new Date().toISOString() }
-              : p
-          ));
-          
-          toast({
-            title: "התחברות הושלמה",
-            description: `התחברת בהצלחה ל${platform === 'google' ? 'גוגל' : 'פייסבוק'}`,
-          });
-
-          // Close popup and cleanup
+          // OAuth successful - now get businesses for user to select
+          fetchBusinessesForSelection(platform);
           cleanup();
         } else if (event.data && event.data.error) {
           console.log('❌ Error message received:', event.data.error);
@@ -233,6 +223,78 @@ const PlatformConnection = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const fetchBusinessesForSelection = async (platformId: string) => {
+    try {
+      console.log('🏢 Fetching businesses for platform:', platformId);
+      const { data, error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'get_businesses',
+          platform: platformId
+        }
+      });
+
+      if (error) throw error;
+
+      console.log('📋 Businesses received:', data.businesses);
+      if (data.businesses && data.businesses.length > 0) {
+        setShowBusinessSelect({ platform: platformId, businesses: data.businesses });
+      } else {
+        // No businesses found, just mark as connected
+        updatePlatformConnection(platformId);
+        toast({
+          title: "התחברות הושלמה",
+          description: `התחברת בהצלחה ל${platformId === 'google' ? 'גוגל' : 'פייסבוק'} (לא נמצאו עסקים)`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching businesses:', error);
+      toast({
+        title: "שגיאה בקבלת רשימת עסקים",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const selectBusiness = async (businessId: string, businessName: string) => {
+    try {
+      console.log('🎯 Selecting business:', businessId, 'for platform:', showBusinessSelect?.platform);
+      const { error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'select_business',
+          platform: showBusinessSelect?.platform,
+          businessId: businessId
+        }
+      });
+
+      if (error) throw error;
+
+      updatePlatformConnection(showBusinessSelect!.platform);
+      setShowBusinessSelect(null);
+      
+      toast({
+        title: "העסק נבחר בהצלחה",
+        description: `בחרת בעסק: ${businessName}`,
+      });
+    } catch (error: any) {
+      console.error('Error selecting business:', error);
+      toast({
+        title: "שגיאה בבחירת עסק",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updatePlatformConnection = (platformId: string) => {
+    setPlatforms(prev => prev.map(p => 
+      p.id === platformId 
+        ? { ...p, connected: true, lastSync: new Date().toISOString() }
+        : p
+    ));
+    setShowConfig(null);
   };
 
   const checkConnectionStatus = async (platformId: string) => {
@@ -506,6 +568,68 @@ const PlatformConnection = () => {
                       className="flex-1"
                     >
                       Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Business Selection Modal */}
+          {showBusinessSelect && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <Card className="w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
+                <CardHeader>
+                  <CardTitle>
+                    בחר את העסק שלך
+                  </CardTitle>
+                  <CardDescription>
+                    בחר את העסק שברצונך לחבר למערכת מתוך רשימת העסקים שלך ב-{showBusinessSelect.platform === 'google' ? 'גוגל' : 'פייסבוק'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="overflow-y-auto max-h-96">
+                  <div className="space-y-3">
+                    {showBusinessSelect.businesses.map((business) => (
+                      <div 
+                        key={business.id} 
+                        className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                        onClick={() => selectBusiness(business.id, business.name)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-lg">{business.name}</h4>
+                            {business.address && (
+                              <p className="text-sm text-muted-foreground mt-1">{business.address}</p>
+                            )}
+                            {business.category && (
+                              <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                {business.category}
+                              </span>
+                            )}
+                            {business.account && (
+                              <p className="text-xs text-muted-foreground mt-1">חשבון: {business.account}</p>
+                            )}
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              selectBusiness(business.id, business.name);
+                            }}
+                          >
+                            בחר
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-4 mt-4 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowBusinessSelect(null)}
+                      className="flex-1"
+                    >
+                      ביטול
                     </Button>
                   </div>
                 </CardContent>
