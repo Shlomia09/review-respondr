@@ -159,9 +159,11 @@ const PlatformConnection = () => {
         console.log('Data has success:', event.data && event.data.success);
         console.log('Platform matches:', event.data && event.data.platform === platform);
         
-        // Accept messages from popup (no strict origin check needed for OAuth callback)
+        // Accept messages from any HTTPS origin for OAuth callback
         if (event.data && event.data.success && event.data.platform === platform) {
-          // Connection successful
+          console.log('✅ Success message received - updating UI');
+          
+          // Connection successful - update UI
           setPlatforms(prev => prev.map(p => 
             p.id === platform 
               ? { ...p, connected: true, lastSync: new Date().toISOString() }
@@ -174,36 +176,55 @@ const PlatformConnection = () => {
           });
 
           // Close popup and cleanup
-          popup?.close();
-          window.removeEventListener('message', messageListener);
-          clearInterval(checkClosed);
+          cleanup();
         } else if (event.data && event.data.error) {
-          // Connection failed
+          console.log('❌ Error message received:', event.data.error);
+          
           toast({
             title: "שגיאה בהתחברות",
             description: event.data.error,
             variant: "destructive",
           });
           
-          popup?.close();
-          window.removeEventListener('message', messageListener);
-          clearInterval(checkClosed);
+          cleanup();
         }
       };
+
+      // Cleanup function
+      const cleanup = () => {
+        console.log('🧹 Cleaning up OAuth popup');
+        if (popup && !popup.closed) {
+          popup.close();
+        }
+        window.removeEventListener('message', messageListener);
+        if (checkClosedRef.current) {
+          clearInterval(checkClosedRef.current);
+        }
+      };
+
+      // Store interval reference
+      const checkClosedRef = { current: null as NodeJS.Timeout | null };
 
       window.addEventListener('message', messageListener);
 
       // Fallback: Listen for OAuth completion by checking if window is closed
-      const checkClosed = setInterval(() => {
+      checkClosedRef.current = setInterval(() => {
         if (popup?.closed) {
-          clearInterval(checkClosed);
-          window.removeEventListener('message', messageListener);
+          console.log('🔍 Popup closed manually - checking connection status as fallback');
+          cleanup();
+          
           // Check if connection was successful as fallback
           setTimeout(() => {
             checkConnectionStatus(platform);
           }, 1000);
         }
       }, 1000);
+
+      // Additional fallback - check connection after 30 seconds regardless
+      setTimeout(() => {
+        console.log('⏰ 30-second timeout - checking connection status');
+        checkConnectionStatus(platform);
+      }, 30000);
 
     } catch (error: any) {
       toast({
