@@ -169,7 +169,15 @@ const PlatformConnection = () => {
         console.log('Data has success:', event.data && event.data.success);
         console.log('Platform matches:', event.data && event.data.platform === platform);
         
-        // Accept messages from any HTTPS origin for OAuth callback
+        // Accept messages from Supabase domain for OAuth callback
+        const validOrigins = [
+          'https://epwriqkyqxwewwcxbnsu.supabase.co',
+          window.location.origin
+        ];
+        
+        console.log('Valid origins:', validOrigins);
+        console.log('Message origin valid:', validOrigins.includes(event.origin));
+        
         if (event.data && event.data.success && event.data.platform === platform) {
           console.log('✅ Success message received - fetching businesses');
           
