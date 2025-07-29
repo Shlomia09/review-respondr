@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ReviewCard from "@/components/ReviewCard";
+import PlatformConnection from "@/components/PlatformConnection";
 import { 
   Star, 
   TrendingUp, 
@@ -300,6 +301,9 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Platform Connections */}
+        <PlatformConnection />
 
         {/* Filters */}
         <Card className="mb-6">
