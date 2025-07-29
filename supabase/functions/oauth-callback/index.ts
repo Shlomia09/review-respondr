@@ -82,9 +82,9 @@ serve(async (req) => {
     // Return success page that closes the popup
     return new Response(`
       <html>
-        <body>
-          <h2>התחברות הושלמה בהצלחה!</h2>
-          <p>החלון יסגר תוך מספר שניות...</p>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8f9fa;">
+          <h2 style="color: #28a745;">Connection Successful!</h2>
+          <p>This window will close automatically...</p>
           <script>
             window.opener.postMessage({success: true, platform: '${platform}'}, '*');
             setTimeout(() => window.close(), 2000);

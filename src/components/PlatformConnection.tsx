@@ -145,10 +145,7 @@ const PlatformConnection = () => {
 
       // Listen for messages from popup
       const messageListener = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin && !event.origin.includes('supabase.co')) {
-          return;
-        }
-
+        // Accept messages from popup (no strict origin check needed for OAuth callback)
         if (event.data.success && event.data.platform === platform) {
           // Connection successful
           setPlatforms(prev => prev.map(p => 
