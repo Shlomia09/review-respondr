@@ -124,6 +124,39 @@ const PlatformConnection = () => {
     }
   };
 
+  const handleOAuthConnect = async (platform: string) => {
+    try {
+      // Handle OAuth connection flow
+      const { data, error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'oauth_connect',
+          platform: platform
+        }
+      });
+
+      if (error) throw error;
+
+      setPlatforms(prev => prev.map(p => 
+        p.id === platform 
+          ? { ...p, connected: true, lastSync: new Date().toISOString() }
+          : p
+      ));
+
+      setShowConfig(null);
+
+      toast({
+        title: "Platform Connected",
+        description: `Successfully connected to ${platforms.find(p => p.id === platform)?.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Failed to connect to platform",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDisconnect = async (platformId: string) => {
     try {
       const { error } = await supabase.functions.invoke('sync-reviews', {
@@ -246,46 +279,104 @@ const PlatformConnection = () => {
                     Connect {platforms.find(p => p.id === showConfig)?.name}
                   </CardTitle>
                   <CardDescription>
-                    Enter your API credentials to connect this platform
+                    הזן את פרטי החיבור שלך לפלטפורמה
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {showConfig === "google" && (
-                    <div>
-                      <Label htmlFor="google-api">Google Places API Key</Label>
-                      <Input
-                        id="google-api"
-                        type="password"
-                        placeholder="Enter your Google Places API key"
-                        value={credentials.google || ''}
-                        onChange={(e) => setCredentials(prev => ({ ...prev, google: e.target.value }))}
-                      />
-                    </div>
-                  )}
-                  {showConfig === "facebook" && (
-                    <div>
-                      <Label htmlFor="facebook-token">Facebook Access Token</Label>
-                      <Input
-                        id="facebook-token"
-                        type="password"
-                        placeholder="Enter your Facebook access token"
-                        value={credentials.facebook || ''}
-                        onChange={(e) => setCredentials(prev => ({ ...prev, facebook: e.target.value }))}
-                      />
-                    </div>
-                  )}
-                  {showConfig === "trustpilot" && (
-                    <div>
-                      <Label htmlFor="trustpilot-api">Trustpilot API Key</Label>
-                      <Input
-                        id="trustpilot-api"
-                        type="password"
-                        placeholder="Enter your Trustpilot API key"
-                        value={credentials.trustpilot || ''}
-                        onChange={(e) => setCredentials(prev => ({ ...prev, trustpilot: e.target.value }))}
-                      />
-                    </div>
-                  )}
+                 <CardContent className="space-y-4">
+                   {showConfig === "google" && (
+                     <div className="space-y-4">
+                       <div>
+                         <Label htmlFor="google-email">אימייל Google</Label>
+                         <Input
+                           id="google-email"
+                           type="email"
+                           placeholder="name@gmail.com"
+                           value={credentials.google_email || ''}
+                           onChange={(e) => setCredentials(prev => ({ ...prev, google_email: e.target.value }))}
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="google-password">סיסמה</Label>
+                         <Input
+                           id="google-password"
+                           type="password"
+                           placeholder="הזן את הסיסמה שלך"
+                           value={credentials.google_password || ''}
+                           onChange={(e) => setCredentials(prev => ({ ...prev, google_password: e.target.value }))}
+                         />
+                       </div>
+                       <div className="text-center">
+                         <span className="text-sm text-muted-foreground">או</span>
+                       </div>
+                       <Button
+                         variant="outline"
+                         className="w-full"
+                         onClick={() => handleOAuthConnect('google')}
+                       >
+                         <Globe className="h-4 w-4 mr-2" />
+                         התחבר עם Google
+                       </Button>
+                     </div>
+                   )}
+                   {showConfig === "facebook" && (
+                     <div className="space-y-4">
+                       <div>
+                         <Label htmlFor="facebook-email">אימייל Facebook</Label>
+                         <Input
+                           id="facebook-email"
+                           type="email"
+                           placeholder="name@example.com"
+                           value={credentials.facebook_email || ''}
+                           onChange={(e) => setCredentials(prev => ({ ...prev, facebook_email: e.target.value }))}
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="facebook-password">סיסמה</Label>
+                         <Input
+                           id="facebook-password"
+                           type="password"
+                           placeholder="הזן את הסיסמה שלך"
+                           value={credentials.facebook_password || ''}
+                           onChange={(e) => setCredentials(prev => ({ ...prev, facebook_password: e.target.value }))}
+                         />
+                       </div>
+                       <div className="text-center">
+                         <span className="text-sm text-muted-foreground">או</span>
+                       </div>
+                       <Button
+                         variant="outline"
+                         className="w-full"
+                         onClick={() => handleOAuthConnect('facebook')}
+                       >
+                         <Facebook className="h-4 w-4 mr-2" />
+                         התחבר עם Facebook
+                       </Button>
+                     </div>
+                   )}
+                   {showConfig === "trustpilot" && (
+                     <div className="space-y-4">
+                       <div>
+                         <Label htmlFor="trustpilot-email">אימייל Trustpilot</Label>
+                         <Input
+                           id="trustpilot-email"
+                           type="email"
+                           placeholder="name@example.com"
+                           value={credentials.trustpilot_email || ''}
+                           onChange={(e) => setCredentials(prev => ({ ...prev, trustpilot_email: e.target.value }))}
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="trustpilot-password">סיסמה</Label>
+                         <Input
+                           id="trustpilot-password"
+                           type="password"
+                           placeholder="הזן את הסיסמה שלך"
+                           value={credentials.trustpilot_password || ''}
+                           onChange={(e) => setCredentials(prev => ({ ...prev, trustpilot_password: e.target.value }))}
+                         />
+                       </div>
+                     </div>
+                   )}
                   
                   <div className="flex gap-2 pt-4">
                     <Button
