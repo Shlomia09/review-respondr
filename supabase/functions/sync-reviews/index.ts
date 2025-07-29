@@ -91,10 +91,9 @@ async function getOAuthUrl(platform: string, userId: string) {
         throw new Error('Google Client ID not configured');
       }
       
-      // Updated scopes for Google Business Profile API (new API)
+      // Updated scopes for Google Business Profile API
       const scopes = [
         'https://www.googleapis.com/auth/business.manage',
-        'https://www.googleapis.com/auth/businessprofileperformance',
         'https://www.googleapis.com/auth/plus.business.manage'
       ].join(' ');
       
