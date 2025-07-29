@@ -164,7 +164,7 @@ const PlatformConnection = () => {
           popup?.close();
           window.removeEventListener('message', messageListener);
           clearInterval(checkClosed);
-        } else if (event.data.error) {
+        } else if (event.data && event.data.error) {
           // Connection failed
           toast({
             title: "שגיאה בהתחברות",
