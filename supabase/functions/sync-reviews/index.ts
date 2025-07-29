@@ -310,7 +310,10 @@ async function selectBusiness(platform: string, businessId: string, userId: stri
 }
 
 async function fetchGoogleBusinesses(accessToken: string) {
+  console.log('🔍 Fetching Google businesses with access token length:', accessToken.length);
+  
   try {
+    console.log('📞 Calling Google My Business Account Management API...');
     const response = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -318,8 +321,13 @@ async function fetchGoogleBusinesses(accessToken: string) {
       },
     });
 
+    console.log('📊 Google API Response Status:', response.status);
+    console.log('📊 Google API Response Headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      console.error('Google businesses API error:', await response.text());
+      const errorText = await response.text();
+      console.error('❌ Google businesses API error status:', response.status);
+      console.error('❌ Google businesses API error body:', errorText);
       return [];
     }
 
