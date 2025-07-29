@@ -20,68 +20,44 @@ import {
   Plus
 } from "lucide-react";
 
-// Mock data for reviews - will be replaced with real data later
-const mockReviews = [
-  {
-    id: "1",
-    reviewer_name: "Sarah Johnson",
-    rating: 5,
-    review_text: "Excellent service! The team was professional and delivered exactly what we needed. Highly recommend!",
-    sentiment: "positive" as const,
-    platform: "Google",
-    review_date: "2024-01-15T10:30:00Z",
-    ai_response: {
-      generated_response: "Thank you so much for your wonderful review, Sarah! We're thrilled that our team exceeded your expectations. Your recommendation means the world to us!",
-      is_approved: false,
-      is_sent: false
-    }
-  },
-  {
-    id: "2",
-    reviewer_name: "Mike Chen",
-    rating: 2,
-    review_text: "Service was slower than expected and the quality didn't match the price point. Expected much better.",
-    sentiment: "negative" as const,
-    platform: "Facebook",
-    review_date: "2024-01-14T14:20:00Z",
-    ai_response: {
-      generated_response: "Hi Mike, thank you for taking the time to share your feedback. We sincerely apologize that our service didn't meet your expectations. We'd love the opportunity to make this right - please reach out to us directly so we can discuss how we can improve your experience.",
-      is_approved: true,
-      is_sent: false
-    }
-  },
-  {
-    id: "3",
-    reviewer_name: "Emily Rodriguez",
-    rating: 4,
-    review_text: "Good overall experience. Staff was friendly and the process was smooth. One minor issue with timing but otherwise satisfied.",
-    sentiment: "positive" as const,
-    platform: "Trustpilot",
-    review_date: "2024-01-13T16:45:00Z"
-  },
-  {
-    id: "4",
-    reviewer_name: "David Wilson",
-    rating: 3,
-    review_text: "Average service. Nothing special but got the job done. Could be improved in several areas.",
-    sentiment: "neutral" as const,
-    platform: "Google",
-    review_date: "2024-01-12T09:15:00Z",
-    ai_response: {
-      generated_response: "Thank you for your honest feedback, David. We appreciate you taking the time to review us. We're always looking for ways to improve - would you mind sharing what specific areas you think we could enhance?",
-      is_approved: true,
-      is_sent: true
-    }
-  }
-];
+interface DatabaseReview {
+  id: string;
+  customer_name: string;
+  customer_email?: string;
+  platform: string;
+  rating: number;
+  content: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  ai_response?: string;
+  response_status: 'pending' | 'generated' | 'approved' | 'sent';
+  review_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Review {
+  id: string;
+  reviewer_name: string;
+  rating: number;
+  review_text: string;
+  sentiment: "positive" | "neutral" | "negative";
+  platform: string;
+  review_date: string;
+  ai_response?: {
+    generated_response: string;
+    is_approved: boolean;
+    is_sent: boolean;
+  };
+}
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
-  const [reviews, setReviews] = useState(mockReviews);
-  const [filteredReviews, setFilteredReviews] = useState(mockReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sentimentFilter, setSentimentFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -92,10 +68,44 @@ const Dashboard = () => {
         navigate("/login");
       } else {
         setUser(user);
+        await fetchReviews();
       }
+      setLoading(false);
     };
     getUser();
   }, [navigate]);
+
+  const fetchReviews = async () => {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({
+        title: "Error fetching reviews",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      // Transform database reviews to match ReviewCard interface
+      const transformedReviews: Review[] = (data || []).map((dbReview: any) => ({
+        id: dbReview.id,
+        reviewer_name: dbReview.customer_name,
+        rating: dbReview.rating,
+        review_text: dbReview.content,
+        sentiment: dbReview.sentiment,
+        platform: dbReview.platform,
+        review_date: dbReview.review_date,
+        ai_response: dbReview.ai_response ? {
+          generated_response: dbReview.ai_response,
+          is_approved: dbReview.response_status === 'approved' || dbReview.response_status === 'sent',
+          is_sent: dbReview.response_status === 'sent'
+        } : undefined
+      }));
+      setReviews(transformedReviews);
+    }
+  };
 
   useEffect(() => {
     let filtered = reviews;
@@ -128,8 +138,8 @@ const Dashboard = () => {
     const positive = reviews.filter(r => r.sentiment === "positive").length;
     const negative = reviews.filter(r => r.sentiment === "negative").length;
     const neutral = reviews.filter(r => r.sentiment === "neutral").length;
-    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / total;
-    const responseRate = (reviews.filter(r => r.ai_response).length / total) * 100;
+    const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
+    const responseRate = total > 0 ? (reviews.filter(r => r.ai_response).length / total) * 100 : 0;
     
     return { total, positive, negative, neutral, avgRating, responseRate };
   };
@@ -144,32 +154,65 @@ const Dashboard = () => {
     // TODO: Implement AI response generation
   };
 
-  const handleApproveResponse = (reviewId: string) => {
-    setReviews(prev => prev.map(review => 
-      review.id === reviewId && review.ai_response
-        ? { ...review, ai_response: { ...review.ai_response, is_approved: true } }
-        : review
-    ));
-    toast({
-      title: "Response Approved",
-      description: "The AI response has been approved and is ready to send.",
-    });
+  const handleApproveResponse = async (reviewId: string) => {
+    const { error } = await supabase
+      .from('reviews')
+      .update({ response_status: 'approved' })
+      .eq('id', reviewId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve response",
+        variant: "destructive",
+      });
+    } else {
+      setReviews(prev => prev.map(review => 
+        review.id === reviewId && review.ai_response
+          ? { ...review, ai_response: { ...review.ai_response, is_approved: true } }
+          : review
+      ));
+      toast({
+        title: "Response Approved",
+        description: "The AI response has been approved and is ready to send.",
+      });
+    }
   };
 
-  const handleSendResponse = (reviewId: string) => {
-    setReviews(prev => prev.map(review => 
-      review.id === reviewId && review.ai_response
-        ? { ...review, ai_response: { ...review.ai_response, is_sent: true } }
-        : review
-    ));
-    toast({
-      title: "Response Sent",
-      description: "Your response has been sent to the review platform.",
-    });
+  const handleSendResponse = async (reviewId: string) => {
+    const { error } = await supabase
+      .from('reviews')
+      .update({ response_status: 'sent' })
+      .eq('id', reviewId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send response",
+        variant: "destructive",
+      });
+    } else {
+      setReviews(prev => prev.map(review => 
+        review.id === reviewId && review.ai_response
+          ? { ...review, ai_response: { ...review.ai_response, is_sent: true } }
+          : review
+      ));
+      toast({
+        title: "Response Sent",
+        description: "Your response has been sent to the review platform.",
+      });
+    }
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
