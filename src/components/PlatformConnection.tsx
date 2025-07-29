@@ -145,7 +145,13 @@ const PlatformConnection = () => {
 
       // Listen for messages from popup
       const messageListener = (event: MessageEvent) => {
-        console.log('Received message:', event.data);
+        console.log('=== Received message from popup ===');
+        console.log('Event data:', event.data);
+        console.log('Event origin:', event.origin);
+        console.log('Expected platform:', platform);
+        console.log('Data has success:', event.data && event.data.success);
+        console.log('Platform matches:', event.data && event.data.platform === platform);
+        
         // Accept messages from popup (no strict origin check needed for OAuth callback)
         if (event.data && event.data.success && event.data.platform === platform) {
           // Connection successful
