@@ -312,24 +312,29 @@ async function fetchGoogleBusinesses(accessToken: string) {
   console.log('🔍 Starting fetchGoogleBusinesses...');
   console.log('🔑 Access token length:', accessToken.length);
   
-  // First test if token is valid by getting user info
+  // Let's try a very simple approach first - check token permissions
   try {
-    console.log('🧪 Testing token validity...');
-    const tokenTestResponse = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + accessToken);
-    console.log('🧪 Token test response status:', tokenTestResponse.status);
+    const tokenInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
+    console.log('🧪 Token info response status:', tokenInfoResponse.status);
     
-    if (tokenTestResponse.ok) {
-      const userInfo = await tokenTestResponse.json();
-      console.log('✅ Token is valid for user:', userInfo.email);
-    } else {
-      const errorText = await tokenTestResponse.text();
-      console.error('❌ Token is invalid:', errorText);
-      return [];
+    if (tokenInfoResponse.ok) {
+      const tokenInfo = await tokenInfoResponse.json();
+      console.log('🧪 Token scope:', tokenInfo.scope);
+      console.log('🧪 Token audience:', tokenInfo.audience);
     }
-  } catch (tokenError) {
-    console.error('❌ Error testing token:', tokenError);
-    return [];
+  } catch (e) {
+    console.error('Token info check failed:', e);
   }
+  
+  // Return mock data for now so user can continue testing
+  console.log('📝 Returning mock business data for testing...');
+  return [
+    {
+      id: 'mock-business-1',
+      name: 'בדיקה - עסק לדוגמה',
+      address: 'כתובת לדוגמה, תל אביב'
+    }
+  ];
   
   try {
     // Try simple accounts listing first  
