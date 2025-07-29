@@ -22,15 +22,27 @@ serve(async (req) => {
     if (error) {
       return new Response(`
         <html>
+          <head>
+            <title>OAuth Error</title>
+          </head>
           <body>
+            <h2>Authentication Error</h2>
+            <p>Error: ${error}</p>
             <script>
-              window.opener.postMessage({error: '${error}'}, '*');
-              window.close();
+              console.log('OAuth Error from URL:', '${error}');
+              if (window.opener) {
+                window.opener.postMessage({error: '${error}'}, '*');
+              }
+              setTimeout(() => window.close(), 3000);
             </script>
           </body>
         </html>
       `, {
-        headers: { 'Content-Type': 'text/html' }
+        headers: { 
+          'Content-Type': 'text/html',
+          'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+          'X-Frame-Options': 'SAMEORIGIN'
+        }
       });
     }
 
@@ -170,7 +182,11 @@ serve(async (req) => {
         </body>
       </html>
     `, {
-      headers: { 'Content-Type': 'text/html' }
+      headers: { 
+        'Content-Type': 'text/html',
+        'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+        'X-Frame-Options': 'SAMEORIGIN'
+      }
     });
 
   } catch (error) {
@@ -178,17 +194,27 @@ serve(async (req) => {
     
     return new Response(`
       <html>
+        <head>
+          <title>שגיאה בהתחברות</title>
+        </head>
         <body>
           <h2>שגיאה בהתחברות</h2>
           <p>${error.message}</p>
           <script>
-            window.opener.postMessage({error: '${error.message}'}, '*');
+            console.log('OAuth Error:', '${error.message}');
+            if (window.opener) {
+              window.opener.postMessage({error: '${error.message}'}, '*');
+            }
             setTimeout(() => window.close(), 3000);
           </script>
         </body>
       </html>
     `, {
-      headers: { 'Content-Type': 'text/html' }
+      headers: { 
+        'Content-Type': 'text/html',
+        'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+        'X-Frame-Options': 'SAMEORIGIN'
+      }
     });
   }
 });
