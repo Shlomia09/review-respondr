@@ -79,8 +79,12 @@ serve(async (req) => {
 });
 
 async function getOAuthUrl(platform: string, userId: string) {
+  console.log('🔗 Getting OAuth URL for platform:', platform, 'user:', userId);
+  
   const baseUrl = Deno.env.get('SUPABASE_URL');
   const redirectUrl = `${baseUrl}/functions/v1/oauth-callback`;
+  
+  console.log('📍 Using redirect URL:', redirectUrl);
   
   let oauthUrl = '';
   
@@ -88,22 +92,29 @@ async function getOAuthUrl(platform: string, userId: string) {
     case 'google':
       const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
       if (!googleClientId) {
+        console.error('❌ Google Client ID not found in environment');
         throw new Error('Google Client ID not configured');
       }
       
-      // Updated scopes for Google My Business API
+      console.log('🔑 Google Client ID found');
+      
+      // Updated scopes for Google Business Profile API (new)
       const scopes = [
-        'https://www.googleapis.com/auth/business.manage'
+        'https://www.googleapis.com/auth/business.manage',
+        'https://www.googleapis.com/auth/plus.business.manage'
       ].join(' ');
+      
       
       oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${googleClientId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
         `response_type=code&` +
         `scope=${encodeURIComponent(scopes)}&` +
-        `state=${platform}_${userId}&` +
         `access_type=offline&` +
-        `prompt=consent`;
+        `prompt=consent&` +
+        `state=${platform}_${userId}`;
+      
+      console.log('🎯 Generated Google OAuth URL');
       break;
       
     case 'facebook':

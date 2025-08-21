@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,24 @@ const PlatformConnection = () => {
   const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [syncing, setSyncing] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Check existing connections on component mount
+  React.useEffect(() => {
+    console.log('🔄 Checking existing platform connections...');
+    checkAllConnections();
+  }, []);
+
+  // Function to check all platform connections
+  const checkAllConnections = async () => {
+    console.log('🔍 Checking all platform connections...');
+    for (const platform of platforms) {
+      try {
+        await checkConnectionStatus(platform.id);
+      } catch (error) {
+        console.error(`Error checking ${platform.id}:`, error);
+      }
+    }
+  };
 
   const handleConnect = async (platformId: string) => {
     try {
@@ -475,12 +493,25 @@ const PlatformConnection = () => {
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    onClick={() => setShowConfig(platform.id)}
-                    size="sm"
-                  >
-                    Connect
-                  </Button>
+                  <>
+                    {(platform.id === 'google' || platform.id === 'facebook') ? (
+                      <Button
+                        onClick={() => handleOAuthConnect(platform.id)}
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        <Globe className="h-4 w-4 mr-2" />
+                        התחבר עם OAuth
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => setShowConfig(platform.id)}
+                        size="sm"
+                      >
+                        Connect
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

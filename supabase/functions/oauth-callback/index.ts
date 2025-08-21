@@ -14,20 +14,29 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== OAuth Callback Started ===');
+    
     const url = new URL(req.url);
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
     const error = url.searchParams.get('error');
 
+    console.log('URL Parameters:', { code: !!code, state, error });
+
     if (error) {
+      console.error('❌ OAuth Error from provider:', error);
       return new Response(`
         <html>
           <head>
             <title>OAuth Error</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8f9fa; }
+              .error { color: #dc3545; font-size: 24px; margin-bottom: 16px; }
+            </style>
           </head>
           <body>
-            <h2>Authentication Error</h2>
-            <p>Error: ${error}</p>
+            <div class="error">❌ שגיאה בהתחברות</div>
+            <p>שגיאה: ${error}</p>
             <script>
               console.log('OAuth Error from URL:', '${error}');
               if (window.opener) {
@@ -47,11 +56,17 @@ serve(async (req) => {
     }
 
     if (!code || !state) {
+      console.error('❌ Missing code or state:', { code: !!code, state });
       throw new Error('Missing authorization code or state');
     }
 
     // Parse state to get platform and user ID
     const [platform, userId] = state.split('_');
+    console.log('🔍 Parsed state:', { platform, userId });
+
+    if (!platform || !userId) {
+      throw new Error('Invalid state parameter');
+    }
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -60,6 +75,7 @@ serve(async (req) => {
     );
 
     // Exchange code for access token
+    console.log('🔄 Exchanging code for token...');
     let tokenData;
     switch (platform) {
       case 'google':
@@ -69,17 +85,20 @@ serve(async (req) => {
         tokenData = await exchangeFacebookCode(code);
         break;
       default:
-        throw new Error('Unsupported platform');
+        throw new Error('Unsupported platform: ' + platform);
     }
 
     if (!tokenData) {
       throw new Error('Failed to exchange code for token');
     }
 
+    console.log('✅ Token exchange successful');
+
     // Store tokens in database
     const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString();
     
-    await supabaseClient
+    console.log('💾 Storing tokens in database...');
+    const { error: dbError } = await supabaseClient
       .from('platform_tokens')
       .upsert({
         user_id: userId,
@@ -91,6 +110,13 @@ serve(async (req) => {
         onConflict: 'user_id,platform'
       });
 
+    if (dbError) {
+      console.error('❌ Database error:', dbError);
+      throw new Error('Failed to store tokens: ' + dbError.message);
+    }
+
+    console.log('✅ Tokens stored successfully');
+
     // Return success page that closes the popup
     return new Response(`
       <html>
@@ -98,84 +124,76 @@ serve(async (req) => {
           <title>Connection Successful</title>
           <style>
             body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              padding: 50px;
-              background: #f8f9fa;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
               margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              text-align: center;
             }
-            .success {
-              color: #28a745;
-              font-size: 24px;
-              margin-bottom: 16px;
+            .container {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              padding: 2rem;
+              border-radius: 15px;
+              box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             }
-            .message {
-              color: #666;
-              font-size: 16px;
-            }
+            .success { color: #4caf50; font-size: 3rem; margin-bottom: 1rem; }
+            .title { font-size: 1.5rem; margin-bottom: 0.5rem; }
+            .description { opacity: 0.8; margin-bottom: 2rem; }
+            .loading { opacity: 0.6; }
           </style>
         </head>
         <body>
-          <div class="success">✅ התחברות הושלמה בהצלחה!</div>
-          <div class="message">החלון ייסגר אוטומטית...</div>
+          <div class="container">
+            <div class="success">✓</div>
+            <div class="title">החיבור הושלם בהצלחה!</div>
+            <div class="description">החלון יסגר בקרוב...</div>
+            <div class="loading">מעבד את הנתונים...</div>
+          </div>
           <script>
-            console.log('=== OAuth Callback Success ===');
+            console.log('=== OAuth Success Page ===');
             console.log('Platform:', '${platform}');
-            console.log('Sending postMessage to parent window...');
+            console.log('User ID:', '${userId}');
             
-            // Multiple attempts to send the message
-            function sendMessage() {
-              const message = {success: true, platform: '${platform}'};
-              console.log('Sending message:', message);
+            // Send success message multiple times to ensure delivery
+            function sendSuccessMessage() {
+              const message = {
+                success: true,
+                platform: '${platform}',
+                userId: '${userId}'
+              };
               
-              // Try window.opener first
+              console.log('📢 Sending success message:', message);
+              
               if (window.opener && !window.opener.closed) {
                 try {
                   window.opener.postMessage(message, '*');
-                  console.log('Message sent to opener');
+                  console.log('✅ Message sent to opener');
                 } catch (e) {
-                  console.log('Error sending to opener:', e);
+                  console.error('❌ Error sending to opener:', e);
                 }
               } else {
-                console.log('No opener window available');
-              }
-              
-              // Also try parent in case it's in an iframe
-              try {
-                if (window.parent && window.parent !== window) {
-                  window.parent.postMessage(message, '*');
-                  console.log('Message sent to parent');
-                }
-              } catch (e) {
-                console.log('Error sending to parent:', e);
-              }
-              
-              // Try to update the opener directly if possible
-              try {
-                if (window.opener && window.opener.location && window.opener.location.reload) {
-                  window.opener.location.reload();
-                  console.log('Reloaded opener window');
-                }
-              } catch (e) {
-                console.log('Could not reload opener:', e);
+                console.log('⚠️ No opener window found');
               }
             }
             
-            // Send immediately and multiple times
-            sendMessage();
-            setTimeout(sendMessage, 100);
-            setTimeout(sendMessage, 500);
-            setTimeout(sendMessage, 1000);
+            // Send message immediately and with delays
+            sendSuccessMessage();
+            setTimeout(sendSuccessMessage, 100);
+            setTimeout(sendSuccessMessage, 500);
+            setTimeout(sendSuccessMessage, 1000);
             
-            // Force close window
+            // Close window after delay
             setTimeout(() => {
-              console.log('Force closing window...');
+              console.log('🔒 Closing OAuth window');
               try {
                 window.close();
               } catch (e) {
                 console.log('Could not close window:', e);
-                // Try to hide the window content
-                document.body.innerHTML = '<div style="text-align:center;padding:50px;color:#28a745;font-size:18px;">✅ ההתחברות הושלמה!<br><small>אנא סגור חלון זה ידנית אם הוא לא נסגר אוטומטית</small></div>';
               }
             }, 2000);
           </script>
@@ -190,26 +208,58 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    console.error('❌ OAuth callback error:', error);
     
+    // Return error page
     return new Response(`
       <html>
         <head>
-          <title>שגיאה בהתחברות</title>
+          <title>Connection Failed</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              color: white;
+              text-align: center;
+            }
+            .container {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              padding: 2rem;
+              border-radius: 15px;
+              box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+            .error { color: #ff4444; font-size: 3rem; margin-bottom: 1rem; }
+            .title { font-size: 1.5rem; margin-bottom: 0.5rem; }
+            .description { opacity: 0.8; margin-bottom: 2rem; }
+            .error-details { font-size: 0.9rem; opacity: 0.7; }
+          </style>
         </head>
         <body>
-          <h2>שגיאה בהתחברות</h2>
-          <p>${error.message}</p>
+          <div class="container">
+            <div class="error">✗</div>
+            <div class="title">שגיאה בחיבור</div>
+            <div class="description">אירעה שגיאה בתהליך החיבור</div>
+            <div class="error-details">${error.message}</div>
+          </div>
           <script>
-            console.log('OAuth Error:', '${error.message}');
+            console.error('OAuth Error:', '${error.message}');
             if (window.opener) {
-              window.opener.postMessage({error: '${error.message}'}, '*');
+              window.opener.postMessage({
+                error: '${error.message}'
+              }, '*');
             }
-            setTimeout(() => window.close(), 3000);
+            setTimeout(() => window.close(), 5000);
           </script>
         </body>
       </html>
     `, {
+      status: 500,
       headers: { 
         'Content-Type': 'text/html',
         'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
@@ -220,9 +270,15 @@ serve(async (req) => {
 });
 
 async function exchangeGoogleCode(code: string) {
+  console.log('🔄 Exchanging Google code...');
+  
   const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/oauth-callback`;
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Google OAuth credentials not configured');
+  }
 
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -230,8 +286,8 @@ async function exchangeGoogleCode(code: string) {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      client_id: clientId!,
-      client_secret: clientSecret!,
+      client_id: clientId,
+      client_secret: clientSecret,
       code: code,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri,
@@ -239,33 +295,47 @@ async function exchangeGoogleCode(code: string) {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to exchange Google authorization code');
+    const errorText = await response.text();
+    console.error('❌ Google token exchange failed:', errorText);
+    throw new Error('Failed to exchange Google authorization code: ' + errorText);
   }
 
-  return await response.json();
+  const tokenData = await response.json();
+  console.log('✅ Google token exchange successful');
+  return tokenData;
 }
 
 async function exchangeFacebookCode(code: string) {
+  console.log('🔄 Exchanging Facebook code...');
+  
   const appId = Deno.env.get('FACEBOOK_APP_ID');
   const appSecret = Deno.env.get('FACEBOOK_APP_SECRET');
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/oauth-callback`;
 
-  const response = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+  if (!appId || !appSecret) {
+    throw new Error('Facebook OAuth credentials not configured');
+  }
+
+  const url = `https://graph.facebook.com/v18.0/oauth/access_token?` + 
+    `client_id=${appId}&` +
+    `client_secret=${appSecret}&` +
+    `code=${code}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: new URLSearchParams({
-      client_id: appId!,
-      client_secret: appSecret!,
-      code: code,
-      redirect_uri: redirectUri,
-    }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to exchange Facebook authorization code');
+    const errorText = await response.text();
+    console.error('❌ Facebook token exchange failed:', errorText);
+    throw new Error('Failed to exchange Facebook authorization code: ' + errorText);
   }
 
-  return await response.json();
+  const tokenData = await response.json();
+  console.log('✅ Facebook token exchange successful');
+  return tokenData;
 }
