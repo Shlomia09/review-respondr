@@ -426,49 +426,49 @@ const PlatformConnection = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" />
-          Platform Connections
+          חיבורי פלטפורמות
         </CardTitle>
         <CardDescription>
-          Connect your review platforms to automatically import and manage reviews
+          חבר את פלטפורמות הביקורת שלך לייבוא וניהול אוטומטי של ביקורות
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {platforms.map((platform) => (
-            <div key={platform.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                {platform.icon}
-                <div>
-                  <h3 className="font-medium">{platform.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
+            <div key={platform.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex-shrink-0">{platform.icon}</div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-medium truncate">{platform.name}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     {platform.connected ? (
                       <>
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Connected
+                          מחובר
                         </Badge>
                         {platform.lastSync && (
-                          <span className="text-xs text-muted-foreground">
-                            Last sync: {new Date(platform.lastSync).toLocaleDateString()}
+                          <span className="text-xs text-muted-foreground hidden sm:inline">
+                            סינכרון אחרון: {new Date(platform.lastSync).toLocaleDateString('he-IL')}
                           </span>
                         )}
                         {platform.reviewCount && (
                           <span className="text-xs text-muted-foreground">
-                            {platform.reviewCount} reviews
+                            {platform.reviewCount} ביקורות
                           </span>
                         )}
                       </>
                     ) : (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="text-xs">
                         <XCircle className="h-3 w-3 mr-1" />
-                        Not connected
+                        לא מחובר
                       </Badge>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {platform.connected ? (
                   <>
                     <Button
@@ -476,20 +476,23 @@ const PlatformConnection = () => {
                       size="sm"
                       onClick={() => handleSync(platform.id)}
                       disabled={syncing === platform.id}
+                      className="text-xs sm:text-sm"
                     >
                       {syncing === platform.id ? (
                         <RefreshCw className="h-4 w-4 animate-spin" />
                       ) : (
                         <RefreshCw className="h-4 w-4" />
                       )}
-                      Sync
+                      <span className="hidden sm:inline ml-1">סינכרון</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDisconnect(platform.id)}
+                      className="text-xs sm:text-sm"
                     >
-                      Disconnect
+                      <span className="hidden sm:inline">נתק</span>
+                      <span className="sm:hidden">✕</span>
                     </Button>
                   </>
                 ) : (
@@ -498,7 +501,7 @@ const PlatformConnection = () => {
                       <Button
                         onClick={() => handleOAuthConnect(platform.id)}
                         size="sm"
-                        className="bg-primary hover:bg-primary/90"
+                        className="text-xs sm:text-sm bg-primary hover:bg-primary/90"
                       >
                         <Globe className="h-4 w-4 mr-2" />
                         התחבר עם OAuth

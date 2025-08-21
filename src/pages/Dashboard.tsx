@@ -373,7 +373,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -382,10 +382,13 @@ const Dashboard = () => {
               <Logo />
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button variant="outline" size="sm" className="hidden sm:flex">
                 <Plus className="h-4 w-4 mr-2" />
                 Connect Platform
+              </Button>
+              <Button variant="outline" size="sm" className="sm:hidden">
+                <Plus className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
@@ -400,58 +403,58 @@ const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">סה"כ ביקורות</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
-                +2 from last week
+                +2 מהשבוע שעבר
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">דירוג ממוצע</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.avgRating.toFixed(1)}</div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.avgRating.toFixed(1)}</div>
               <p className="text-xs text-muted-foreground">
-                +0.2 from last week
+                +0.2 מהשבוע שעבר
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">שיעור תגובה</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.responseRate.toFixed(0)}%</div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.responseRate.toFixed(0)}%</div>
               <p className="text-xs text-muted-foreground">
-                +12% from last week
+                +12% מהשבוע שעבר
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sentiment</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">סנטימנט</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  {stats.positive} Positive
+              <div className="flex gap-1 sm:gap-2 flex-wrap">
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 badge-mobile text-xs">
+                  {stats.positive} חיובי
                 </Badge>
-                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                  {stats.negative} Negative
+                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 badge-mobile text-xs">
+                  {stats.negative} שלילי
                 </Badge>
               </div>
             </CardContent>

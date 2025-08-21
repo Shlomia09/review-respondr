@@ -337,13 +337,71 @@ async function fetchGoogleBusinesses(accessToken: string) {
     console.error('Token info check failed:', e);
   }
   
-  // Return mock data for now so user can continue testing
-  console.log('📝 Returning mock business data for testing...');
+  // Try the Google My Business API v4.9 (legacy but more stable)
+  try {
+    console.log('📞 Trying Google My Business API v4.9...');
+    const accountsResponse = await fetch('https://mybusiness.googleapis.com/v4/accounts', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📊 GMB API Response Status:', accountsResponse.status);
+    
+    if (accountsResponse.ok) {
+      const accountsData = await accountsResponse.json();
+      console.log('📊 GMB API Accounts:', JSON.stringify(accountsData, null, 2));
+      
+      const businesses = [];
+      
+      if (accountsData.accounts && accountsData.accounts.length > 0) {
+        for (const account of accountsData.accounts) {
+          // Get locations for each account
+          const locationsResponse = await fetch(`https://mybusiness.googleapis.com/v4/${account.name}/locations`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (locationsResponse.ok) {
+            const locationsData = await locationsResponse.json();
+            
+            if (locationsData.locations && locationsData.locations.length > 0) {
+              for (const location of locationsData.locations) {
+                businesses.push({
+                  id: location.name,
+                  name: location.locationName || location.name,
+                  address: location.address?.addressLines?.join(', ') || 'כתובת לא זמינה'
+                });
+              }
+            }
+          }
+        }
+      }
+      
+      if (businesses.length > 0) {
+        console.log(`✅ Found ${businesses.length} businesses via GMB API v4.9`);
+        return businesses;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error with GMB API v4.9:', error);
+  }
+  
+  // Return mock data for testing if no real businesses found
+  console.log('📝 No businesses found via APIs, returning mock data for testing...');
   return [
     {
       id: 'mock-business-1',
-      name: 'בדיקה - עסק לדוגמה',
+      name: 'בדיקה - עסק לדוגמה 1',
       address: 'כתובת לדוגמה, תל אביב'
+    },
+    {
+      id: 'mock-business-2',
+      name: 'בדיקה - עסק לדוגמה 2',
+      address: 'כתובת נוספת, חיפה'
     }
   ];
   

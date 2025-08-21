@@ -122,6 +122,8 @@ serve(async (req) => {
       <html>
         <head>
           <title>Connection Successful</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -130,80 +132,149 @@ serve(async (req) => {
               align-items: center;
               min-height: 100vh;
               margin: 0;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
               color: white;
               text-align: center;
+              direction: rtl;
             }
             .container {
-              background: rgba(255, 255, 255, 0.1);
+              background: rgba(255, 255, 255, 0.15);
               backdrop-filter: blur(10px);
-              padding: 2rem;
-              border-radius: 15px;
-              box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+              padding: 3rem;
+              border-radius: 20px;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+              max-width: 400px;
+              width: 90%;
             }
-            .success { color: #4caf50; font-size: 3rem; margin-bottom: 1rem; }
-            .title { font-size: 1.5rem; margin-bottom: 0.5rem; }
-            .description { opacity: 0.8; margin-bottom: 2rem; }
-            .loading { opacity: 0.6; }
+            .success { 
+              color: #10f5a8; 
+              font-size: 4rem; 
+              margin-bottom: 1rem;
+              animation: bounce 1s ease-in-out;
+            }
+            .title { 
+              font-size: 1.75rem; 
+              margin-bottom: 0.75rem; 
+              font-weight: 600;
+            }
+            .description { 
+              opacity: 0.9; 
+              margin-bottom: 2rem; 
+              font-size: 1.1rem;
+              line-height: 1.5;
+            }
+            .loading { 
+              opacity: 0.7;
+              font-size: 0.95rem;
+              animation: pulse 2s ease-in-out infinite;
+            }
+            .progress-bar {
+              width: 100%;
+              height: 4px;
+              background: rgba(255, 255, 255, 0.2);
+              border-radius: 2px;
+              overflow: hidden;
+              margin-top: 1rem;
+            }
+            .progress-fill {
+              height: 100%;
+              background: #10f5a8;
+              width: 0%;
+              animation: progress 3s ease-out forwards;
+            }
+            @keyframes bounce {
+              0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+              40% { transform: translateY(-10px); }
+              60% { transform: translateY(-5px); }
+            }
+            @keyframes pulse {
+              0%, 100% { opacity: 0.7; }
+              50% { opacity: 1; }
+            }
+            @keyframes progress {
+              0% { width: 0%; }
+              100% { width: 100%; }
+            }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="success">✓</div>
             <div class="title">החיבור הושלם בהצלחה!</div>
-            <div class="description">החלון יסגר בקרוב...</div>
-            <div class="loading">מעבד את הנתונים...</div>
+            <div class="description">
+              הפלטפורמה חוברה למערכת.<br>
+              כעת תוכל לבחור את העסק שלך.
+            </div>
+            <div class="loading">מעבד את המידע...</div>
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
           </div>
           <script>
             console.log('=== OAuth Success Page ===');
             console.log('Platform:', '${platform}');
             console.log('User ID:', '${userId}');
             
-            // Send success message multiple times to ensure delivery
+            // Enhanced message sending with better error handling
             function sendSuccessMessage() {
               const message = {
                 success: true,
                 platform: '${platform}',
-                userId: '${userId}'
+                userId: '${userId}',
+                timestamp: Date.now()
               };
               
               console.log('📢 Sending success message:', message);
               
-              if (window.opener && !window.opener.closed) {
-                try {
+              try {
+                // Try multiple methods to communicate success
+                if (window.opener && !window.opener.closed) {
                   window.opener.postMessage(message, '*');
-                  console.log('✅ Message sent to opener');
-                } catch (e) {
-                  console.error('❌ Error sending to opener:', e);
+                  console.log('✅ Message sent to opener window');
+                  
+                  // Also try to focus the parent window
+                  window.opener.focus();
                 }
-              } else {
-                console.log('⚠️ No opener window found');
+                
+                if (window.parent && window.parent !== window) {
+                  window.parent.postMessage(message, '*');
+                  console.log('✅ Message sent to parent window');
+                }
+                
+              } catch (e) {
+                console.error('❌ Error sending messages:', e);
               }
             }
             
-            // Send message immediately and with delays
+            // Send message multiple times to ensure delivery
             sendSuccessMessage();
-            setTimeout(sendSuccessMessage, 100);
+            setTimeout(sendSuccessMessage, 200);
             setTimeout(sendSuccessMessage, 500);
             setTimeout(sendSuccessMessage, 1000);
+            setTimeout(sendSuccessMessage, 2000);
             
-            // Close window after delay
+            // Close window after showing progress
             setTimeout(() => {
-              console.log('🔒 Closing OAuth window');
+              console.log('🔒 Closing OAuth popup window');
               try {
+                if (window.opener) {
+                  window.opener.focus();
+                }
                 window.close();
               } catch (e) {
-                console.log('Could not close window:', e);
+                console.log('Could not close window, user will need to close manually:', e);
+                document.querySelector('.loading').textContent = 'ניתן לסגור את החלון';
               }
-            }, 2000);
+            }, 3500);
           </script>
         </body>
       </html>
     `, {
       headers: { 
-        'Content-Type': 'text/html',
+        'Content-Type': 'text/html; charset=utf-8',
         'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
-        'X-Frame-Options': 'SAMEORIGIN'
+        'X-Frame-Options': 'SAMEORIGIN',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       }
     });
 
