@@ -109,11 +109,19 @@ const PlatformConnection = () => {
   const handleSync = async (platformId: string) => {
     setSyncing(platformId);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'sync',
           platform: platformId
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -147,13 +155,22 @@ const PlatformConnection = () => {
     console.log('🚀 Starting OAuth connection for:', platform);
     
     try {
+      // Get user session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       // Get OAuth URL from edge function
       console.log('📞 Calling sync-reviews for OAuth URL...');
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'get_oauth_url',
           platform: platform
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) {
@@ -237,11 +254,17 @@ const PlatformConnection = () => {
         console.log('🔄 Checking OAuth completion...');
         
         try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+
           const { data } = await supabase.functions.invoke('sync-reviews', {
             body: { 
               action: 'check_connection',
               platform: platform
-            }
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
           });
 
           if (data?.connected) {
@@ -286,11 +309,20 @@ const PlatformConnection = () => {
   const fetchBusinessesForSelection = async (platformId: string) => {
     try {
       console.log('🏢 Fetching businesses for platform:', platformId);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'get_businesses',
           platform: platformId
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -319,12 +351,21 @@ const PlatformConnection = () => {
   const selectBusiness = async (businessId: string, businessName: string) => {
     try {
       console.log('🎯 Selecting business:', businessId, 'for platform:', showBusinessSelect?.platform);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const { error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'select_business',
           platform: showBusinessSelect?.platform,
           businessId: businessId
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -358,11 +399,20 @@ const PlatformConnection = () => {
   const checkConnectionStatus = async (platformId: string) => {
     console.log('🔍 Checking connection status for:', platformId);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No session available for connection check');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'check_connection',
           platform: platformId
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -393,11 +443,19 @@ const PlatformConnection = () => {
 
   const handleDisconnect = async (platformId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const { error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'disconnect',
           platform: platformId
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
