@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import revaiLogo from "../assets/revai-logo.png";
 
 interface LogoProps {
   className?: string;
@@ -14,7 +15,7 @@ const Logo = ({ className, size = "md" }: LogoProps) => {
 
   return (
     <img
-      src="/lovable-uploads/d6e80b55-f0ad-419d-96cf-5294de06a77a.png"
+      src={revaiLogo}
       alt="RevAI Logo"
       className={cn(sizeClasses[size], className)}
     />

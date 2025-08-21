@@ -380,7 +380,6 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <Logo />
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <Button variant="outline" size="sm" className="hidden sm:flex">

@@ -500,6 +500,13 @@ async function fetchGoogleBusinessProfileAPI(accessToken: string) {
     if (!locationsResponse.ok) {
       const errorText = await locationsResponse.text();
       console.error('❌ Business Profile API error:', errorText);
+      
+      // Check if this is a quota issue
+      if (locationsResponse.status === 429) {
+        console.log('⚠️ Google API quota exceeded - this is normal during development');
+        throw new Error('Google API quota exceeded. This is a temporary limitation during development. Please try again later or contact support for production quota increase.');
+      }
+      
       console.log('🔄 Trying fallback method...');
       return await fetchGoogleBusinessesOldAPI(accessToken);
     }

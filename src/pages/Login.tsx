@@ -75,7 +75,6 @@ const Login = () => {
               <Logo size="lg" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             AI-powered review management for your business
           </p>
