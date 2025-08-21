@@ -90,11 +90,16 @@ async function getOAuthUrl(platform: string, userId: string) {
   
   switch (platform) {
     case 'google':
+      console.log('🔍 Checking for Google credentials in environment...');
+      const allEnvVars = Object.keys(Deno.env.toObject());
+      console.log('🔍 Available env vars starting with GOOGLE:', allEnvVars.filter(key => key.startsWith('GOOGLE')));
+      
       const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID')
         || Deno.env.get('GOOGLE_OAUTH_CLIENT_ID')
         || Deno.env.get('GOOGLE_WEB_CLIENT_ID');
       if (!googleClientId) {
-        console.error('❌ Google Client ID not found in environment (checked GOOGLE_CLIENT_ID, GOOGLE_OAUTH_CLIENT_ID, GOOGLE_WEB_CLIENT_ID)');
+        console.error('❌ Google Client ID not found in any expected environment variable');
+        console.error('Available GOOGLE env vars:', allEnvVars.filter(key => key.startsWith('GOOGLE')));
         throw new Error('Google Client ID not configured');
       }
       
