@@ -22,34 +22,60 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('🔄 Signup attempt with email:', email);
+    console.log('🏢 Business name:', businessName);
+
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             business_name: businessName,
           },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         },
       });
 
+      console.log('📊 Signup result:', { data, error });
+
       if (error) {
+        console.error('❌ Signup error:', error);
         toast({
           title: "Signup Failed",
-          description: error.message,
+          description: `${error.message} (Code: ${error.status || 'Unknown'})`,
           variant: "destructive",
         });
+      } else if (data.user) {
+        console.log('✅ Signup successful for user:', data.user.id);
+        console.log('📧 Email confirmation needed:', !data.session);
+        
+        if (data.session) {
+          toast({
+            title: "Account Created!",
+            description: "You are now logged in.",
+          });
+          navigate("/dashboard");
+        } else {
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to verify your account.",
+          });
+          navigate("/login");
+        }
       } else {
+        console.warn('⚠️ Signup completed but no user data received');
         toast({
-          title: "Account Created!",
-          description: "Please check your email to verify your account.",
+          title: "Signup Issue", 
+          description: "Signup completed but no user data received",
+          variant: "destructive",
         });
-        navigate("/login");
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('💥 Unexpected signup error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: `Unexpected error: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {

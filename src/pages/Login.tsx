@@ -21,29 +21,43 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('🔄 Login attempt with email:', email);
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('📊 Login result:', { data, error });
+
       if (error) {
+        console.error('❌ Login error:', error);
         toast({
           title: "Login Failed",
-          description: error.message,
+          description: `${error.message} (Code: ${error.status || 'Unknown'})`,
           variant: "destructive",
         });
-      } else {
+      } else if (data.user) {
+        console.log('✅ Login successful for user:', data.user.id);
         toast({
           title: "Welcome back!",
           description: "Successfully logged in.",
         });
         navigate("/dashboard");
+      } else {
+        console.warn('⚠️ Login completed but no user data received');
+        toast({
+          title: "Login Issue",
+          description: "Login completed but no user data received",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('💥 Unexpected login error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: `Unexpected error: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
