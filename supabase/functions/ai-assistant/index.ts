@@ -105,6 +105,7 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   - אל תמציא פרטים שלא קיימים בביקורת
   - שלב את ההוראות המיוחדות באופן טבעי
   - התאם את התגובה לסוג העסק הספציפי
+  - **חשוב מאוד**: סיים תמיד את התגובה עם "בברכה, ${businessInfo.business_name ? `צוות ${businessInfo.business_name}` : 'צוות העסק'}"
   
   פלטפורמה: ${platform}
   דירוג: ${rating}/5`;
