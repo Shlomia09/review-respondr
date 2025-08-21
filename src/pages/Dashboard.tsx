@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ReviewCard from "@/components/ReviewCard";
 import PlatformConnection from "@/components/PlatformConnection";
+import { BusinessSetupModal } from "@/components/BusinessSetupModal";
+import { ManualResponseModal } from "@/components/ManualResponseModal";
+import { AIInstructionsModal } from "@/components/AIInstructionsModal";
 import { 
   Star, 
   TrendingUp, 
@@ -35,6 +38,8 @@ interface DatabaseReview {
   content: string;
   sentiment: 'positive' | 'negative' | 'neutral';
   ai_response?: string;
+  manual_response?: string;
+  ai_instructions?: string;
   response_status: 'pending' | 'generated' | 'approved' | 'sent';
   review_date: string;
   created_at: string;
@@ -50,6 +55,8 @@ interface Review {
   platform: string;
   review_date: string;
   ai_response?: string;
+  manual_response?: string;
+  ai_instructions?: string;
   response_status: 'pending' | 'generating' | 'generated' | 'approved' | 'sent';
 }
 
@@ -63,6 +70,14 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("new");
   const [generatingResponses, setGeneratingResponses] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  
+  // Modal states
+  const [showBusinessSetup, setShowBusinessSetup] = useState(false);
+  const [showManualResponse, setShowManualResponse] = useState(false);
+  const [showAIInstructions, setShowAIInstructions] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [hasBusinessProfile, setHasBusinessProfile] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -73,12 +88,39 @@ const Dashboard = () => {
         navigate("/login");
       } else {
         setUser(user);
-        await fetchReviews();
+        await Promise.all([
+          fetchReviews(),
+          checkBusinessProfile(user.id)
+        ]);
       }
       setLoading(false);
     };
     getUser();
   }, [navigate]);
+
+  const checkBusinessProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('business_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking business profile:', error);
+        return;
+      }
+
+      setHasBusinessProfile(!!data);
+      
+      // Show setup modal if no profile exists
+      if (!data) {
+        setShowBusinessSetup(true);
+      }
+    } catch (error) {
+      console.error('Error checking business profile:', error);
+    }
+  };
 
   const fetchReviews = async () => {
     const { data, error } = await supabase
@@ -103,6 +145,8 @@ const Dashboard = () => {
         platform: dbReview.platform,
         review_date: dbReview.review_date,
         ai_response: dbReview.ai_response,
+        manual_response: dbReview.manual_response,
+        ai_instructions: dbReview.ai_instructions,
         response_status: dbReview.response_status || 'pending'
       }));
       setReviews(transformedReviews);
@@ -150,7 +194,7 @@ const Dashboard = () => {
     const negative = reviews.filter(r => r.sentiment === "negative").length;
     const neutral = reviews.filter(r => r.sentiment === "neutral").length;
     const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
-    const responseRate = total > 0 ? (reviews.filter(r => r.ai_response).length / total) * 100 : 0;
+    const responseRate = total > 0 ? (reviews.filter(r => r.ai_response || r.manual_response).length / total) * 100 : 0;
     
     // Stats by tab
     const newReviews = reviews.filter(r => r.response_status === 'pending').length;
@@ -184,7 +228,8 @@ const Dashboard = () => {
           customerName: review.customer_name,
           rating: review.rating,
           platform: review.platform,
-          businessType: 'עסק כללי'
+          businessType: 'עסק כללי',
+          aiInstructions: review.ai_instructions
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -290,6 +335,25 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error sending response:', error);
     }
+  };
+
+  const handleManualResponse = (review: Review) => {
+    setSelectedReview(review);
+    setShowManualResponse(true);
+  };
+
+  const handleAIInstructions = (review: Review) => {
+    setSelectedReview(review);
+    setShowAIInstructions(true);
+  };
+
+  const handleAIInstructionsComplete = async (reviewId: string) => {
+    // After saving instructions, generate AI response
+    await handleGenerateResponse(reviewId);
+  };
+
+  const handleBusinessSetupComplete = () => {
+    setHasBusinessProfile(true);
   };
 
   if (loading) {
@@ -493,6 +557,8 @@ const Dashboard = () => {
                     onGenerateResponse={handleGenerateResponse}
                     onApproveResponse={handleApproveResponse}
                     onSendResponse={handleSendResponse}
+                    onManualResponse={handleManualResponse}
+                    onAIInstructions={handleAIInstructions}
                     isGenerating={generatingResponses.has(review.id)}
                   />
                 ))
@@ -522,6 +588,8 @@ const Dashboard = () => {
                     onGenerateResponse={handleGenerateResponse}
                     onApproveResponse={handleApproveResponse}
                     onSendResponse={handleSendResponse}
+                    onManualResponse={handleManualResponse}
+                    onAIInstructions={handleAIInstructions}
                     isGenerating={generatingResponses.has(review.id)}
                   />
                 ))
@@ -551,6 +619,8 @@ const Dashboard = () => {
                     onGenerateResponse={handleGenerateResponse}
                     onApproveResponse={handleApproveResponse}
                     onSendResponse={handleSendResponse}
+                    onManualResponse={handleManualResponse}
+                    onAIInstructions={handleAIInstructions}
                     isGenerating={generatingResponses.has(review.id)}
                   />
                 ))
@@ -558,6 +628,27 @@ const Dashboard = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Modals */}
+        <BusinessSetupModal
+          isOpen={showBusinessSetup}
+          onClose={() => setShowBusinessSetup(false)}
+          onComplete={handleBusinessSetupComplete}
+        />
+        
+        <ManualResponseModal
+          isOpen={showManualResponse}
+          onClose={() => setShowManualResponse(false)}
+          review={selectedReview}
+          onSuccess={fetchReviews}
+        />
+        
+        <AIInstructionsModal
+          isOpen={showAIInstructions}
+          onClose={() => setShowAIInstructions(false)}
+          review={selectedReview}
+          onSuccess={handleAIInstructionsComplete}
+        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MessageSquare, Check, Clock, Send, Sparkles } from "lucide-react";
+import { Star, MessageSquare, Check, Clock, Send, Sparkles, Edit, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Review {
@@ -13,6 +13,8 @@ interface Review {
   platform: string;
   review_date: string;
   ai_response?: string;
+  manual_response?: string;
+  ai_instructions?: string;
   response_status: 'pending' | 'generating' | 'generated' | 'approved' | 'sent';
 }
 
@@ -21,6 +23,8 @@ interface ReviewCardProps {
   onGenerateResponse?: (reviewId: string) => void;
   onApproveResponse?: (reviewId: string) => void;
   onSendResponse?: (reviewId: string) => void;
+  onManualResponse?: (review: Review) => void;
+  onAIInstructions?: (review: Review) => void;
   isGenerating?: boolean;
 }
 
@@ -29,6 +33,8 @@ const ReviewCard = ({
   onGenerateResponse, 
   onApproveResponse, 
   onSendResponse,
+  onManualResponse,
+  onAIInstructions,
   isGenerating = false
 }: ReviewCardProps) => {
   const getSentimentColor = (sentiment: string) => {
@@ -121,40 +127,73 @@ const ReviewCard = ({
           </p>
         </div>
 
-        {review.ai_response && (
+        {(review.ai_response || review.manual_response) && (
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                תגובת AI
+                {review.manual_response ? "תגובה ידנית" : "תגובת AI"}
               </span>
+              {review.ai_instructions && (
+                <Badge variant="secondary" className="text-xs">
+                  עם הוראות מיוחדות
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed text-right">
-              {review.ai_response}
+              {review.manual_response || review.ai_response}
             </p>
           </div>
         )}
 
         <div className="flex flex-wrap gap-2">
-          {(review.response_status === 'pending' || review.response_status === 'generating') && onGenerateResponse && (
-            <Button
-              size="sm"
-              onClick={() => onGenerateResponse(review.id)}
-              className="flex items-center gap-1"
-              disabled={isGenerating || review.response_status === 'generating'}
-            >
-              {(isGenerating || review.response_status === 'generating') ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  מייצר תגובה...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3 w-3" />
-                  צור תגובת AI
-                </>
+          {review.response_status === 'pending' && (
+            <>
+              {onGenerateResponse && (
+                <Button
+                  size="sm"
+                  onClick={() => onGenerateResponse(review.id)}
+                  className="flex items-center gap-1"
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      מייצר תגובה...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3" />
+                      צור תגובת AI
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+
+              {onAIInstructions && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onAIInstructions(review)}
+                  className="flex items-center gap-1"
+                >
+                  <Settings className="h-3 w-3" />
+                  AI עם הוראות
+                </Button>
+              )}
+
+              {onManualResponse && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onManualResponse(review)}
+                  className="flex items-center gap-1"
+                >
+                  <Edit className="h-3 w-3" />
+                  תגובה ידנית
+                </Button>
+              )}
+            </>
           )}
           
           {review.response_status === 'generated' && onApproveResponse && (

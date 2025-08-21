@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_profiles: {
+        Row: {
+          business_description: string | null
+          business_name: string
+          business_tone: string | null
+          business_type: string
+          created_at: string
+          id: string
+          special_instructions: string | null
+          target_audience: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_description?: string | null
+          business_name: string
+          business_tone?: string | null
+          business_type: string
+          created_at?: string
+          id?: string
+          special_instructions?: string | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_description?: string | null
+          business_name?: string
+          business_tone?: string | null
+          business_type?: string
+          created_at?: string
+          id?: string
+          special_instructions?: string | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_tokens: {
         Row: {
           access_token: string
@@ -52,12 +91,14 @@ export type Database = {
       }
       reviews: {
         Row: {
+          ai_instructions: string | null
           ai_response: string | null
           content: string
           created_at: string
           customer_email: string | null
           customer_name: string
           id: string
+          manual_response: string | null
           platform: string
           rating: number
           response_status: string
@@ -67,12 +108,14 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          ai_instructions?: string | null
           ai_response?: string | null
           content: string
           created_at?: string
           customer_email?: string | null
           customer_name: string
           id?: string
+          manual_response?: string | null
           platform: string
           rating: number
           response_status?: string
@@ -82,12 +125,14 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          ai_instructions?: string | null
           ai_response?: string | null
           content?: string
           created_at?: string
           customer_email?: string | null
           customer_name?: string
           id?: string
+          manual_response?: string | null
           platform?: string
           rating?: number
           response_status?: string

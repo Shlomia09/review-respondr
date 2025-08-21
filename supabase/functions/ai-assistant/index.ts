@@ -63,8 +63,39 @@ serve(async (req) => {
 async function generateAIResponse(reviewId: string, reviewContent: string, customerName: string, rating: number, platform: string, businessType: string, userId: string, supabase: any) {
   console.log(`🤖 Generating AI response for review: ${reviewId}`);
   
+  // Get business profile and any specific instructions
+  const { data: businessProfile } = await supabase
+    .from('business_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  // Get review-specific instructions
+  const { data: reviewData } = await supabase
+    .from('reviews')
+    .select('ai_instructions')
+    .eq('id', reviewId)
+    .single();
+
+  const businessInfo = businessProfile || {};
+  const specificInstructions = reviewData?.ai_instructions || '';
+
+  console.log('📋 Business Profile:', businessInfo);
+  console.log('📝 Specific Instructions:', specificInstructions);
+
   const systemPrompt = `אתה מומחה בשירות לקוחות ומגיב על ביקורות לקוחות בעברית. 
   המטרה שלך היא ליצור תגובות מקצועיות, אישיות ובונות.
+  
+  פרטי העסק:
+  - שם העסק: ${businessInfo.business_name || 'לא צוין'}
+  - סוג העסק: ${businessInfo.business_type || businessType || 'עסק כללי'}
+  - תיאור העסק: ${businessInfo.business_description || 'לא צוין'}
+  - קהל היעד: ${businessInfo.target_audience || 'כללי'}
+  - טון התגובות: ${businessInfo.business_tone || 'מקצועי'}
+  - הוראות כלליות: ${businessInfo.special_instructions || 'אין'}
+  
+  הוראות מיוחדות לביקורת הזו:
+  ${specificInstructions || 'אין הוראות מיוחדות'}
   
   כללים חשובים:
   - תמיד כתוב בעברית
@@ -75,15 +106,16 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   - התאם את הטון לפלטפורמה (גוגל/פייסבוק)
   - שמור על אורך של 2-3 משפטים מקסימום
   - אל תמציא פרטים שלא קיימים בביקורת
+  - שלב את ההוראות המיוחדות באופן טבעי
+  - התאם את התגובה לסוג העסק הספציפי
   
-  סוג העסק: ${businessType || 'עסק כללי'}
   פלטפורמה: ${platform}
   דירוג: ${rating}/5`;
 
   const userPrompt = `שם הלקוח: ${customerName}
   הביקורת: "${reviewContent}"
   
-  אנא כתב תגובה מקצועית ואישית לביקורת זו.`;
+  אנא כתב תגובה מקצועית ואישית לביקורת זו המתאימה לעסק שלי ולהוראות שקיבלת.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
