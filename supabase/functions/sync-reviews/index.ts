@@ -98,11 +98,15 @@ async function getOAuthUrl(platform: string, userId: string) {
       
       console.log('🔑 Google Client ID found');
       
-      // Updated scopes for Google Business Profile API
+      // Updated scopes for Google Business Profile API (expanded for compatibility)
       const scopes = [
-        'https://www.googleapis.com/auth/business.manage'
+        'https://www.googleapis.com/auth/business.manage',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'openid',
+        // Legacy scope for some accounts/projects
+        'https://www.googleapis.com/auth/plus.business.manage'
       ].join(' ');
-      
       
       oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${googleClientId}&` +
