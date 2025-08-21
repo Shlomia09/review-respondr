@@ -352,6 +352,11 @@ const Dashboard = () => {
     await handleGenerateResponse(reviewId);
   };
 
+  const handleRegenerateResponse = async (reviewId: string) => {
+    // Same logic as generating response - regenerate the AI response
+    await handleGenerateResponse(reviewId);
+  };
+
   const handleBusinessSetupComplete = () => {
     setHasBusinessProfile(true);
   };
@@ -559,6 +564,7 @@ const Dashboard = () => {
                     onSendResponse={handleSendResponse}
                     onManualResponse={handleManualResponse}
                     onAIInstructions={handleAIInstructions}
+                    onRegenerateResponse={handleRegenerateResponse}
                     isGenerating={generatingResponses.has(review.id)}
                   />
                 ))
@@ -590,6 +596,7 @@ const Dashboard = () => {
                     onSendResponse={handleSendResponse}
                     onManualResponse={handleManualResponse}
                     onAIInstructions={handleAIInstructions}
+                    onRegenerateResponse={handleRegenerateResponse}
                     isGenerating={generatingResponses.has(review.id)}
                   />
                 ))
@@ -621,6 +628,7 @@ const Dashboard = () => {
                     onSendResponse={handleSendResponse}
                     onManualResponse={handleManualResponse}
                     onAIInstructions={handleAIInstructions}
+                    onRegenerateResponse={handleRegenerateResponse}
                     isGenerating={generatingResponses.has(review.id)}
                   />
                 ))

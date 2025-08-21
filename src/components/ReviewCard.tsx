@@ -25,6 +25,7 @@ interface ReviewCardProps {
   onSendResponse?: (reviewId: string) => void;
   onManualResponse?: (review: Review) => void;
   onAIInstructions?: (review: Review) => void;
+  onRegenerateResponse?: (reviewId: string) => void;
   isGenerating?: boolean;
 }
 
@@ -35,6 +36,7 @@ const ReviewCard = ({
   onSendResponse,
   onManualResponse,
   onAIInstructions,
+  onRegenerateResponse,
   isGenerating = false
 }: ReviewCardProps) => {
   const getSentimentColor = (sentiment: string) => {
@@ -198,15 +200,39 @@ const ReviewCard = ({
           )}
           
           {review.response_status === 'generated' && onApproveResponse && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onApproveResponse(review.id)}
-              className="flex items-center gap-1"
-            >
-              <Check className="h-3 w-3" />
-              אשר תגובה
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onApproveResponse(review.id)}
+                className="flex items-center gap-1"
+              >
+                <Check className="h-3 w-3" />
+                אשר תגובה
+              </Button>
+              
+              {onRegenerateResponse && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onRegenerateResponse(review.id)}
+                  className="flex items-center gap-1"
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      מייצר...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3" />
+                      צור תגובה חדשה
+                    </>
+                  )}
+                </Button>
+              )}
+            </>
           )}
           
           {review.response_status === 'approved' && onSendResponse && (
