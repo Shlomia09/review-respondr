@@ -39,17 +39,14 @@ interface DatabaseReview {
 
 interface Review {
   id: string;
-  reviewer_name: string;
+  customer_name: string;
   rating: number;
-  review_text: string;
+  content: string;
   sentiment: "positive" | "neutral" | "negative";
   platform: string;
   review_date: string;
-  ai_response?: {
-    generated_response: string;
-    is_approved: boolean;
-    is_sent: boolean;
-  };
+  ai_response?: string;
+  response_status: 'pending' | 'generating' | 'generated' | 'approved' | 'sent';
 }
 
 const Dashboard = () => {
@@ -59,6 +56,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sentimentFilter, setSentimentFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [generatingResponses, setGeneratingResponses] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -93,17 +91,14 @@ const Dashboard = () => {
       // Transform database reviews to match ReviewCard interface
       const transformedReviews: Review[] = (data || []).map((dbReview: any) => ({
         id: dbReview.id,
-        reviewer_name: dbReview.customer_name,
+        customer_name: dbReview.customer_name,
         rating: dbReview.rating,
-        review_text: dbReview.content,
+        content: dbReview.content,
         sentiment: dbReview.sentiment,
         platform: dbReview.platform,
         review_date: dbReview.review_date,
-        ai_response: dbReview.ai_response ? {
-          generated_response: dbReview.ai_response,
-          is_approved: dbReview.response_status === 'approved' || dbReview.response_status === 'sent',
-          is_sent: dbReview.response_status === 'sent'
-        } : undefined
+        ai_response: dbReview.ai_response,
+        response_status: dbReview.response_status || 'pending'
       }));
       setReviews(transformedReviews);
     }
@@ -114,8 +109,8 @@ const Dashboard = () => {
     
     if (searchTerm) {
       filtered = filtered.filter(review => 
-        review.reviewer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        review.review_text.toLowerCase().includes(searchTerm.toLowerCase())
+        review.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        review.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -148,61 +143,140 @@ const Dashboard = () => {
 
   const stats = getStats();
 
-  const handleGenerateResponse = (reviewId: string) => {
-    toast({
-      title: "Generating AI Response",
-      description: "Creating a personalized response for this review...",
-    });
-    // TODO: Implement AI response generation
-  };
+  const handleGenerateResponse = async (reviewId: string) => {
+    const review = reviews.find(r => r.id === reviewId);
+    if (!review) return;
 
-  const handleApproveResponse = async (reviewId: string) => {
-    const { error } = await supabase
-      .from('reviews')
-      .update({ response_status: 'approved' })
-      .eq('id', reviewId);
+    setGeneratingResponses(prev => new Set([...prev, reviewId]));
 
-    if (error) {
+    try {
+      // Update review status to generating
+      const { error: statusError } = await supabase
+        .from('reviews')
+        .update({ response_status: 'generating' })
+        .eq('id', reviewId);
+
+      if (statusError) {
+        console.error('Error updating status:', statusError);
+        throw statusError;
+      }
+
+      // Refresh reviews to show generating status
+      await fetchReviews();
+
+      // Get user session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      // Call AI assistant function
+      const { data, error } = await supabase.functions.invoke('ai-assistant', {
+        body: {
+          action: 'generate_response',
+          reviewId: review.id,
+          reviewContent: review.content,
+          customerName: review.customer_name,
+          rating: review.rating,
+          platform: review.platform,
+          businessType: 'עסק כללי'
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Error generating response:', error);
+        throw error;
+      }
+
+      if (data?.success) {
+        toast({
+          title: "תגובת AI נוצרה בהצלחה",
+          description: "התגובה ממתינה לאישור",
+        });
+        await fetchReviews();
+      }
+
+    } catch (error) {
+      console.error('Error generating response:', error);
+      
+      // Reset status on error
+      await supabase
+        .from('reviews')
+        .update({ response_status: 'pending' })
+        .eq('id', reviewId);
+
       toast({
-        title: "Error",
-        description: "Failed to approve response",
+        title: "שגיאה",
+        description: "לא הצלחנו לייצר תגובת AI. נסה שוב.",
         variant: "destructive",
       });
-    } else {
-      setReviews(prev => prev.map(review => 
-        review.id === reviewId && review.ai_response
-          ? { ...review, ai_response: { ...review.ai_response, is_approved: true } }
-          : review
-      ));
-      toast({
-        title: "Response Approved",
-        description: "The AI response has been approved and is ready to send.",
+      
+      await fetchReviews();
+    } finally {
+      setGeneratingResponses(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reviewId);
+        return newSet;
       });
     }
   };
 
-  const handleSendResponse = async (reviewId: string) => {
-    const { error } = await supabase
-      .from('reviews')
-      .update({ response_status: 'sent' })
-      .eq('id', reviewId);
+  const handleApproveResponse = async (reviewId: string) => {
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .update({ response_status: 'approved' })
+        .eq('id', reviewId);
 
-    if (error) {
+      if (error) {
+        console.error('Error approving response:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא הצלחנו לאשר את התגובה",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
-        title: "Error",
-        description: "Failed to send response",
-        variant: "destructive",
+        title: "תגובה אושרה",
+        description: "התגובה אושרה בהצלחה",
       });
-    } else {
-      setReviews(prev => prev.map(review => 
-        review.id === reviewId && review.ai_response
-          ? { ...review, ai_response: { ...review.ai_response, is_sent: true } }
-          : review
-      ));
+      
+      await fetchReviews();
+    } catch (error) {
+      console.error('Error approving response:', error);
+    }
+  };
+
+  const handleSendResponse = async (reviewId: string) => {
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .update({ response_status: 'sent' })
+        .eq('id', reviewId);
+
+      if (error) {
+        console.error('Error sending response:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא הצלחנו לשלוח את התגובה",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
-        title: "Response Sent",
-        description: "Your response has been sent to the review platform.",
+        title: "תגובה נשלחה",
+        description: "התגובה נשלחה ללקוח בהצלחה",
       });
+      
+      await fetchReviews();
+    } catch (error) {
+      console.error('Error sending response:', error);
     }
   };
 
@@ -378,6 +452,7 @@ const Dashboard = () => {
                 onGenerateResponse={handleGenerateResponse}
                 onApproveResponse={handleApproveResponse}
                 onSendResponse={handleSendResponse}
+                isGenerating={generatingResponses.has(review.id)}
               />
             ))
           )}

@@ -1,38 +1,35 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MessageSquare, Check, Clock, Send } from "lucide-react";
+import { Star, MessageSquare, Check, Clock, Send, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Review {
   id: string;
-  reviewer_name: string;
+  customer_name: string;
   rating: number;
-  review_text: string;
+  content: string;
   sentiment: "positive" | "neutral" | "negative";
   platform: string;
   review_date: string;
-  ai_response?: {
-    generated_response: string;
-    is_approved: boolean;
-    is_sent: boolean;
-  };
+  ai_response?: string;
+  response_status: 'pending' | 'generating' | 'generated' | 'approved' | 'sent';
 }
 
 interface ReviewCardProps {
   review: Review;
   onGenerateResponse?: (reviewId: string) => void;
   onApproveResponse?: (reviewId: string) => void;
-  onEditResponse?: (reviewId: string) => void;
   onSendResponse?: (reviewId: string) => void;
+  isGenerating?: boolean;
 }
 
 const ReviewCard = ({ 
   review, 
   onGenerateResponse, 
   onApproveResponse, 
-  onEditResponse, 
-  onSendResponse 
+  onSendResponse,
+  isGenerating = false
 }: ReviewCardProps) => {
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -71,10 +68,18 @@ const ReviewCard = ({
   };
 
   const getResponseStatus = () => {
-    if (!review.ai_response) return null;
-    if (review.ai_response.is_sent) return { icon: Send, text: "Sent", color: "text-green-600" };
-    if (review.ai_response.is_approved) return { icon: Check, text: "Approved", color: "text-blue-600" };
-    return { icon: Clock, text: "Pending", color: "text-yellow-600" };
+    switch (review.response_status) {
+      case 'sent':
+        return { icon: Send, text: "נשלח", color: "text-green-600" };
+      case 'approved':
+        return { icon: Check, text: "אושר", color: "text-blue-600" };
+      case 'generated':
+        return { icon: Clock, text: "ממתין לאישור", color: "text-yellow-600" };
+      case 'generating':
+        return { icon: Clock, text: "מייצר...", color: "text-orange-600" };
+      default:
+        return null;
+    }
   };
 
   const responseStatus = getResponseStatus();
@@ -85,7 +90,7 @@ const ReviewCard = ({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-base">{review.reviewer_name}</h3>
+              <h3 className="font-semibold text-base">{review.customer_name}</h3>
               <Badge className={getPlatformColor(review.platform)} variant="secondary">
                 {review.platform}
               </Badge>
@@ -96,7 +101,7 @@ const ReviewCard = ({
             <div className="flex items-center gap-2 mb-2">
               <div className="flex">{renderStars(review.rating)}</div>
               <span className="text-sm text-muted-foreground">
-                {new Date(review.review_date).toLocaleDateString()}
+                {new Date(review.review_date).toLocaleDateString('he-IL')}
               </span>
             </div>
           </div>
@@ -111,8 +116,8 @@ const ReviewCard = ({
       
       <CardContent className="space-y-4">
         <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            "{review.review_text}"
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed text-right">
+            "{review.content}"
           </p>
         </div>
 
@@ -121,62 +126,58 @@ const ReviewCard = ({
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                AI Generated Response
+                תגובת AI
               </span>
             </div>
-            <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
-              {review.ai_response.generated_response}
+            <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed text-right">
+              {review.ai_response}
             </p>
           </div>
         )}
 
         <div className="flex flex-wrap gap-2">
-          {!review.ai_response && onGenerateResponse && (
+          {(review.response_status === 'pending' || review.response_status === 'generating') && onGenerateResponse && (
             <Button
               size="sm"
               onClick={() => onGenerateResponse(review.id)}
               className="flex items-center gap-1"
+              disabled={isGenerating || review.response_status === 'generating'}
             >
-              <MessageSquare className="h-3 w-3" />
-              Generate AI Response
+              {(isGenerating || review.response_status === 'generating') ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  מייצר תגובה...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3 w-3" />
+                  צור תגובת AI
+                </>
+              )}
             </Button>
           )}
           
-          {review.ai_response && !review.ai_response.is_sent && (
-            <>
-              {!review.ai_response.is_approved && onApproveResponse && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onApproveResponse(review.id)}
-                  className="flex items-center gap-1"
-                >
-                  <Check className="h-3 w-3" />
-                  Approve
-                </Button>
-              )}
-              
-              {onEditResponse && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onEditResponse(review.id)}
-                >
-                  Edit Response
-                </Button>
-              )}
-              
-              {review.ai_response.is_approved && onSendResponse && (
-                <Button
-                  size="sm"
-                  onClick={() => onSendResponse(review.id)}
-                  className="flex items-center gap-1"
-                >
-                  <Send className="h-3 w-3" />
-                  Send Response
-                </Button>
-              )}
-            </>
+          {review.response_status === 'generated' && onApproveResponse && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onApproveResponse(review.id)}
+              className="flex items-center gap-1"
+            >
+              <Check className="h-3 w-3" />
+              אשר תגובה
+            </Button>
+          )}
+          
+          {review.response_status === 'approved' && onSendResponse && (
+            <Button
+              size="sm"
+              onClick={() => onSendResponse(review.id)}
+              className="flex items-center gap-1"
+            >
+              <Send className="h-3 w-3" />
+              שלח תגובה
+            </Button>
           )}
         </div>
       </CardContent>
