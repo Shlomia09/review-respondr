@@ -118,6 +118,32 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   אנא כתב תגובה מקצועית ואישית לביקורת זו המתאימה לעסק שלי ולהוראות שקיבלת.`;
 
   try {
+    // Helper: fallback message if model returns empty
+    const buildFallbackResponse = () => {
+      const name = customerName || 'הלקוח/ה';
+      const bName = (businessInfo.business_name || '').trim();
+      const tone = (businessInfo.business_tone || 'מקצועי').toLowerCase();
+      const isPositive = Number(rating) >= 4;
+      const isNegative = Number(rating) <= 2;
+
+      const opener = isPositive
+        ? `תודה רבה, ${name}! שמחים מאוד שנהנית מהחוויה אצלנו${bName ? ' ב' + bName : ''}.`
+        : isNegative
+        ? `מצטערים לשמוע, ${name}. חשוב לנו לספק חוויה מצוינת בכל ביקור.`
+        : `תודה על המשוב, ${name}. דעתך חשובה לנו.`;
+
+      const follow = isNegative
+        ? `נשמח להבין יותר ולטפל בכך מיד. אפשר לפנות אלינו בהודעה פרטית או בטלפון, ונמצא פתרון מתאים.`
+        : `נשמח לראותך שוב בקרוב! אם יש עוד משהו שנוכל לשפר, נודה לשיתוף.`;
+
+      const extra = specificInstructions
+        ? ` (${specificInstructions})`
+        : '';
+
+      return `${opener} ${follow}${extra}`.trim();
+    };
+
+    // First attempt: GPT‑5 (recommended) with correct params
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -125,26 +151,61 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 300,
-        temperature: 0.7
+        max_completion_tokens: 300
       }),
     });
 
-    if (!response.ok) {
+    let aiResponse = '';
+
+    if (response.ok) {
+      const data = await response.json();
+      aiResponse = (data?.choices?.[0]?.message?.content || '').trim();
+    } else {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('OpenAI API error (gpt-5):', error);
     }
 
-    const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    // Second attempt: legacy model if first is empty
+    if (!aiResponse) {
+      console.log('⚠️ Empty response from gpt-5, retrying with gpt-4o-mini');
+      const response2 = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          max_tokens: 300,
+          temperature: 0.7
+        }),
+      });
 
-    console.log(`✅ Generated AI response: ${aiResponse ? aiResponse.substring(0, 100) : 'null'}...`);
+      if (response2.ok) {
+        const data2 = await response2.json();
+        aiResponse = (data2?.choices?.[0]?.message?.content || '').trim();
+      } else {
+        const error2 = await response2.text();
+        console.error('OpenAI API error (gpt-4o-mini):', error2);
+      }
+    }
+
+    // Final fallback: deterministic template
+    if (!aiResponse) {
+      aiResponse = buildFallbackResponse();
+      console.log('🧩 Using fallback response');
+    }
+
+    console.log(`✅ Generated AI response (preview): ${aiResponse.substring(0, 100)}...`);
 
     // Update the review with the AI response
     const { error: updateError } = await supabase
