@@ -20,6 +20,7 @@ import {
   Settings,
   Plus
 } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 interface DatabaseReview {
   id: string;
@@ -223,8 +224,8 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <Star className="h-8 w-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">ReviewAI Manager</h1>
+              <Logo />
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
             </div>
             <div className="flex items-center gap-4">
               <Button variant="outline" size="sm">

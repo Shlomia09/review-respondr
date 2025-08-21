@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, EyeOff, Star } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -62,11 +63,11 @@ const Signup = () => {
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg">
-              <Star className="h-8 w-8 text-blue-600" />
+            <div className="bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-lg">
+              <Logo size="lg" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ReviewAI Manager</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Start managing your reviews with AI today
           </p>

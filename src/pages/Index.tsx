@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, MessageSquare, TrendingUp, Zap, Globe, Shield } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -25,8 +26,8 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <Star className="h-8 w-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">ReviewAI Manager</h1>
+              <Logo />
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login">
@@ -248,11 +249,11 @@ const Index = () => {
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Star className="h-6 w-6" />
-            <span className="text-lg font-semibold">ReviewAI Manager</span>
+            <Logo size="sm" />
+            <span className="text-lg font-semibold">RevAI Manager</span>
           </div>
           <p className="text-gray-400">
-            © 2024 ReviewAI Manager. All rights reserved.
+            © 2024 RevAI Manager. All rights reserved.
           </p>
         </div>
       </footer>
