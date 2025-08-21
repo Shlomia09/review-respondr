@@ -7,14 +7,14 @@ interface LogoProps {
 
 const Logo = ({ className, size = "md" }: LogoProps) => {
   const sizeClasses = {
-    sm: "h-12 w-auto",
-    md: "h-16 w-auto", 
-    lg: "h-24 w-auto"
+    sm: "h-20 w-auto",
+    md: "h-28 w-auto", 
+    lg: "h-36 w-auto"
   };
 
   return (
     <img
-      src="/lovable-uploads/4691da96-9ac2-48b6-ad0f-d167c83ff374.png"
+      src="/lovable-uploads/2b66b53b-097c-41f2-b620-f18f499d7424.png"
       alt="RevAI Logo"
       className={cn(sizeClasses[size], className)}
     />
