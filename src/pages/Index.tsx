@@ -38,9 +38,8 @@ const Index = () => {
       <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <Logo />
-              {!isMobile && <h1 className="text-xl font-bold text-foreground ml-3">RevAI</h1>}
             </div>
             
             {/* Desktop Navigation */}
@@ -545,9 +544,8 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-card border-t border-border py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center mb-4">
             <Logo size="sm" />
-            <span className="text-lg font-semibold text-foreground">RevAI</span>
           </div>
           <p className="text-muted-foreground text-sm">
             © 2024 RevAI. כל הזכויות שמורות.
