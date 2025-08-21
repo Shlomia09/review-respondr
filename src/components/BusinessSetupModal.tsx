@@ -106,10 +106,10 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="business_name" className="text-right block">
+            <div className="space-y-2">
+              <Label htmlFor="business_name" className="text-right block text-sm font-medium">
                 שם העסק *
               </Label>
               <Input
@@ -122,8 +122,8 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
               />
             </div>
 
-            <div>
-              <Label htmlFor="business_type" className="text-right block">
+            <div className="space-y-2">
+              <Label htmlFor="business_type" className="text-right block text-sm font-medium">
                 סוג העסק *
               </Label>
               <Select 
@@ -144,8 +144,8 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="business_description" className="text-right block">
+          <div className="space-y-2">
+            <Label htmlFor="business_description" className="text-right block text-sm font-medium">
               תיאור העסק
             </Label>
             <Textarea
@@ -153,26 +153,26 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
               value={formData.business_description}
               onChange={(e) => setFormData(prev => ({ ...prev, business_description: e.target.value }))}
               placeholder="תאר בקצרה מה העסק מציע, מה המיוחד בו..."
-              className="text-right"
+              className="text-right resize-none"
               rows={3}
             />
           </div>
 
-          <div>
-            <Label htmlFor="target_audience" className="text-right block">
+          <div className="space-y-2">
+            <Label htmlFor="target_audience" className="text-right block text-sm font-medium">
               קהל היעד
             </Label>
             <Input
               id="target_audience"
               value={formData.target_audience}
               onChange={(e) => setFormData(prev => ({ ...prev, target_audience: e.target.value }))}
-              placeholder="למשל: משפחות עם ילדים, צעירים, אנשי עסקים..."
+              placeholder="משפחות עם ילדים, צעירים, אנשי עסקים..."
               className="text-right"
             />
           </div>
 
-          <div>
-            <Label htmlFor="business_tone" className="text-right block">
+          <div className="space-y-2">
+            <Label htmlFor="business_tone" className="text-right block text-sm font-medium">
               טון התגובות
             </Label>
             <Select 
@@ -192,18 +192,21 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="special_instructions" className="text-right block">
+          <div className="space-y-2">
+            <Label htmlFor="special_instructions" className="text-right block text-sm font-medium">
               הוראות מיוחדות למערכת
             </Label>
             <Textarea
               id="special_instructions"
               value={formData.special_instructions}
               onChange={(e) => setFormData(prev => ({ ...prev, special_instructions: e.target.value }))}
-              placeholder="הוראות נוספות למערכת AI על איך להגיב (למשל: תמיד להזכיר את המבצעים, להזמין לאירועים מיוחדים...)"
-              className="text-right"
+              placeholder="הוראות נוספות למערכת AI על איך להגיב..."
+              className="text-right resize-none"
               rows={3}
             />
+            <p className="text-xs text-muted-foreground text-right mt-1">
+              למשל: תמיד להזכיר את המבצעים, להזמין לאירועים מיוחדים
+            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
