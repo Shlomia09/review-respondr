@@ -111,7 +111,7 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log(`✅ Generated AI response: ${aiResponse.substring(0, 100)}...`);
+    console.log(`✅ Generated AI response: ${aiResponse ? aiResponse.substring(0, 100) : 'null'}...`);
 
     // Update the review with the AI response
     const { error: updateError } = await supabase
@@ -128,9 +128,12 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
       throw new Error('Failed to save AI response');
     }
 
+    console.log(`💾 Successfully saved AI response for review: ${reviewId}`);
+
     return new Response(JSON.stringify({ 
       success: true, 
-      ai_response: aiResponse 
+      ai_response: aiResponse,
+      reviewId: reviewId
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

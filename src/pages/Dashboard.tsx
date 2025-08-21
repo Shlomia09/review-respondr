@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ReviewCard from "@/components/ReviewCard";
@@ -18,7 +19,10 @@ import {
   BarChart3,
   LogOut,
   Settings,
-  Plus
+  Plus,
+  Clock,
+  CheckCircle,
+  Send
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
@@ -56,6 +60,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sentimentFilter, setSentimentFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("new");
   const [generatingResponses, setGeneratingResponses] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -107,6 +112,15 @@ const Dashboard = () => {
   useEffect(() => {
     let filtered = reviews;
     
+    // Filter by active tab first
+    if (activeTab === "new") {
+      filtered = filtered.filter(review => review.response_status === 'pending');
+    } else if (activeTab === "waiting") {
+      filtered = filtered.filter(review => review.response_status === 'generated');
+    } else if (activeTab === "processed") {
+      filtered = filtered.filter(review => ['approved', 'sent'].includes(review.response_status));
+    }
+    
     if (searchTerm) {
       filtered = filtered.filter(review => 
         review.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,7 +137,7 @@ const Dashboard = () => {
     }
     
     setFilteredReviews(filtered);
-  }, [reviews, searchTerm, sentimentFilter, platformFilter]);
+  }, [reviews, searchTerm, sentimentFilter, platformFilter, activeTab]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -138,7 +152,12 @@ const Dashboard = () => {
     const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
     const responseRate = total > 0 ? (reviews.filter(r => r.ai_response).length / total) * 100 : 0;
     
-    return { total, positive, negative, neutral, avgRating, responseRate };
+    // Stats by tab
+    const newReviews = reviews.filter(r => r.response_status === 'pending').length;
+    const waitingReviews = reviews.filter(r => r.response_status === 'generated').length;
+    const processedReviews = reviews.filter(r => ['approved', 'sent'].includes(r.response_status)).length;
+    
+    return { total, positive, negative, neutral, avgRating, responseRate, newReviews, waitingReviews, processedReviews };
   };
 
   const stats = getStats();
@@ -182,7 +201,20 @@ const Dashboard = () => {
           title: "תגובת AI נוצרה בהצלחה",
           description: "התגובה ממתינה לאישור",
         });
-        await fetchReviews();
+        
+        // Immediately update the local state to show the response
+        setReviews(prev => prev.map(r => 
+          r.id === reviewId 
+            ? { 
+                ...r, 
+                ai_response: data.ai_response, 
+                response_status: 'generated' as const
+              } 
+            : r
+        ));
+        
+        // Also fetch fresh data from server
+        setTimeout(() => fetchReviews(), 1000);
       }
 
     } catch (error) {
@@ -357,83 +389,172 @@ const Dashboard = () => {
         {/* Platform Connections */}
         <PlatformConnection />
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Reviews Dashboard
-            </CardTitle>
-            <CardDescription>
-              Monitor and respond to your online reviews across all platforms
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search reviews..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Sentiment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sentiments</SelectItem>
-                  <SelectItem value="positive">Positive</SelectItem>
-                  <SelectItem value="neutral">Neutral</SelectItem>
-                  <SelectItem value="negative">Negative</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Platforms</SelectItem>
-                  <SelectItem value="google">Google</SelectItem>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="trustpilot">Trustpilot</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Reviews Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="new" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              ביקורות חדשות
+              {stats.newReviews > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {stats.newReviews}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="waiting" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              מחכות לאישור
+              {stats.waitingReviews > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {stats.waitingReviews}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="processed" className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              תגובות מטופלות
+              {stats.processedReviews > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {stats.processedReviews}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Reviews List */}
-        <div className="space-y-6">
-          {filteredReviews.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No reviews found
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Try adjusting your filters or connect a new platform to start receiving reviews.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredReviews.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                onGenerateResponse={handleGenerateResponse}
-                onApproveResponse={handleApproveResponse}
-                onSendResponse={handleSendResponse}
-                isGenerating={generatingResponses.has(review.id)}
-              />
-            ))
-          )}
-        </div>
+          {/* Filters */}
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                סינון ביקורות
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="חיפוש ביקורות..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="סנטימנט" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הסנטימנטים</SelectItem>
+                    <SelectItem value="positive">חיובי</SelectItem>
+                    <SelectItem value="neutral">ניטרלי</SelectItem>
+                    <SelectItem value="negative">שלילי</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="פלטפורמה" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הפלטפורמות</SelectItem>
+                    <SelectItem value="google">Google</SelectItem>
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="trustpilot">Trustpilot</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <TabsContent value="new">
+            <div className="space-y-6 mt-6">
+              {filteredReviews.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      אין ביקורות חדשות
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      כל הביקורות החדשות יופיעו כאן
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredReviews.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onGenerateResponse={handleGenerateResponse}
+                    onApproveResponse={handleApproveResponse}
+                    onSendResponse={handleSendResponse}
+                    isGenerating={generatingResponses.has(review.id)}
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="waiting">
+            <div className="space-y-6 mt-6">
+              {filteredReviews.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      אין תגובות הממתינות לאישור
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      תגובות AI שנוצרו והמחכות לאישור יופיעו כאן
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredReviews.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onGenerateResponse={handleGenerateResponse}
+                    onApproveResponse={handleApproveResponse}
+                    onSendResponse={handleSendResponse}
+                    isGenerating={generatingResponses.has(review.id)}
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="processed">
+            <div className="space-y-6 mt-6">
+              {filteredReviews.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      אין תגובות מטופלות
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      תגובות שאושרו ונשלחו יופיעו כאן
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredReviews.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onGenerateResponse={handleGenerateResponse}
+                    onApproveResponse={handleApproveResponse}
+                    onSendResponse={handleSendResponse}
+                    isGenerating={generatingResponses.has(review.id)}
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
