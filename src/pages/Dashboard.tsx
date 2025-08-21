@@ -255,6 +255,9 @@ const Dashboard = () => {
         description: "התגובה אושרה בהצלחה",
       });
       
+      // Optimistic update: move item to processed
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, response_status: 'approved' as const } : r));
+      
       await fetchReviews();
     } catch (error) {
       console.error('Error approving response:', error);
