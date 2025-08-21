@@ -90,23 +90,13 @@ async function getOAuthUrl(platform: string, userId: string) {
   
   switch (platform) {
     case 'google':
-      console.log('🔍 Checking for Google credentials in environment...');
-      const allEnvVars = Deno.env.toObject();
-      console.log('🔍 All environment variables:', Object.keys(allEnvVars));
-      console.log('🔍 Google-related env vars:', Object.keys(allEnvVars).filter(key => key.includes('GOOGLE')));
-      console.log('🔍 CLIENT-related env vars:', Object.keys(allEnvVars).filter(key => key.includes('CLIENT')));
-      
-      const googleClientId = allEnvVars.GOOGLE_CLIENT_ID 
-        || allEnvVars.GOOGLE_OAUTH_CLIENT_ID
-        || allEnvVars.GOOGLE_WEB_CLIENT_ID;
-        
-      console.log('🔑 Found Client ID:', !!googleClientId, googleClientId ? `(${googleClientId.substring(0, 20)}...)` : 'not found');
-      
+      const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
       if (!googleClientId) {
-        console.error('❌ Google Client ID not found in any expected environment variable');
-        console.error('Available env vars:', Object.keys(allEnvVars));
-        throw new Error('Google Client ID not configured - check Supabase secrets');
+        console.error('❌ Google Client ID not found in environment');
+        throw new Error('Google Client ID not configured');
       }
+      
+      console.log('🔑 Google Client ID found');
       
       console.log('🔑 Google Client ID found');
       

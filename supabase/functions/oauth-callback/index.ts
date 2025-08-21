@@ -343,12 +343,8 @@ serve(async (req) => {
 async function exchangeGoogleCode(code: string) {
   console.log('🔄 Exchanging Google code...');
   
-  const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
-    || Deno.env.get('GOOGLE_OAUTH_CLIENT_ID')
-    || Deno.env.get('GOOGLE_WEB_CLIENT_ID');
-  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
-    || Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET')
-    || Deno.env.get('GOOGLE_WEB_CLIENT_SECRET');
+  const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/oauth-callback`;
 
   if (!clientId || !clientSecret) {
