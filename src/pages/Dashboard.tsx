@@ -150,20 +150,6 @@ const Dashboard = () => {
     setGeneratingResponses(prev => new Set([...prev, reviewId]));
 
     try {
-      // Update review status to generating
-      const { error: statusError } = await supabase
-        .from('reviews')
-        .update({ response_status: 'generating' })
-        .eq('id', reviewId);
-
-      if (statusError) {
-        console.error('Error updating status:', statusError);
-        throw statusError;
-      }
-
-      // Refresh reviews to show generating status
-      await fetchReviews();
-
       // Get user session for auth
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -201,20 +187,11 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Error generating response:', error);
-      
-      // Reset status on error
-      await supabase
-        .from('reviews')
-        .update({ response_status: 'pending' })
-        .eq('id', reviewId);
-
       toast({
         title: "שגיאה",
         description: "לא הצלחנו לייצר תגובת AI. נסה שוב.",
         variant: "destructive",
       });
-      
-      await fetchReviews();
     } finally {
       setGeneratingResponses(prev => {
         const newSet = new Set(prev);

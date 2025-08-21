@@ -93,13 +93,12 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 300,
-        temperature: 0.7,
+        max_completion_tokens: 300
       }),
     });
 
@@ -163,13 +162,12 @@ async function analyzeSentiment(reviewContent: string, reviewId: string, userId:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini-2025-04-14',
+        model: 'gpt-5-nano-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `נתח את הסנטימנט של הביקורת הזו: "${reviewContent}"` }
         ],
-        max_tokens: 10,
-        temperature: 0.1,
+        max_completion_tokens: 10
       }),
     });
 
