@@ -127,7 +127,8 @@ const ReviewCard = ({
           </p>
         </div>
 
-        {(review.ai_response || review.manual_response) && (
+        {/* Show AI/Manual response if exists or if status is generated/approved */}
+        {(review.ai_response || review.manual_response || review.response_status === 'generated' || review.response_status === 'approved') && (
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare className="h-4 w-4 text-blue-600" />
@@ -141,7 +142,7 @@ const ReviewCard = ({
               )}
             </div>
             <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed text-right">
-              {review.manual_response || review.ai_response}
+              {review.manual_response || review.ai_response || "התגובה נוצרה בהצלחה"}
             </p>
           </div>
         )}

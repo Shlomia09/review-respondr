@@ -80,9 +80,6 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   const businessInfo = businessProfile || {};
   const specificInstructions = reviewData?.ai_instructions || '';
 
-  console.log('📋 Business Profile:', businessInfo);
-  console.log('📝 Specific Instructions:', specificInstructions);
-
   const systemPrompt = `אתה מומחה בשירות לקוחות ומגיב על ביקורות לקוחות בעברית. 
   המטרה שלך היא ליצור תגובות מקצועיות, אישיות ובונות.
   
@@ -116,6 +113,11 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   הביקורת: "${reviewContent}"
   
   אנא כתב תגובה מקצועית ואישית לביקורת זו המתאימה לעסק שלי ולהוראות שקיבלת.`;
+
+  console.log(`📋 Business Profile:`, JSON.stringify(businessInfo, null, 2));
+  console.log(`📝 Specific Instructions:`, specificInstructions);
+  console.log(`🎯 System Prompt Preview:`, systemPrompt.substring(0, 200) + '...');
+  console.log(`💬 User Prompt:`, userPrompt);
 
   try {
     // Helper: fallback message if model returns empty
@@ -165,6 +167,8 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
     if (response.ok) {
       const data = await response.json();
       aiResponse = (data?.choices?.[0]?.message?.content || '').trim();
+      console.log(`🔍 Raw OpenAI response:`, JSON.stringify(data, null, 2));
+      console.log(`📤 Extracted AI response: "${aiResponse}"`);
     } else {
       const error = await response.text();
       console.error('OpenAI API error (gpt-5):', error);
