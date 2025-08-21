@@ -80,67 +80,81 @@ export const AIInstructionsModal = ({ isOpen, onClose, review, onSuccess }: AIIn
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-right">הוראות למערכת AI</DialogTitle>
-          <DialogDescription className="text-right">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-3 pb-4">
+          <DialogTitle className="text-right text-lg font-semibold">הוראות למערכת AI</DialogTitle>
+          <DialogDescription className="text-right text-sm text-muted-foreground leading-relaxed">
             הוסף הוראות מיוחדות למערכת לתגובה על ביקורת של {review.customer_name}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Review Display */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-500">
-              {review.platform} • {review.rating}/5
+        <div className="space-y-6">
+          {/* Review Display */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-gray-500">
+                {review.platform} • {review.rating}/5
+              </div>
+              <h4 className="font-medium truncate mr-2">{review.customer_name}</h4>
             </div>
-            <h4 className="font-medium">{review.customer_name}</h4>
+            <p className="text-sm text-gray-700 dark:text-gray-300 text-right leading-relaxed break-words">
+              "{review.content}"
+            </p>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 text-right">
-            "{review.content}"
-          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="ai_instructions" className="text-right block text-sm font-medium">
+                הוראות למערכת AI
+              </Label>
+              <Textarea
+                id="ai_instructions"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="למשל: הזכר את המבצע החדש, התנצל על התקלה שהוזכרה..."
+                className="text-right min-h-[120px] resize-none"
+                rows={5}
+                required
+              />
+              <p className="text-xs text-muted-foreground text-right mt-2 leading-relaxed">
+                ההוראות האלו יתווספו לפרומפט של מערכת ה-AI לביקורת הספציפית הזו
+              </p>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3 text-right">
+                דוגמאות להוראות:
+              </h4>
+              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-2 text-right">
+                <li className="flex items-start gap-2 flex-row-reverse">
+                  <span>•</span>
+                  <span>"הזכר את המבצע על המנה החדשה"</span>
+                </li>
+                <li className="flex items-start gap-2 flex-row-reverse">
+                  <span>•</span>
+                  <span>"התנצל על זמן ההמתנה והציע פיצוי"</span>
+                </li>
+                <li className="flex items-start gap-2 flex-row-reverse">
+                  <span>•</span>
+                  <span>"הזמן את הלקוח לבקר שוב במהלך השבוע"</span>
+                </li>
+                <li className="flex items-start gap-2 flex-row-reverse">
+                  <span>•</span>
+                  <span>"הודה על הפידבק וציין שנתקן את הבעיה"</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
+                ביטול
+              </Button>
+              <Button type="submit" disabled={loading} className="min-w-[140px]">
+                {loading ? "שומר..." : "שמירת הוראות"}
+              </Button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="ai_instructions" className="text-right block">
-              הוראות למערכת AI
-            </Label>
-            <Textarea
-              id="ai_instructions"
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              placeholder="למשל: הזכר את המבצע החדש, התנצל על התקלה שהוזכרה, הזמן לפגישה אישית..."
-              className="text-right min-h-[120px]"
-              rows={6}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1 text-right">
-              ההוראות האלו יתווספו לפרומפט של מערכת ה-AI לביקורת הספציפית הזו
-            </div>
-          </div>
-
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2 text-right">
-              דוגמאות להוראות:
-            </h4>
-            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 text-right list-none">
-              <li>• "הזכר את המבצע על המנה החדשה"</li>
-              <li>• "התנצל על זמן ההמתנה והציע פיצוי"</li>
-              <li>• "הזמן את הלקוח לבקר שוב במהלך השבוע"</li>
-              <li>• "הודה על הפידבק וציין שנתקן את הבעיה"</li>
-            </ul>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-              ביטול
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "שומר..." : "שמירת הוראות וייצור תגובה"}
-            </Button>
-          </div>
-        </form>
       </DialogContent>
     </Dialog>
   );

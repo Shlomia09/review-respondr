@@ -80,55 +80,57 @@ export const ManualResponseModal = ({ isOpen, onClose, review, onSuccess }: Manu
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-right">תגובה ידנית</DialogTitle>
-          <DialogDescription className="text-right">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-3 pb-4">
+          <DialogTitle className="text-right text-lg font-semibold">תגובה ידנית</DialogTitle>
+          <DialogDescription className="text-right text-sm text-muted-foreground leading-relaxed">
             כתוב תגובה אישית לביקורת של {review.customer_name}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Review Display */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-500">
-              {review.platform} • {review.rating}/5
+        <div className="space-y-6">
+          {/* Review Display */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-gray-500">
+                {review.platform} • {review.rating}/5
+              </div>
+              <h4 className="font-medium truncate mr-2">{review.customer_name}</h4>
             </div>
-            <h4 className="font-medium">{review.customer_name}</h4>
+            <p className="text-sm text-gray-700 dark:text-gray-300 text-right leading-relaxed break-words">
+              "{review.content}"
+            </p>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 text-right">
-            "{review.content}"
-          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="manual_response" className="text-right block text-sm font-medium">
+                התגובה שלך
+              </Label>
+              <Textarea
+                id="manual_response"
+                value={manualResponse}
+                onChange={(e) => setManualResponse(e.target.value)}
+                placeholder="כתוב כאן את התגובה האישית שלך לביקורת..."
+                className="text-right min-h-[120px] resize-none"
+                rows={5}
+                required
+              />
+              <p className="text-xs text-muted-foreground text-right mt-2">
+                {manualResponse.length} תווים
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
+                ביטול
+              </Button>
+              <Button type="submit" disabled={loading} className="min-w-[120px]">
+                {loading ? "שומר..." : "שמירת תגובה"}
+              </Button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="manual_response" className="text-right block">
-              התגובה שלך
-            </Label>
-            <Textarea
-              id="manual_response"
-              value={manualResponse}
-              onChange={(e) => setManualResponse(e.target.value)}
-              placeholder="כתוב כאן את התגובה האישית שלך לביקורת..."
-              className="text-right min-h-[120px]"
-              rows={6}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1 text-right">
-              {manualResponse.length} תווים
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-              ביטול
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "שומר..." : "שמירת תגובה"}
-            </Button>
-          </div>
-        </form>
       </DialogContent>
     </Dialog>
   );

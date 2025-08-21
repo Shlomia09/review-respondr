@@ -98,10 +98,10 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-right">הגדרת פרופיל העסק</DialogTitle>
-          <DialogDescription className="text-right">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-3 pb-4">
+          <DialogTitle className="text-right text-lg font-semibold">הגדרת פרופיל העסק</DialogTitle>
+          <DialogDescription className="text-right text-sm text-muted-foreground leading-relaxed">
             כדי שנוכל לספק תגובות מותאמות ומדויקות, אנא ספר לנו על העסק שלך
           </DialogDescription>
         </DialogHeader>
@@ -209,11 +209,11 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete }: BusinessSetu
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-6 border-t mt-6">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               ביטול
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="min-w-[100px]">
               {loading ? "שומר..." : "שמירה"}
             </Button>
           </div>
