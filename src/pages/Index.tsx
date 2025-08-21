@@ -1,13 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, MessageSquare, TrendingUp, Zap, Globe, Shield } from "lucide-react";
+import { Star, MessageSquare, TrendingUp, Zap, Globe, Shield, Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -19,16 +23,27 @@ const Index = () => {
     checkUser();
   }, [navigate]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <Logo />
-              <h1 className="text-xl font-bold text-foreground">RevAI</h1>
+              {!isMobile && <h1 className="text-xl font-bold text-foreground ml-3">RevAI</h1>}
             </div>
+            
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 תכונות
@@ -40,7 +55,9 @@ const Index = () => {
                 לקוחות
               </a>
             </nav>
-            <div className="flex items-center gap-4">
+            
+            {/* Desktop Buttons */}
+            <div className="hidden md:flex items-center gap-4">
               <Link to="/login">
                 <Button variant="ghost" className="text-sm">התחברות</Button>
               </Link>
@@ -48,9 +65,66 @@ const Index = () => {
                 <Button className="text-sm bg-primary text-primary-foreground hover:bg-primary/90">התחל עכשיו</Button>
               </Link>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="פתח תפריט"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-sm border-b border-border shadow-lg">
+              <nav className="py-4 px-4 space-y-4">
+                <a 
+                  href="#features" 
+                  className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  תכונות
+                </a>
+                <a 
+                  href="#pricing" 
+                  className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  תמחור
+                </a>
+                <a 
+                  href="#customers" 
+                  className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  לקוחות
+                </a>
+                <hr className="border-border" />
+                <Link to="/login" className="block py-2">
+                  <Button variant="ghost" className="w-full text-sm justify-start">התחברות</Button>
+                </Link>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
+
+      {/* Mobile Sticky CTA Button */}
+      {isMobile && scrolled && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/95 backdrop-blur-sm border-t border-border">
+          <Link to="/signup" className="block">
+            <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+              התחל עכשיו
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
