@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import revaiLogo from "../assets/revai-logo.png";
+import revaiLogo from "@/assets/revai-logo.png";
 
 interface LogoProps {
   className?: string;
