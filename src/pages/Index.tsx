@@ -20,21 +20,32 @@ const Index = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b">
+      <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <Logo />
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">RevAI Manager</h1>
+              <h1 className="text-xl font-bold text-foreground">RevAI</h1>
             </div>
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                תכונות
+              </a>
+              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                תמחור
+              </a>
+              <a href="#customers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                לקוחות
+              </a>
+            </nav>
             <div className="flex items-center gap-4">
               <Link to="/login">
-                <Button variant="ghost">Sign In</Button>
+                <Button variant="ghost" className="text-sm">התחברות</Button>
               </Link>
               <Link to="/signup">
-                <Button>Get Started</Button>
+                <Button className="text-sm bg-primary text-primary-foreground hover:bg-primary/90">התחל עכשיו</Button>
               </Link>
             </div>
           </div>
@@ -42,218 +53,310 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
-            AI-Powered Review Management
-            <span className="block text-blue-600">for Your Business</span>
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-            Monitor, analyze, and respond to online reviews across Google, Facebook, and Trustpilot 
-            with intelligent AI assistance. Support for Hebrew, Arabic, English, and Spanish.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup">
-              <Button size="lg" className="text-lg px-8 py-3">
-                Start Free Trial
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-              Watch Demo
-            </Button>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="text-center lg:text-right">
+            <h1 className="text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+              נהל את הביקורות שלך
+              <span className="block">במקום אחד באמצעות AI</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              התחבר אוטומטית לגוגל, פייסבוק ו-Trustpilot. 
+              ניתוח חכם, תגובות אוטומטיות ולוח בקרה מאוחד לכל הביקורות שלך.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Link to="/signup">
+                <Button size="lg" className="text-lg px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground">
+                  התחל ניסיון חינמי
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="bg-card border border-border rounded-2xl shadow-xl p-6 transform rotate-2 hover:rotate-0 transition-transform duration-300">
+              <div className="bg-muted rounded-lg p-4 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-destructive rounded-full"></div>
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                </div>
+                <div className="text-sm font-medium mb-2">לוח בקרה RevAI</div>
+                <div className="text-xs text-muted-foreground">
+                  קבלת החלטות מהירות • ניתוח סנטימנטים
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">G</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full w-3/4"></div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium">175%</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">f</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full w-1/2"></div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium">92%</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">T</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full w-2/3"></div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium">158%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Everything You Need to Manage Reviews
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Powerful features designed for small and medium-sized businesses
-          </p>
+      {/* Platform Integration Section */}
+      <section id="features" className="bg-muted/30 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <span className="text-4xl font-bold">G</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">גוגל</h3>
+              <p className="text-sm font-medium text-primary mb-2">אינטגרציה מהירה של פלטפורמות</p>
+              <p className="text-sm text-muted-foreground">
+                התחברות חלקה לפלטפורמות ביקורות
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <span className="text-4xl font-bold text-blue-600">f</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">פייסבוק</h3>
+              <p className="text-sm font-medium text-primary mb-2">ניתוח AI בזמן אמת</p>
+              <p className="text-sm text-muted-foreground">
+                תובנות וסנטימנטים בקצות האצבעות שלך
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Star className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Trustpilot</h3>
+              <p className="text-sm font-medium text-primary mb-2">דוחות חכמים ותובנות</p>
+              <p className="text-sm text-muted-foreground">
+                שפר את העסק שלך עם נתונים ניתנים לפעולה
+              </p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <MessageSquare className="h-12 w-12 text-blue-600 mb-4" />
-              <CardTitle>AI Response Generation</CardTitle>
-              <CardDescription>
-                Generate personalized responses using GPT-4, matching your brand tone and customer language
-              </CardDescription>
-            </CardHeader>
-          </Card>
+      {/* Testimonial Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="relative">
+              <div className="bg-card border border-border rounded-2xl shadow-lg p-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-3 h-3 bg-destructive rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <h4 className="font-semibold text-foreground">לוח בקרה RevAI</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">ביקורות חדשות</span>
+                      <span className="text-sm font-medium">24</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">דירוג ממוצע</span>
+                      <span className="text-sm font-medium">4.8</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">תגובות ממתינות</span>
+                      <span className="text-sm font-medium">3</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center lg:text-right">
+              <blockquote className="text-2xl lg:text-3xl font-bold text-foreground mb-6">
+                "מאז ההרשמה, ראינו עלייה של 30% בפניות חדשות"
+              </blockquote>
+              <div className="flex items-center justify-center lg:justify-start gap-4">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                  <span className="text-sm font-medium">YM</span>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-foreground">יוסי מלכה</p>
+                  <p className="text-sm text-muted-foreground">מנהל שיווק</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <TrendingUp className="h-12 w-12 text-green-600 mb-4" />
-              <CardTitle>Sentiment Analysis</CardTitle>
-              <CardDescription>
-                Automatically classify reviews as positive, neutral, or negative with detailed topic extraction
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <Globe className="h-12 w-12 text-purple-600 mb-4" />
-              <CardTitle>Multi-Language Support</CardTitle>
-              <CardDescription>
-                Full RTL support for Hebrew and Arabic, plus English and Spanish with intelligent translation
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <Zap className="h-12 w-12 text-yellow-600 mb-4" />
-              <CardTitle>Real-Time Alerts</CardTitle>
-              <CardDescription>
-                Instant WhatsApp and email notifications for negative reviews with automated positive responses
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <Star className="h-12 w-12 text-orange-600 mb-4" />
-              <CardTitle>Multi-Platform Integration</CardTitle>
-              <CardDescription>
-                Connect Google Reviews, Facebook, Trustpilot, and more platforms through secure APIs
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <Shield className="h-12 w-12 text-red-600 mb-4" />
-              <CardTitle>Advanced Analytics</CardTitle>
-              <CardDescription>
-                Weekly and monthly reports with sentiment trends, response rates, and exportable PDFs
-              </CardDescription>
-            </CardHeader>
-          </Card>
+      {/* Features List Section */}
+      <section className="bg-muted/30 py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center mt-1">
+                  <MessageSquare className="w-3 h-3 text-primary-foreground" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">סנכרון ביקורות</h4>
+                  <p className="text-sm text-muted-foreground">
+                    סנכרון אוטומטי של ביקורות מכל הפלטפורמות
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center mt-1">
+                  <TrendingUp className="w-3 h-3 text-primary-foreground" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">ניתוח סנטימנטים</h4>
+                  <p className="text-sm text-muted-foreground">
+                    זיהוי אוטומטי של רגשות ונושאים בביקורות
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center mt-1">
+                  <MessageSquare className="w-3 h-3 text-primary-foreground" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">תגובות אוטומטיות</h4>
+                  <p className="text-sm text-muted-foreground">
+                    יצירת תגובות מותאמות אישית באמצעות AI
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center mt-1">
+                  <Globe className="w-3 h-3 text-primary-foreground" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">תמיכה רב-לשונית</h4>
+                  <p className="text-sm text-muted-foreground">
+                    תמיכה מלאה בעברית, ערבית, אנגלית וספרדית
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Choose the plan that fits your business needs
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <Card className="border-2 border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-center">Free</CardTitle>
-              <div className="text-center">
-                <span className="text-3xl font-bold">€0</span>
-                <span className="text-gray-500">/month</span>
+      <section id="pricing" className="py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              תוכנית המותאמת לעסק שלך
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              החל מ-€ /חודש
+            </p>
+          </div>
+          
+          <div className="bg-card border border-border rounded-2xl p-8 shadow-lg max-w-md mx-auto">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-foreground mb-2">תוכנית מקצועית</h3>
+              <div className="text-4xl font-bold text-foreground mb-2">
+                €69
+                <span className="text-lg text-muted-foreground font-normal">/חודש</span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm">• 1 response/day</p>
-              <p className="text-sm">• 1 platform</p>
-              <p className="text-sm">• Basic sentiment analysis</p>
-              <Button variant="outline" className="w-full mt-4">
-                Get Started
+              <p className="text-sm text-muted-foreground">ללא כרטיס אשראי נדרש</p>
+            </div>
+            
+            <ul className="space-y-3 mb-8 text-right">
+              <li className="flex items-center justify-end gap-3">
+                <span className="text-sm text-muted-foreground">ביקורות בלתי מוגבלות</span>
+                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs">✓</span>
+                </div>
+              </li>
+              <li className="flex items-center justify-end gap-3">
+                <span className="text-sm text-muted-foreground">כל הפלטפורמות</span>
+                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs">✓</span>
+                </div>
+              </li>
+              <li className="flex items-center justify-end gap-3">
+                <span className="text-sm text-muted-foreground">למידת טון ואזעקות</span>
+                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs">✓</span>
+                </div>
+              </li>
+              <li className="flex items-center justify-end gap-3">
+                <span className="text-sm text-muted-foreground">תמיכה 24/7</span>
+                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs">✓</span>
+                </div>
+              </li>
+            </ul>
+            
+            <Link to="/signup">
+              <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                הצג תוכניות
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-blue-200">
-            <CardHeader>
-              <CardTitle className="text-center">Starter</CardTitle>
-              <div className="text-center">
-                <span className="text-3xl font-bold">€29</span>
-                <span className="text-gray-500">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm">• Up to 100 reviews/month</p>
-              <p className="text-sm">• 3 platforms</p>
-              <p className="text-sm">• Smart AI replies</p>
-              <Button className="w-full mt-4">
-                Start Trial
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-blue-500">
-            <CardHeader>
-              <CardTitle className="text-center">Pro</CardTitle>
-              <div className="text-center">
-                <span className="text-3xl font-bold">€69</span>
-                <span className="text-gray-500">/month</span>
-              </div>
-              <div className="text-center">
-                <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs">Most Popular</span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm">• Unlimited reviews</p>
-              <p className="text-sm">• All platforms</p>
-              <p className="text-sm">• Tone learning & alerts</p>
-              <Button className="w-full mt-4">
-                Start Trial
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-purple-200">
-            <CardHeader>
-              <CardTitle className="text-center">Agency</CardTitle>
-              <div className="text-center">
-                <span className="text-3xl font-bold">€199</span>
-                <span className="text-gray-500">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm">• Multi-account dashboard</p>
-              <p className="text-sm">• White label</p>
-              <p className="text-sm">• Full API access</p>
-              <Button variant="outline" className="w-full mt-4">
-                Contact Sales
-              </Button>
-            </CardContent>
-          </Card>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Transform Your Review Management?
+      <section className="bg-gradient-to-r from-[hsl(220,30%,20%)] to-[hsl(220,25%,15%)] text-white py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            התחל לנהל את המוניטין שלך עוד היום
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join hundreds of businesses already using ReviewAI Manager
+            חינמי למשך 14 יום, ללא כרטיס אשראי נדרש
           </p>
           <Link to="/signup">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-              Start Your Free Trial Today
+            <Button size="lg" className="text-lg px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground">
+              צור חשבון עכשיו
             </Button>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-card border-t border-border py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Logo size="sm" />
-            <span className="text-lg font-semibold">RevAI Manager</span>
+            <span className="text-lg font-semibold text-foreground">RevAI</span>
           </div>
-          <p className="text-gray-400">
-            © 2024 RevAI Manager. All rights reserved.
+          <p className="text-muted-foreground text-sm">
+            © 2024 RevAI. כל הזכויות שמורות.
           </p>
         </div>
       </footer>
