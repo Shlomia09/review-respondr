@@ -98,10 +98,9 @@ async function getOAuthUrl(platform: string, userId: string) {
       
       console.log('🔑 Google Client ID found');
       
-      // Updated scopes for Google Business Profile API (new)
+      // Updated scopes for Google Business Profile API
       const scopes = [
-        'https://www.googleapis.com/auth/business.manage',
-        'https://www.googleapis.com/auth/plus.business.manage'
+        'https://www.googleapis.com/auth/business.manage'
       ].join(' ');
       
       
@@ -390,20 +389,9 @@ async function fetchGoogleBusinesses(accessToken: string) {
     console.error('❌ Error with GMB API v4.9:', error);
   }
   
-  // Return mock data for testing if no real businesses found
-  console.log('📝 No businesses found via APIs, returning mock data for testing...');
-  return [
-    {
-      id: 'mock-business-1',
-      name: 'בדיקה - עסק לדוגמה 1',
-      address: 'כתובת לדוגמה, תל אביב'
-    },
-    {
-      id: 'mock-business-2',
-      name: 'בדיקה - עסק לדוגמה 2',
-      address: 'כתובת נוספת, חיפה'
-    }
-  ];
+  // No businesses found via GMB v4.9, trying newer APIs...
+  // Continue to try Account Management + Business Information APIs below
+  
   
   try {
     // Try simple accounts listing first  
@@ -495,14 +483,15 @@ async function fetchGoogleBusinessProfileAPI(accessToken: string) {
     console.log('📞 Using Google Business Profile API...');
     
     // Try to get locations directly using the newer API
-    const locationsResponse = await fetch('https://businessprofileperformance.googleapis.com/v1/locations:search', {
+    const locationsResponse = await fetch('https://mybusinessbusinessinformation.googleapis.com/v1/locations:search', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        searchFilter: {}  // This searches for all locations the user has access to
+        // Empty filter to return all accessible locations
+        // Some projects may require specifying a parent; if so, the fallback below will handle it
       })
     });
 
