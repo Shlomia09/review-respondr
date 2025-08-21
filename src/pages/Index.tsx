@@ -349,58 +349,178 @@ const Index = () => {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="mb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              תוכנית המותאמת לעסק שלך
+              בחר את התוכנית המתאימה לך
             </h2>
             <p className="text-lg text-muted-foreground">
-              החל מ-€ /חודש
+              מחינם ועד פתרון עסקי מלא
             </p>
           </div>
           
-          <div className="bg-card border border-border rounded-2xl p-8 shadow-lg max-w-md mx-auto">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-foreground mb-2">תוכנית מקצועית</h3>
-              <div className="text-4xl font-bold text-foreground mb-2">
-                €69
-                <span className="text-lg text-muted-foreground font-normal">/חודש</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Free Plan */}
+            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+              <h3 className="text-lg font-bold text-foreground mb-2">חינם</h3>
+              <div className="text-3xl font-bold text-foreground mb-4">
+                €0
+                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
               </div>
-              <p className="text-sm text-muted-foreground">ללא כרטיס אשראי נדרש</p>
+              
+              <ul className="space-y-3 mb-6 text-right text-sm">
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">תגובה אחת ביום</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">פלטפורמה אחת</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">ניתוח סנטימנטים בסיסי</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+              </ul>
+              
+              <Link to="/signup">
+                <Button variant="outline" size="lg" className="w-full">
+                  התחל חינם
+                </Button>
+              </Link>
             </div>
-            
-            <ul className="space-y-3 mb-8 text-right">
-              <li className="flex items-center justify-end gap-3">
-                <span className="text-sm text-muted-foreground">ביקורות בלתי מוגבלות</span>
-                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-xs">✓</span>
-                </div>
-              </li>
-              <li className="flex items-center justify-end gap-3">
-                <span className="text-sm text-muted-foreground">כל הפלטפורמות</span>
-                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-xs">✓</span>
-                </div>
-              </li>
-              <li className="flex items-center justify-end gap-3">
-                <span className="text-sm text-muted-foreground">למידת טון ואזעקות</span>
-                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-xs">✓</span>
-                </div>
-              </li>
-              <li className="flex items-center justify-end gap-3">
-                <span className="text-sm text-muted-foreground">תמיכה 24/7</span>
-                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-xs">✓</span>
-                </div>
-              </li>
-            </ul>
-            
-            <Link to="/signup">
-              <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                הצג תוכניות
-              </Button>
-            </Link>
+
+            {/* Starter Plan */}
+            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+              <h3 className="text-lg font-bold text-foreground mb-2">מתחילים</h3>
+              <div className="text-3xl font-bold text-foreground mb-4">
+                €29
+                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+              </div>
+              
+              <ul className="space-y-3 mb-6 text-right text-sm">
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">עד 50 ביקורות/חודש</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">3 פלטפורמות</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">תגובות חכמות</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+              </ul>
+              
+              <Link to="/signup">
+                <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  בחר תוכנית
+                </Button>
+              </Link>
+            </div>
+
+            {/* Pro Plan - Popular */}
+            <div className="bg-card border-2 border-primary rounded-2xl p-6 text-center relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                  הכי פופולרי
+                </span>
+              </div>
+              
+              <h3 className="text-lg font-bold text-foreground mb-2">מקצועי</h3>
+              <div className="text-3xl font-bold text-foreground mb-4">
+                €69
+                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+              </div>
+              
+              <ul className="space-y-3 mb-6 text-right text-sm">
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">ביקורות בלתי מוגבלות</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">כל הפלטפורמות</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">למידת טון ואזעקות</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">דוחות מתקדמים</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+              </ul>
+              
+              <Link to="/signup">
+                <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  בחר תוכנית
+                </Button>
+              </Link>
+            </div>
+
+            {/* Agency Plan */}
+            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+              <h3 className="text-lg font-bold text-foreground mb-2">סוכנות</h3>
+              <div className="text-3xl font-bold text-foreground mb-4">
+                €199
+                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+              </div>
+              
+              <ul className="space-y-3 mb-6 text-right text-sm">
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">לוח בקרה רב-חשבונות</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">White Label</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">API מלא</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+                <li className="flex items-center justify-end gap-2">
+                  <span className="text-muted-foreground">תמיכה VIP</span>
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs">✓</span>
+                  </div>
+                </li>
+              </ul>
+              
+              <Link to="/signup">
+                <Button variant="outline" size="lg" className="w-full">
+                  צור קשר
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
