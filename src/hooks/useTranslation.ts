@@ -17,7 +17,8 @@ const translations: Translations = {
       pricing: 'תמחור', 
       customers: 'לקוחות',
       login: 'התחברות',
-      signup: 'התחל עכשיו'
+      signup: 'התחל עכשיו',
+      openMenu: 'פתח תפריט'
     },
     hero: {
       title: 'נהל את הביקורות שלך',
@@ -152,7 +153,35 @@ const translations: Translations = {
       noWaitingReviews: 'אין תגובות הממתינות לאישור',
       noWaitingReviewsDesc: 'תגובות AI שנוצרו והמחכות לאישור יופיעו כאן',
       noProcessedReviews: 'אין תגובות מטופלות',
-      noProcessedReviewsDesc: 'תגובות שאושרו ונשלחו יופיעו כאן'
+      noProcessedReviewsDesc: 'תגובות שאושרו ונשלחו יופיעו כאן',
+      aiResponseGenerated: 'תגובת AI נוצרה בהצלחה',
+      responseWaitingApproval: 'התגובה ממתينה לאישור',
+      error: 'שגיאה',
+      failedToGenerate: 'לא הצלחנו לייצר תגובת AI. נסה שוב.',
+      responseApproved: 'תגובה אושרה',
+      responseApprovedSuccess: 'התגובה אושרה בהצלחה',
+      failedToApprove: 'לא הצלחנו לאשר את התגובה',
+      responseSent: 'תגובה נשלחה',
+      responseSentSuccess: 'התגובה נשלחה ללקוח בהצלחה',
+      failedToSend: 'לא הצלחנו לשלוח את התגובה',
+      errorFetching: 'שגיאה בטעינת הביקורות'
+    },
+    reviewCard: {
+      sent: 'נשלח',
+      approved: 'אושר',  
+      waitingApproval: 'ממתין לאישור',
+      generating: 'מייצר...',
+      manualResponse: 'תגובה ידנית',
+      aiResponse: 'תגובת AI',
+      specialInstructions: 'עם הוראות מיוחדות',
+      responseGenerated: 'התגובה נוצרה בהצלחה',
+      generatingResponse: 'מייצר תגובה...',
+      generateAIResponse: 'צור תגובת AI',
+      aiWithInstructions: 'AI עם הוראות',
+      writeManualResponse: 'תגובה ידנית',
+      approveResponse: 'אשר תגובה',
+      regenerateResponse: 'צור תגובה חדשה',
+      sendResponse: 'שלח תגובה'
     },
     footer: {
       copyright: '© 2024 RevAI. כל הזכויות שמורות.'
@@ -164,7 +193,8 @@ const translations: Translations = {
       pricing: 'Pricing',
       customers: 'Customers',  
       login: 'Sign In',
-      signup: 'Get Started'
+      signup: 'Get Started',
+      openMenu: 'Open menu'
     },
     hero: {
       title: 'Manage Your Reviews',
@@ -292,7 +322,42 @@ const translations: Translations = {
       filterByPlatform: 'Filter by platform',
       searchReviews: 'Search reviews',
       allPlatforms: 'All platforms',
-      allSentiments: 'All sentiments'
+      allSentiments: 'All sentiments',
+      filterReviews: 'Filter Reviews',
+      noNewReviews: 'No New Reviews',
+      noNewReviewsDesc: 'All new reviews will appear here',
+      noWaitingReviews: 'No Responses Waiting for Approval',
+      noWaitingReviewsDesc: 'AI responses that are generated and waiting for approval will appear here',
+      noProcessedReviews: 'No Processed Responses',
+      noProcessedReviewsDesc: 'Approved and sent responses will appear here',
+      aiResponseGenerated: 'AI response generated successfully',
+      responseWaitingApproval: 'Response is waiting for approval',
+      error: 'Error',
+      failedToGenerate: 'Failed to generate AI response. Please try again.',
+      responseApproved: 'Response approved',
+      responseApprovedSuccess: 'Response approved successfully',
+      failedToApprove: 'Failed to approve response',
+      responseSent: 'Response sent',
+      responseSentSuccess: 'Response sent to customer successfully',
+      failedToSend: 'Failed to send response',
+      errorFetching: 'Error fetching reviews'
+    },
+    reviewCard: {
+      sent: 'Sent',
+      approved: 'Approved',
+      waitingApproval: 'Waiting for approval',
+      generating: 'Generating...',
+      manualResponse: 'Manual response',
+      aiResponse: 'AI response',
+      specialInstructions: 'With special instructions',
+      responseGenerated: 'Response generated successfully',
+      generatingResponse: 'Generating response...',
+      generateAIResponse: 'Generate AI Response',
+      aiWithInstructions: 'AI with Instructions',
+      writeManualResponse: 'Manual Response',
+      approveResponse: 'Approve Response',
+      regenerateResponse: 'Generate New Response',
+      sendResponse: 'Send Response'
     },
     footer: {
       copyright: '© 2024 RevAI. All rights reserved.'
@@ -307,7 +372,8 @@ translations.es = {
     pricing: 'Precios', 
     customers: 'Clientes',
     login: 'Iniciar Sesión',
-    signup: 'Empezar Ahora'
+    signup: 'Empezar Ahora',
+    openMenu: 'Abrir menú'
   },
   hero: {
     title: 'Gestiona Tus Reseñas',
@@ -435,7 +501,42 @@ translations.es = {
     filterByPlatform: 'Filtrar por plataforma',
     searchReviews: 'Buscar reseñas',
     allPlatforms: 'Todas las plataformas',
-    allSentiments: 'Todos los sentimientos'
+    allSentiments: 'Todos los sentimientos',
+    filterReviews: 'Filtrar Reseñas',
+    noNewReviews: 'Sin Nuevas Reseñas',
+    noNewReviewsDesc: 'Todas las nuevas reseñas aparecerán aquí',
+    noWaitingReviews: 'Sin Respuestas Esperando Aprobación',
+    noWaitingReviewsDesc: 'Las respuestas de IA generadas y esperando aprobación aparecerán aquí',
+    noProcessedReviews: 'Sin Respuestas Procesadas',
+    noProcessedReviewsDesc: 'Las respuestas aprobadas y enviadas aparecerán aquí',
+    aiResponseGenerated: 'Respuesta de IA generada exitosamente',
+    responseWaitingApproval: 'La respuesta está esperando aprobación',
+    error: 'Error',
+    failedToGenerate: 'No se pudo generar la respuesta de IA. Por favor inténtalo de nuevo.',
+    responseApproved: 'Respuesta aprobada',
+    responseApprovedSuccess: 'Respuesta aprobada exitosamente',
+    failedToApprove: 'No se pudo aprobar la respuesta',
+    responseSent: 'Respuesta enviada',
+    responseSentSuccess: 'Respuesta enviada al cliente exitosamente',
+    failedToSend: 'No se pudo enviar la respuesta',
+    errorFetching: 'Error al cargar las reseñas'
+  },
+  reviewCard: {
+    sent: 'Enviado',
+    approved: 'Aprobado',
+    waitingApproval: 'Esperando aprobación',
+    generating: 'Generando...',
+    manualResponse: 'Respuesta manual',
+    aiResponse: 'Respuesta de IA',
+    specialInstructions: 'Con instrucciones especiales',
+    responseGenerated: 'Respuesta generada exitosamente',
+    generatingResponse: 'Generando respuesta...',
+    generateAIResponse: 'Generar Respuesta de IA',
+    aiWithInstructions: 'IA con Instrucciones',
+    writeManualResponse: 'Respuesta Manual',
+    approveResponse: 'Aprobar Respuesta',
+    regenerateResponse: 'Generar Nueva Respuesta',
+    sendResponse: 'Enviar Respuesta'
   },
   footer: {
     copyright: '© 2024 RevAI. Todos los derechos reservados.'
@@ -448,7 +549,8 @@ translations.de = {
     pricing: 'Preise',
     customers: 'Kunden',
     login: 'Anmelden',
-    signup: 'Jetzt Starten'
+    signup: 'Jetzt Starten',
+    openMenu: 'Menü öffnen'
   },
   hero: {
     title: 'Verwalten Sie Ihre Bewertungen',
@@ -576,7 +678,42 @@ translations.de = {
     filterByPlatform: 'Nach Plattform filtern',
     searchReviews: 'Bewertungen suchen',
     allPlatforms: 'Alle Plattformen',
-    allSentiments: 'Alle Stimmungen'
+    allSentiments: 'Alle Stimmungen',
+    filterReviews: 'Bewertungen Filtern',
+    noNewReviews: 'Keine Neuen Bewertungen',
+    noNewReviewsDesc: 'Alle neuen Bewertungen werden hier angezeigt',
+    noWaitingReviews: 'Keine Antworten Warten auf Genehmigung',
+    noWaitingReviewsDesc: 'KI-Antworten, die generiert wurden und auf Genehmigung warten, werden hier angezeigt',
+    noProcessedReviews: 'Keine Verarbeiteten Antworten',
+    noProcessedReviewsDesc: 'Genehmigte und gesendete Antworten werden hier angezeigt',
+    aiResponseGenerated: 'KI-Antwort erfolgreich generiert',
+    responseWaitingApproval: 'Antwort wartet auf Genehmigung',
+    error: 'Fehler',
+    failedToGenerate: 'KI-Antwort konnte nicht generiert werden. Bitte versuchen Sie es erneut.',
+    responseApproved: 'Antwort genehmigt',
+    responseApprovedSuccess: 'Antwort erfolgreich genehmigt',
+    failedToApprove: 'Antwort konnte nicht genehmigt werden',
+    responseSent: 'Antwort gesendet',
+    responseSentSuccess: 'Antwort erfolgreich an Kunden gesendet',
+    failedToSend: 'Antwort konnte nicht gesendet werden',
+    errorFetching: 'Fehler beim Laden der Bewertungen'
+  },
+  reviewCard: {
+    sent: 'Gesendet',
+    approved: 'Genehmigt',
+    waitingApproval: 'Wartet auf Genehmigung',
+    generating: 'Generiert...',
+    manualResponse: 'Manuelle Antwort',
+    aiResponse: 'KI-Antwort',
+    specialInstructions: 'Mit speziellen Anweisungen',
+    responseGenerated: 'Antwort erfolgreich generiert',
+    generatingResponse: 'Antwort wird generiert...',
+    generateAIResponse: 'KI-Antwort Generieren',
+    aiWithInstructions: 'KI mit Anweisungen',
+    writeManualResponse: 'Manuelle Antwort',
+    approveResponse: 'Antwort Genehmigen',
+    regenerateResponse: 'Neue Antwort Generieren',
+    sendResponse: 'Antwort Senden'
   },
   footer: {
     copyright: '© 2024 RevAI. Alle Rechte vorbehalten.'
@@ -589,7 +726,8 @@ translations.ar = {
     pricing: 'الأسعار',
     customers: 'العملاء',
     login: 'تسجيل الدخول',
-    signup: 'ابدأ الآن'
+    signup: 'ابدأ الآن',
+    openMenu: 'فتح القائمة'
   },
   hero: {
     title: 'إدارة مراجعاتك',
@@ -717,7 +855,42 @@ translations.ar = {
     filterByPlatform: 'تصفية حسب المنصة',
     searchReviews: 'البحث في المراجعات',
     allPlatforms: 'جميع المنصات',
-    allSentiments: 'جميع المشاعر'
+    allSentiments: 'جميع المشاعر',
+    filterReviews: 'تصفية المراجعات',
+    noNewReviews: 'لا توجد مراجعات جديدة',
+    noNewReviewsDesc: 'جميع المراجعات الجديدة ستظهر هنا',
+    noWaitingReviews: 'لا توجد ردود في انتظار الموافقة',
+    noWaitingReviewsDesc: 'ردود الذكاء الاصطناعي المُنشأة والتي في انتظار الموافقة ستظهر هنا',
+    noProcessedReviews: 'لا توجد ردود معالجة',
+    noProcessedReviewsDesc: 'الردود المعتمدة والمرسلة ستظهر هنا',
+    aiResponseGenerated: 'تم إنشاء رد الذكاء الاصطناعي بنجاح',
+    responseWaitingApproval: 'الرد في انتظار الموافقة',
+    error: 'خطأ',
+    failedToGenerate: 'فشل في إنشاء رد الذكاء الاصطناعي. يرجى المحاولة مرة أخرى.',
+    responseApproved: 'تمت الموافقة على الرد',
+    responseApprovedSuccess: 'تمت الموافقة على الرد بنجاح',
+    failedToApprove: 'فشل في الموافقة على الرد',
+    responseSent: 'تم إرسال الرد',
+    responseSentSuccess: 'تم إرسال الرد للعميل بنجاح',
+    failedToSend: 'فشل في إرسال الرد',
+    errorFetching: 'خطأ في تحميل المراجعات'
+  },
+  reviewCard: {
+    sent: 'مرسل',
+    approved: 'معتمد',
+    waitingApproval: 'في انتظار الموافقة',
+    generating: 'جاري الإنشاء...',
+    manualResponse: 'رد يدوي',
+    aiResponse: 'رد الذكاء الاصطناعي',
+    specialInstructions: 'مع تعليمات خاصة',
+    responseGenerated: 'تم إنشاء الرد بنجاح',
+    generatingResponse: 'جاري إنشاء الرد...',
+    generateAIResponse: 'إنشاء رد ذكي',
+    aiWithInstructions: 'ذكاء اصطناعي مع تعليمات',
+    writeManualResponse: 'رد يدوي',
+    approveResponse: 'الموافقة على الرد',
+    regenerateResponse: 'إنشاء رد جديد',
+    sendResponse: 'إرسال الرد'
   },
   footer: {
     copyright: '© 2024 RevAI. جميع الحقوق محفوظة.'
@@ -730,7 +903,8 @@ translations.ru = {
     pricing: 'Цены',
     customers: 'Клиенты',
     login: 'Войти',
-    signup: 'Начать Сейчас'
+    signup: 'Начать Сейчас',
+    openMenu: 'Открыть меню'
   },
   hero: {
     title: 'Управляйте Отзывами',
@@ -858,7 +1032,42 @@ translations.ru = {
     filterByPlatform: 'Фильтр по платформе',
     searchReviews: 'Поиск отзывов',
     allPlatforms: 'Все платформы',
-    allSentiments: 'Все тональности'
+    allSentiments: 'Все тональности',
+    filterReviews: 'Фильтр Отзывов',
+    noNewReviews: 'Нет Новых Отзывов',
+    noNewReviewsDesc: 'Все новые отзывы будут появляться здесь',
+    noWaitingReviews: 'Нет Ответов Ожидающих Подтверждения',
+    noWaitingReviewsDesc: 'Ответы ИИ, которые созданы и ожидают подтверждения, будут появляться здесь',
+    noProcessedReviews: 'Нет Обработанных Ответов',
+    noProcessedReviewsDesc: 'Одобренные и отправленные ответы будут появляться здесь',
+    aiResponseGenerated: 'Ответ ИИ успешно создан',
+    responseWaitingApproval: 'Ответ ожидает подтверждения',
+    error: 'Ошибка',
+    failedToGenerate: 'Не удалось создать ответ ИИ. Пожалуйста, попробуйте еще раз.',
+    responseApproved: 'Ответ одобрен',
+    responseApprovedSuccess: 'Ответ успешно одобрен',
+    failedToApprove: 'Не удалось одобрить ответ',
+    responseSent: 'Ответ отправлен',
+    responseSentSuccess: 'Ответ успешно отправлен клиенту',
+    failedToSend: 'Не удалось отправить ответ',
+    errorFetching: 'Ошибка загрузки отзывов'
+  },
+  reviewCard: {
+    sent: 'Отправлен',
+    approved: 'Одобрен',
+    waitingApproval: 'Ожидает подтверждения',
+    generating: 'Генерация...',
+    manualResponse: 'Ручной ответ',
+    aiResponse: 'Ответ ИИ',
+    specialInstructions: 'Со специальными инструкциями',
+    responseGenerated: 'Ответ успешно создан',
+    generatingResponse: 'Создание ответа...',
+    generateAIResponse: 'Создать Ответ ИИ',
+    aiWithInstructions: 'ИИ с Инструкциями',
+    writeManualResponse: 'Ручной Ответ',
+    approveResponse: 'Одобрить Ответ',
+    regenerateResponse: 'Создать Новый Ответ',
+    sendResponse: 'Отправить Ответ'
   },
   footer: {
     copyright: '© 2024 RevAI. Все права защищены.'

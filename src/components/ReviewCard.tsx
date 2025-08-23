@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, MessageSquare, Check, Clock, Send, Sparkles, Edit, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Review {
   id: string;
@@ -39,6 +40,7 @@ const ReviewCard = ({
   onRegenerateResponse,
   isGenerating = false
 }: ReviewCardProps) => {
+  const { t } = useTranslation();
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
       case "positive":
@@ -78,13 +80,13 @@ const ReviewCard = ({
   const getResponseStatus = () => {
     switch (review.response_status) {
       case 'sent':
-        return { icon: Send, text: "נשלח", color: "text-green-600" };
+        return { icon: Send, text: t('reviewCard.sent'), color: "text-green-600" };
       case 'approved':
-        return { icon: Check, text: "אושר", color: "text-blue-600" };
+        return { icon: Check, text: t('reviewCard.approved'), color: "text-blue-600" };
       case 'generated':
-        return { icon: Clock, text: "ממתין לאישור", color: "text-yellow-600" };
+        return { icon: Clock, text: t('reviewCard.waitingApproval'), color: "text-yellow-600" };
       case 'generating':
-        return { icon: Clock, text: "מייצר...", color: "text-orange-600" };
+        return { icon: Clock, text: t('reviewCard.generating'), color: "text-orange-600" };
       default:
         return null;
     }
@@ -135,16 +137,16 @@ const ReviewCard = ({
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {review.manual_response ? "תגובה ידנית" : "תגובת AI"}
+                {review.manual_response ? t('reviewCard.manualResponse') : t('reviewCard.aiResponse')}
               </span>
               {review.ai_instructions && (
                 <Badge variant="secondary" className="text-xs">
-                  עם הוראות מיוחדות
+                  {t('reviewCard.specialInstructions')}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed text-right">
-              {review.manual_response || review.ai_response || "התגובה נוצרה בהצלחה"}
+              {review.manual_response || review.ai_response || t('reviewCard.responseGenerated')}
             </p>
           </div>
         )}
@@ -162,12 +164,12 @@ const ReviewCard = ({
                   {isGenerating ? (
                     <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      מייצר תגובה...
+                      {t('reviewCard.generatingResponse')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-3 w-3" />
-                      צור תגובת AI
+                      {t('reviewCard.generateAIResponse')}
                     </>
                   )}
                 </Button>
@@ -181,7 +183,7 @@ const ReviewCard = ({
                   className="flex items-center gap-1"
                 >
                   <Settings className="h-3 w-3" />
-                  AI עם הוראות
+                  {t('reviewCard.aiWithInstructions')}
                 </Button>
               )}
 
@@ -193,7 +195,7 @@ const ReviewCard = ({
                   className="flex items-center gap-1"
                 >
                   <Edit className="h-3 w-3" />
-                  תגובה ידנית
+                  {t('reviewCard.writeManualResponse')}
                 </Button>
               )}
             </>
@@ -208,7 +210,7 @@ const ReviewCard = ({
                 className="flex items-center gap-1"
               >
                 <Check className="h-3 w-3" />
-                אשר תגובה
+                {t('reviewCard.approveResponse')}
               </Button>
               
               {onRegenerateResponse && (
@@ -222,12 +224,12 @@ const ReviewCard = ({
                   {isGenerating ? (
                     <>
                       <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      מייצר...
+                      {t('reviewCard.generating')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-3 w-3" />
-                      צור תגובה חדשה
+                      {t('reviewCard.regenerateResponse')}
                     </>
                   )}
                 </Button>
@@ -242,7 +244,7 @@ const ReviewCard = ({
               className="flex items-center gap-1"
             >
               <Send className="h-3 w-3" />
-              שלח תגובה
+              {t('reviewCard.sendResponse')}
             </Button>
           )}
         </div>

@@ -76,7 +76,7 @@ const Index = () => {
             <button
               className="md:hidden p-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="פתח תפריט"
+              aria-label={t('nav.openMenu')}
             >
               {isMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -127,7 +127,7 @@ const Index = () => {
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/95 backdrop-blur-sm border-t border-border">
           <Link to="/signup" className="block">
             <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-              התחל עכשיו
+              {t('nav.signup')}
             </Button>
           </Link>
         </div>
@@ -160,9 +160,9 @@ const Index = () => {
                   <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 </div>
-                <div className="text-sm font-medium mb-2">לוח בקרה RevAI</div>
+                <div className="text-sm font-medium mb-2">{t('dashboard.title')}</div>
                 <div className="text-xs text-muted-foreground">
-                  קבלת החלטות מהירות • ניתוח סנטימנטים
+                  {t('dashboard.subtitle')}
                 </div>
               </div>
               <div className="space-y-3">
@@ -257,21 +257,21 @@ const Index = () => {
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   </div>
-                  <h4 className="font-semibold text-foreground">לוח בקרה RevAI</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">ביקורות חדשות</span>
-                      <span className="text-sm font-medium">24</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">דירוג ממוצע</span>
-                      <span className="text-sm font-medium">4.8</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">תגובות ממתינות</span>
-                      <span className="text-sm font-medium">3</span>
-                    </div>
-                  </div>
+              <h4 className="font-semibold text-foreground">{t('dashboard.title')}</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">{t('dashboard.newReviews')}</span>
+                  <span className="text-sm font-medium">24</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">{t('dashboard.averageRating')}</span>
+                  <span className="text-sm font-medium">4.8</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">{t('dashboard.pendingResponses')}</span>
+                  <span className="text-sm font-medium">3</span>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -407,36 +407,37 @@ const Index = () => {
 
             {/* Starter Plan */}
             <div className="bg-card border border-border rounded-2xl p-6 text-center">
-              <h3 className="text-lg font-bold text-foreground mb-2">מתחילים</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{t('pricing.plans.starter.name')}</h3>
               <div className="text-3xl font-bold text-foreground mb-4">
-                €29
-                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+                {t('pricing.plans.starter.price')}
+                <span className="text-sm text-muted-foreground font-normal">/{language === 'he' ? 'חודש' : 'month'}</span>
               </div>
               
-              <ul className="space-y-3 mb-6 text-right text-sm">
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">עד 50 ביקורות/חודש</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">3 פלטפורמות</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">תגובות חכמות</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
+              <ul className={`space-y-3 mb-6 text-sm ${language === 'he' || language === 'ar' ? 'text-right' : 'text-left'}`}>
+                {t('pricing.plans.starter.features').split(',').map((feature: string, index: number) => (
+                  <li key={index} className={`flex items-center gap-2 ${language === 'he' || language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+                    {language === 'he' || language === 'ar' ? (
+                      <>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                      </>
+                    )}
+                  </li>
+                ))}
               </ul>
               
               <Link to="/signup">
                 <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  בחר תוכנית
+                  {t('nav.signup')}
                 </Button>
               </Link>
             </div>
@@ -445,88 +446,78 @@ const Index = () => {
             <div className="bg-card border-2 border-primary rounded-2xl p-6 text-center relative">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                  הכי פופולרי
+                  {language === 'he' ? 'הכי פופולרי' : language === 'ar' ? 'الأكثر شيوعاً' : 'Most Popular'}
                 </span>
               </div>
               
-              <h3 className="text-lg font-bold text-foreground mb-2">מקצועי</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{t('pricing.plans.pro.name')}</h3>
               <div className="text-3xl font-bold text-foreground mb-4">
-                €69
-                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+                {t('pricing.plans.pro.price')}
+                <span className="text-sm text-muted-foreground font-normal">/{language === 'he' ? 'חודש' : 'month'}</span>
               </div>
               
-              <ul className="space-y-3 mb-6 text-right text-sm">
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">ביקורות בלתי מוגבלות</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">כל הפלטפורמות</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">למידת טון ואזעקות</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">דוחות מתקדמים</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
+              <ul className={`space-y-3 mb-6 text-sm ${language === 'he' || language === 'ar' ? 'text-right' : 'text-left'}`}>
+                {t('pricing.plans.pro.features').split(',').map((feature: string, index: number) => (
+                  <li key={index} className={`flex items-center gap-2 ${language === 'he' || language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+                    {language === 'he' || language === 'ar' ? (
+                      <>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                      </>
+                    )}
+                  </li>
+                ))}
               </ul>
               
               <Link to="/signup">
                 <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  בחר תוכנית
+                  {t('nav.signup')}
                 </Button>
               </Link>
             </div>
 
             {/* Agency Plan */}
             <div className="bg-card border border-border rounded-2xl p-6 text-center">
-              <h3 className="text-lg font-bold text-foreground mb-2">סוכנות</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{t('pricing.plans.agency.name')}</h3>
               <div className="text-3xl font-bold text-foreground mb-4">
-                €199
-                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+                {t('pricing.plans.agency.price')}
+                <span className="text-sm text-muted-foreground font-normal">/{language === 'he' ? 'חודש' : 'month'}</span>
               </div>
               
-              <ul className="space-y-3 mb-6 text-right text-sm">
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">לוח בקרה רב-חשבונות</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">White Label</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">API מלא</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">תמיכה VIP</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
+              <ul className={`space-y-3 mb-6 text-sm ${language === 'he' || language === 'ar' ? 'text-right' : 'text-left'}`}>
+                {t('pricing.plans.agency.features').split(',').map((feature: string, index: number) => (
+                  <li key={index} className={`flex items-center gap-2 ${language === 'he' || language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+                    {language === 'he' || language === 'ar' ? (
+                      <>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                      </>
+                    )}
+                  </li>
+                ))}
               </ul>
               
               <Link to="/signup">
                 <Button variant="outline" size="lg" className="w-full">
-                  צור קשר
+                  {language === 'he' ? 'צור קשר' : language === 'ar' ? 'اتصل بنا' : 'Contact Us'}
                 </Button>
               </Link>
             </div>

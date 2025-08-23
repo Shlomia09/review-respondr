@@ -132,7 +132,7 @@ const Dashboard = () => {
 
     if (error) {
       toast({
-        title: "Error fetching reviews",
+        title: t('dashboard.errorFetching'),
         description: error.message,
         variant: "destructive",
       });
@@ -245,8 +245,8 @@ const Dashboard = () => {
 
       if (data?.success) {
         toast({
-          title: "תגובת AI נוצרה בהצלחה",
-          description: "התגובה ממתינה לאישור",
+          title: t('dashboard.aiResponseGenerated'),
+          description: t('dashboard.responseWaitingApproval'),
         });
         
         // Immediately update the local state to show the response
@@ -267,8 +267,8 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error generating response:', error);
       toast({
-        title: "שגיאה",
-        description: "לא הצלחנו לייצר תגובת AI. נסה שוב.",
+        title: t('dashboard.error'),
+        description: t('dashboard.failedToGenerate'),
         variant: "destructive",
       });
     } finally {
@@ -290,16 +290,16 @@ const Dashboard = () => {
       if (error) {
         console.error('Error approving response:', error);
         toast({
-          title: "שגיאה",
-          description: "לא הצלחנו לאשר את התגובה",
+          title: t('dashboard.error'),
+          description: t('dashboard.failedToApprove'),
           variant: "destructive",
         });
         return;
       }
 
       toast({
-        title: "תגובה אושרה",
-        description: "התגובה אושרה בהצלחה",
+        title: t('dashboard.responseApproved'),
+        description: t('dashboard.responseApprovedSuccess'),
       });
       
       // Optimistic update: move item to processed
@@ -321,16 +321,16 @@ const Dashboard = () => {
       if (error) {
         console.error('Error sending response:', error);
         toast({
-          title: "שגיאה",
-          description: "לא הצלחנו לשלוח את התגובה",
+          title: t('dashboard.error'),
+          description: t('dashboard.failedToSend'),
           variant: "destructive",
         });
         return;
       }
 
       toast({
-        title: "תגובה נשלחה",
-        description: "התגובה נשלחה ללקוח בהצלחה",
+        title: t('dashboard.responseSent'),
+        description: t('dashboard.responseSentSuccess'),
       });
       
       await fetchReviews();
