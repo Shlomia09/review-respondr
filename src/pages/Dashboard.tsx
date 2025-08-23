@@ -28,6 +28,7 @@ import {
   Send
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DatabaseReview {
   id: string;
@@ -61,6 +62,7 @@ interface Review {
 }
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
@@ -366,7 +368,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -384,7 +386,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-2 sm:gap-4">
               <Button variant="outline" size="sm" className="hidden sm:flex">
                 <Plus className="h-4 w-4 mr-2" />
-                Connect Platform
+                {t('dashboard.connectPlatform')}
               </Button>
               <Button variant="outline" size="sm" className="sm:hidden">
                 <Plus className="h-4 w-4" />
@@ -405,55 +407,55 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">סה"כ ביקורות</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.totalReviews')}</CardTitle>
               <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-lg sm:text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
-                +2 מהשבוע שעבר
+                +2 {t('dashboard.fromLastWeek')}
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">דירוג ממוצע</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.averageRating')}</CardTitle>
               <Star className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-lg sm:text-2xl font-bold">{stats.avgRating.toFixed(1)}</div>
               <p className="text-xs text-muted-foreground">
-                +0.2 מהשבוע שעבר
+                +0.2 {t('dashboard.fromLastWeek')}
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">שיעור תגובה</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.responseRate')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-lg sm:text-2xl font-bold">{stats.responseRate.toFixed(0)}%</div>
               <p className="text-xs text-muted-foreground">
-                +12% מהשבוע שעבר
+                +12% {t('dashboard.fromLastWeek')}
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">סנטימנט</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.sentiment')}</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="flex gap-1 sm:gap-2 flex-wrap">
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 badge-mobile text-xs">
-                  {stats.positive} חיובי
+                  {stats.positive} {t('dashboard.positive')}
                 </Badge>
                 <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 badge-mobile text-xs">
-                  {stats.negative} שלילי
+                  {stats.negative} {t('dashboard.negative')}
                 </Badge>
               </div>
             </CardContent>
@@ -468,7 +470,7 @@ const Dashboard = () => {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="new" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
-              ביקורות חדשות
+              {t('dashboard.newReviews')}
               {stats.newReviews > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {stats.newReviews}
@@ -477,7 +479,7 @@ const Dashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="waiting" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              מחכות לאישור
+              {t('dashboard.waitingApproval')}
               {stats.waitingReviews > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {stats.waitingReviews}
@@ -486,7 +488,7 @@ const Dashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="processed" className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              תגובות מטופלות
+              {t('dashboard.processedResponses')}
               {stats.processedReviews > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {stats.processedReviews}
@@ -500,45 +502,49 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                סינון ביקורות
+                {t('dashboard.filterReviews')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="חיפוש ביקורות..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder={t('dashboard.searchReviews')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Filters */}
+              <div className="flex gap-2">
                 <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="סנטימנט" />
+                  <SelectTrigger className="w-[140px] sm:w-[180px]">
+                    <SelectValue placeholder={t('dashboard.filterBySentiment')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">כל הסנטימנטים</SelectItem>
-                    <SelectItem value="positive">חיובי</SelectItem>
-                    <SelectItem value="neutral">ניטרלי</SelectItem>
-                    <SelectItem value="negative">שלילי</SelectItem>
+                    <SelectItem value="all">{t('dashboard.allSentiments')}</SelectItem>
+                    <SelectItem value="positive">{t('dashboard.positive')}</SelectItem>
+                    <SelectItem value="negative">{t('dashboard.negative')}</SelectItem>
+                    <SelectItem value="neutral">{t('dashboard.neutral')}</SelectItem>
                   </SelectContent>
                 </Select>
                 
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="פלטפורמה" />
+                  <SelectTrigger className="w-[120px] sm:w-[150px]">
+                    <SelectValue placeholder={t('dashboard.filterByPlatform')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">כל הפלטפורמות</SelectItem>
+                    <SelectItem value="all">{t('dashboard.allPlatforms')}</SelectItem>
                     <SelectItem value="google">Google</SelectItem>
                     <SelectItem value="facebook">Facebook</SelectItem>
                     <SelectItem value="trustpilot">Trustpilot</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
             </CardContent>
           </Card>
 
@@ -549,10 +555,10 @@ const Dashboard = () => {
                   <CardContent className="text-center py-12">
                     <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                      אין ביקורות חדשות
+                      {t('dashboard.noNewReviews')}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      כל הביקורות החדשות יופיעו כאן
+                      {t('dashboard.noNewReviewsDesc')}
                     </p>
                   </CardContent>
                 </Card>
@@ -581,10 +587,10 @@ const Dashboard = () => {
                   <CardContent className="text-center py-12">
                     <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                      אין תגובות הממתינות לאישור
+                      {t('dashboard.noWaitingReviews')}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      תגובות AI שנוצרו והמחכות לאישור יופיעו כאן
+                      {t('dashboard.noWaitingReviewsDesc')}
                     </p>
                   </CardContent>
                 </Card>
@@ -613,10 +619,10 @@ const Dashboard = () => {
                   <CardContent className="text-center py-12">
                     <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                      אין תגובות מטופלות
+                      {t('dashboard.noProcessedReviews')}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      תגובות שאושרו ונשלחו יופיעו כאן
+                      {t('dashboard.noProcessedReviewsDesc')}
                     </p>
                   </CardContent>
                 </Card>
