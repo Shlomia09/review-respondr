@@ -210,6 +210,15 @@ const Dashboard = () => {
 
   const stats = getStats();
 
+  const detectLanguage = (text: string): 'he' | 'ar' | 'ru' | 'es' | 'de' | 'en' => {
+    if (/\p{Script=Hebrew}/u.test(text) || /[\u0590-\u05FF]/.test(text)) return 'he';
+    if (/\p{Script=Arabic}/u.test(text) || /[\u0600-\u06FF]/.test(text)) return 'ar';
+    if (/[\u0400-\u04FF]/.test(text)) return 'ru';
+    if (/[ñáéíóúü¡¿]/i.test(text)) return 'es';
+    if (/[äöüß]/i.test(text)) return 'de';
+    return 'en';
+  };
+
   const handleGenerateResponse = async (reviewId: string) => {
     const review = reviews.find(r => r.id === reviewId);
     if (!review) return;
@@ -233,7 +242,8 @@ const Dashboard = () => {
           rating: review.rating,
           platform: review.platform,
           businessType: t('businessSetup.types.other'),
-          aiInstructions: review.ai_instructions
+          aiInstructions: review.ai_instructions,
+          targetLanguage: detectLanguage(review.content)
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,

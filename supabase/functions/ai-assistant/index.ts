@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, reviewId, reviewContent, customerName, rating, platform, businessType } = await req.json();
+    const { action, reviewId, reviewContent, customerName, rating, platform, businessType, targetLanguage } = await req.json();
     
     // Get JWT token from Authorization header
     const authHeader = req.headers.get('Authorization');
@@ -44,7 +44,7 @@ serve(async (req) => {
     console.log(`🔄 Processing ${action} for user: ${user.id}`);
 
     if (action === 'generate_response') {
-      return await generateAIResponse(reviewId, reviewContent, customerName, rating, platform, businessType, user.id, supabase);
+      return await generateAIResponse(reviewId, reviewContent, customerName, rating, platform, businessType, targetLanguage, user.id, supabase);
     } else if (action === 'analyze_sentiment') {
       return await analyzeSentiment(reviewContent, reviewId, user.id, supabase);
     } else {
@@ -60,7 +60,7 @@ serve(async (req) => {
   }
 });
 
-async function generateAIResponse(reviewId: string, reviewContent: string, customerName: string, rating: number, platform: string, businessType: string, userId: string, supabase: any) {
+async function generateAIResponse(reviewId: string, reviewContent: string, customerName: string, rating: number, platform: string, businessType: string, targetLanguage: string | undefined, userId: string, supabase: any) {
   console.log(`🤖 Generating AI response for review: ${reviewId}`);
   
   // Get business profile and any specific instructions
@@ -80,40 +80,53 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   const businessInfo = businessProfile || {};
   const specificInstructions = reviewData?.ai_instructions || '';
 
-  const systemPrompt = `אתה מומחה בשירות לקוחות ומגיב על ביקורות לקוחות בעברית. 
-  המטרה שלך היא ליצור תגובות מקצועיות, אישיות ובונות.
-  
-  פרטי העסק:
-  - שם העסק: ${businessInfo.business_name || 'לא צוין'}
-  - סוג העסק: ${businessInfo.business_type || businessType || 'עסק כללי'}
-  - תיאור העסק: ${businessInfo.business_description || 'לא צוין'}
-  - קהל היעד: ${businessInfo.target_audience || 'כללי'}
-  - טון התגובות: ${businessInfo.business_tone || 'מקצועי'}
-  - הוראות כלליות: ${businessInfo.special_instructions || 'אין'}
-  
-  הוראות מיוחדות לביקורת הזו:
-  ${specificInstructions || 'אין הוראות מיוחדות'}
-  
-  כללים חשובים:
-  - תמיד כתוב בעברית
-  - היה מקצועי ונעים
-  - הודה על הביקורת
-  - אם הביקורת חיובית - הבע הערכה והזמן את הלקוח לחזור
-  - אם הביקורת שלילית - התנצל, הצע פתרון והזמן לשיחה פרטית
-  - התאם את הטון לפלטפורמה (גוגל/פייסבוק)
-  - שמור על אורך של 2-3 משפטים מקסימום
-  - אל תמציא פרטים שלא קיימים בביקורת
-  - שלב את ההוראות המיוחדות באופן טבעי
-  - התאם את התגובה לסוג העסק הספציפי
-  - **חשוב מאוד**: סיים תמיד את התגובה עם "בברכה, ${businessInfo.business_name ? `צוות ${businessInfo.business_name}` : 'צוות העסק'}"
-  
-  פלטפורמה: ${platform}
-  דירוג: ${rating}/5`;
+  const lang = (targetLanguage || 'en').toLowerCase();
+  const langConfig: Record<string, { name: string; closing: string; team: string }> = {
+    he: { name: 'Hebrew',  closing: 'בברכה',                    team: 'צוות' },
+    ar: { name: 'Arabic',  closing: 'مع التحية',                 team: 'فريق' },
+    es: { name: 'Spanish', closing: 'Saludos',                   team: 'Equipo' },
+    de: { name: 'German',  closing: 'Mit freundlichen Grüßen',   team: 'Team' },
+    ru: { name: 'Russian', closing: 'С уважением',               team: 'Команда' },
+    en: { name: 'English', closing: 'Best regards',              team: 'Team' },
+  };
+  const cfg = langConfig[lang] || langConfig.en;
+  const teamSignature = businessInfo.business_name
+    ? `${cfg.closing}, ${cfg.team} ${businessInfo.business_name}`
+    : `${cfg.closing}`;
 
-  const userPrompt = `שם הלקוח: ${customerName}
-  הביקורת: "${reviewContent}"
-  
-  אנא כתב תגובה מקצועית ואישית לביקורת זו המתאימה לעסק שלי ולהוראות שקיבלת.`;
+  const systemPrompt = `You are a customer support expert who replies to customer reviews in ${cfg.name}.
+Your goal is to produce professional, personal, and constructive replies tailored to the business.
+
+Business details:
+- Business name: ${businessInfo.business_name || 'Not specified'}
+- Business type: ${businessInfo.business_type || businessType || 'General business'}
+- Description: ${businessInfo.business_description || 'Not specified'}
+- Target audience: ${businessInfo.target_audience || 'General'}
+- Preferred tone: ${businessInfo.business_tone || 'Professional'}
+- General instructions: ${businessInfo.special_instructions || 'None'}
+
+Special instructions for this review:
+${specificInstructions || 'None'}
+
+Important rules:
+- Always write in ${cfg.name}
+- Be professional and friendly
+- Thank the customer for the review
+- If positive: express appreciation and invite to return
+- If negative: apologize, offer a solution, and invite to a private conversation
+- Match the tone to the platform (Google/Facebook/Trustpilot)
+- Keep the response to 2-3 sentences max
+- Do not invent details that are not in the review
+- Integrate special instructions naturally
+- Tailor the response to the specific business type
+- ALWAYS end with "${teamSignature}"`;
+
+  const userPrompt = `Customer name: ${customerName}
+Review: "${reviewContent}"
+Rating: ${rating}/5
+Platform: ${platform}
+
+Please write a professional and personal reply in ${cfg.name}, following the instructions above.`;
 
   console.log(`📋 Business Profile:`, JSON.stringify(businessInfo, null, 2));
   console.log(`📝 Specific Instructions:`, specificInstructions);
@@ -123,26 +136,60 @@ async function generateAIResponse(reviewId: string, reviewContent: string, custo
   try {
     // Helper: fallback message if model returns empty
     const buildFallbackResponse = () => {
-      const name = customerName || 'הלקוח/ה';
+      const name = customerName || '';
       const bName = (businessInfo.business_name || '').trim();
-      const tone = (businessInfo.business_tone || 'מקצועי').toLowerCase();
       const isPositive = Number(rating) >= 4;
       const isNegative = Number(rating) <= 2;
 
-      const opener = isPositive
-        ? `תודה רבה, ${name}! שמחים מאוד שנהנית מהחוויה אצלנו${bName ? ' ב' + bName : ''}.`
-        : isNegative
-        ? `מצטערים לשמוע, ${name}. חשוב לנו לספק חוויה מצוינת בכל ביקור.`
-        : `תודה על המשוב, ${name}. דעתך חשובה לנו.`;
+      const phrases: Record<string, { thanks: (n:string)=>string; sorry: (n:string)=>string; neutral: (n:string)=>string; followPos: string; followNeg: string }> = {
+        en: {
+          thanks: (n) => `Thank you${n ? ', ' + n : ''}! We’re thrilled you enjoyed your experience${bName ? ' at ' + bName : ''}.`,
+          sorry:  (n) => `We’re sorry to hear this${n ? ', ' + n : ''}. We aim to provide an excellent experience every time.`,
+          neutral: (n) => `Thanks for your feedback${n ? ', ' + n : ''}. Your opinion matters to us.`,
+          followPos: `We hope to see you again soon!`,
+          followNeg: `Please contact us privately so we can make this right as soon as possible.`,
+        },
+        he: {
+          thanks: (n) => `תודה רבה${n ? ', ' + n : ''}! שמחים שנהנית מהחוויה${bName ? ' ב' + bName : ''}.`,
+          sorry:  (n) => `מצטערים לשמוע${n ? ', ' + n : ''}. חשוב לנו לספק חוויה מצוינת בכל ביקור.`,
+          neutral: (n) => `תודה על המשוב${n ? ', ' + n : ''}. דעתך חשובה לנו.`,
+          followPos: `נשמח לראותך שוב בקרוב!`,
+          followNeg: `נשמח לשוחח בפרטי ולטפל בכך מיד.`,
+        },
+        es: {
+          thanks: (n) => `¡Gracias${n ? ', ' + n : ''}! Nos alegra que hayas disfrutado la experiencia${bName ? ' en ' + bName : ''}.`,
+          sorry:  (n) => `Lamentamos escuchar esto${n ? ', ' + n : ''}. Buscamos brindar una excelente experiencia siempre.`,
+          neutral: (n) => `Gracias por tu comentario${n ? ', ' + n : ''}. Tu opinión es importante para nosotros.`,
+          followPos: `¡Esperamos verte pronto de nuevo!`,
+          followNeg: `Contáctanos en privado para solucionarlo lo antes posible.`,
+        },
+        de: {
+          thanks: (n) => `Vielen Dank${n ? ', ' + n : ''}! Wir freuen uns, dass Ihnen die Erfahrung${bName ? ' bei ' + bName : ''} gefallen hat.`,
+          sorry:  (n) => `Es tut uns leid, das zu hören${n ? ', ' + n : ''}. Wir möchten stets eine ausgezeichnete Erfahrung bieten.`,
+          neutral: (n) => `Danke für Ihr Feedback${n ? ', ' + n : ''}. Ihre Meinung ist uns wichtig.`,
+          followPos: `Wir freuen uns auf Ihren nächsten Besuch!`,
+          followNeg: `Bitte kontaktieren Sie uns privat, damit wir das schnell klären können.`,
+        },
+        ar: {
+          thanks: (n) => `شكرًا جزيلاً${n ? '، ' + n : ''}! يسعدنا أنك استمتعت بالتجربة${bName ? ' في ' + bName : ''}.`,
+          sorry:  (n) => `نأسف لسماع ذلك${n ? '، ' + n : ''}. نهدف دائمًا إلى تقديم تجربة ممتازة.`,
+          neutral: (n) => `شكرًا على ملاحظاتك${n ? '، ' + n : ''}. رأيك مهم لنا.`,
+          followPos: `نتطلع لرؤيتك مرة أخرى قريبًا!`,
+          followNeg: `يرجى التواصل معنا بشكل خاص لمعالجة الأمر بأسرع وقت.`,
+        },
+        ru: {
+          thanks: (n) => `Спасибо${n ? ', ' + n : ''}! Мы рады, что вам понравилось${bName ? ' в ' + bName : ''}.`,
+          sorry:  (n) => `Нам жаль это слышать${n ? ', ' + n : ''}. Мы стремимся всегда предоставлять отличный сервис.`,
+          neutral: (n) => `Спасибо за ваш отзыв${n ? ', ' + n : ''}. Ваше мнение важно для нас.`,
+          followPos: `Будем рады видеть вас снова!`,
+          followNeg: `Свяжитесь с нами лично, чтобы мы могли быстро решить вопрос.`,
+        },
+      };
 
-      const follow = isNegative
-        ? `נשמח להבין יותר ולטפל בכך מיד. אפשר לפנות אלינו בהודעה פרטית או בטלפון, ונמצא פתרון מתאים.`
-        : `נשמח לראותך שוב בקרוב! אם יש עוד משהו שנוכל לשפר, נודה לשיתוף.`;
-
-      const extra = specificInstructions
-        ? ` (${specificInstructions})`
-        : '';
-
+      const p = phrases[lang] || phrases.en;
+      const opener = isPositive ? p.thanks(name) : isNegative ? p.sorry(name) : p.neutral(name);
+      const follow = isNegative ? p.followNeg : p.followPos;
+      const extra = specificInstructions ? ` (${specificInstructions})` : '';
       return `${opener} ${follow}${extra}`.trim();
     };
 
