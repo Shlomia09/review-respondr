@@ -1076,7 +1076,219 @@ translations.ru = {
 
 const defaultLanguage: Language = 'en';
 
-// Add Business Setup translations for all languages
+// Add missing translations for all modals and components
+(translations as any).en.aiInstructions = {
+  title: 'AI Instructions',
+  description: 'Add special instructions for AI to customize the response for this review',
+  fields: {
+    instructions: 'Instructions for AI'
+  },
+  placeholders: {
+    instructions: 'For example: emphasize service quality, mention current promotions...'
+  },
+  helpText: 'These instructions will help AI generate a more accurate response',
+  examples: {
+    title: 'Example Instructions:',
+    list: 'Mention current promotions, Apologize for unavailability, Invite to special event, Emphasize product quality'
+  },
+  buttons: {
+    cancel: 'Cancel',
+    save: 'Save',
+    saving: 'Saving...'
+  },
+  toasts: {
+    errorTitle: 'Error',
+    errorMissingInstructions: 'Please enter instructions for the system',
+    savedTitle: 'Saved',
+    savedDesc: 'Instructions saved successfully',
+    errorSaveDesc: 'Error saving instructions. Please try again.'
+  }
+};
+
+(translations as any).he.aiInstructions = {
+  title: 'הוראות למערכת AI',
+  description: 'הוסף הוראות מיוחדות למערכת AI כדי להתאים את התגובה לביקורת הזו',
+  fields: {
+    instructions: 'הוראות למערכת AI'
+  },
+  placeholders: {
+    instructions: 'למשל: תן דגש על איכות השירות, הזכר את המבצעים החדשים...'
+  },
+  helpText: 'ההוראות האלה יעזרו למערכת AI להתאים את התגובה באופן מדויק יותר',
+  examples: {
+    title: 'דוגמאות להוראות:',
+    list: 'הזכר את המבצעים הנוכחיים, תתנצל על חוסר הזמינות, הזמן לאירוע מיוחד, דגש על איכות המוצרים'
+  },
+  buttons: {
+    cancel: 'ביטול',
+    save: 'שמירה',
+    saving: 'שומר...'
+  },
+  toasts: {
+    errorTitle: 'שגיאה',
+    errorMissingInstructions: 'אנא הזן הוראות למערכת',
+    savedTitle: 'נשמר',
+    savedDesc: 'ההוראות נשמרו בהצלחה',
+    errorSaveDesc: 'שגיאה בשמירת ההוראות. נסה שוב.'
+  }
+};
+
+(translations as any).en.manualResponse = {
+  title: 'Manual Response',
+  description: 'Write a personal response to this review',
+  fields: {
+    response: 'Your Response'
+  },
+  placeholders: {
+    response: 'Write a personalized response...'
+  },
+  helpText: 'The response will be sent to the customer after approval',
+  buttons: {
+    cancel: 'Cancel',
+    save: 'Save',
+    saving: 'Saving...'
+  },
+  toasts: {
+    errorTitle: 'Error',
+    errorMissingResponse: 'Please write a response',
+    savedTitle: 'Saved',
+    savedDesc: 'Response saved successfully',
+    errorSaveDesc: 'Error saving response. Please try again.'
+  }
+};
+
+(translations as any).he.manualResponse = {
+  title: 'תגובה ידנית',
+  description: 'כתוב תגובה אישית לביקורת הזו',
+  fields: {
+    response: 'התגובה שלך'
+  },
+  placeholders: {
+    response: 'כתוב תגובה מותאמת אישית...'
+  },
+  helpText: 'התגובה תישלח ללקוח לאחר האישור',
+  buttons: {
+    cancel: 'ביטול',
+    save: 'שמירה',
+    saving: 'שומר...'
+  },
+  toasts: {
+    errorTitle: 'שגיאה',
+    errorMissingResponse: 'אנא כתוב תגובה',
+    savedTitle: 'נשמר',
+    savedDesc: 'התגובה נשמרה בהצלחה',
+    errorSaveDesc: 'שגיאה בשמירת התגובה. נסה שוב.'
+  }
+};
+
+(translations as any).en.platformConnection = {
+  title: 'Platform Connections',
+  description: 'Connect your review platforms for automatic import and management of reviews',
+  connected: 'Connected',
+  disconnected: 'Not Connected',
+  reviews: 'reviews',
+  connect: 'Connect',
+  manage: 'Manage'
+};
+
+(translations as any).he.platformConnection = {
+  title: 'חיבור פלטפורמות',
+  description: 'חבר את פלטפורמות הביקורת שלך לייבוא וניהול אוטומטי של ביקורות',
+  connected: 'מחובר',
+  disconnected: 'לא מחובר',
+  reviews: 'ביקורות',
+  connect: 'חבר',
+  manage: 'נהל'
+};
+
+// Add translations for all other languages  
+['es', 'de', 'ar', 'ru'].forEach(lang => {
+  if (lang === 'es') {
+    (translations as any)[lang].aiInstructions = {
+      title: 'Instrucciones de IA',
+      description: 'Agrega instrucciones especiales para que la IA personalice la respuesta',
+      fields: { instructions: 'Instrucciones para IA' },
+      placeholders: { instructions: 'Por ejemplo: enfatizar la calidad del servicio, mencionar promociones...' },
+      helpText: 'Estas instrucciones ayudarán a la IA a generar una respuesta más precisa',
+      examples: { title: 'Ejemplos de instrucciones:', list: 'Mencionar promociones actuales, Disculparse por no disponibilidad, Invitar a evento especial, Enfatizar calidad del producto' },
+      buttons: { cancel: 'Cancelar', save: 'Guardar', saving: 'Guardando...' },
+      toasts: { errorTitle: 'Error', errorMissingInstructions: 'Por favor ingresa instrucciones', savedTitle: 'Guardado', savedDesc: 'Instrucciones guardadas exitosamente', errorSaveDesc: 'Error al guardar. Inténtalo de nuevo.' }
+    };
+    (translations as any)[lang].manualResponse = {
+      title: 'Respuesta Manual',
+      description: 'Escribe una respuesta personal a esta reseña',
+      fields: { response: 'Tu Respuesta' },
+      placeholders: { response: 'Escribe una respuesta personalizada...' },
+      helpText: 'La respuesta será enviada al cliente después de la aprobación',
+      buttons: { cancel: 'Cancelar', save: 'Guardar', saving: 'Guardando...' },
+      toasts: { errorTitle: 'Error', errorMissingResponse: 'Por favor escribe una respuesta', savedTitle: 'Guardado', savedDesc: 'Respuesta guardada exitosamente', errorSaveDesc: 'Error al guardar. Inténtalo de nuevo.' }
+    };
+    (translations as any)[lang].platformConnection = { title: 'Conexiones de Plataforma', description: 'Conecta tus plataformas de reseñas para importación y gestión automática', connected: 'Conectado', disconnected: 'No Conectado', reviews: 'reseñas', connect: 'Conectar', manage: 'Gestionar' };
+  } else if (lang === 'de') {
+    (translations as any)[lang].aiInstructions = {
+      title: 'KI-Anweisungen',
+      description: 'Füge spezielle Anweisungen für die KI hinzu, um die Antwort anzupassen',
+      fields: { instructions: 'Anweisungen für KI' },
+      placeholders: { instructions: 'Zum Beispiel: Servicequalität betonen, aktuelle Aktionen erwähnen...' },
+      helpText: 'Diese Anweisungen helfen der KI, eine genauere Antwort zu generieren',
+      examples: { title: 'Beispiel-Anweisungen:', list: 'Aktuelle Aktionen erwähnen, Sich für Nichtverfügbarkeit entschuldigen, Zu besonderen Events einladen, Produktqualität betonen' },
+      buttons: { cancel: 'Abbrechen', save: 'Speichern', saving: 'Speichern...' },
+      toasts: { errorTitle: 'Fehler', errorMissingInstructions: 'Bitte geben Sie Anweisungen ein', savedTitle: 'Gespeichert', savedDesc: 'Anweisungen erfolgreich gespeichert', errorSaveDesc: 'Fehler beim Speichern. Bitte erneut versuchen.' }
+    };
+    (translations as any)[lang].manualResponse = {
+      title: 'Manuelle Antwort',
+      description: 'Schreibe eine persönliche Antwort auf diese Bewertung',
+      fields: { response: 'Ihre Antwort' },
+      placeholders: { response: 'Schreibe eine personalisierte Antwort...' },
+      helpText: 'Die Antwort wird nach Genehmigung an den Kunden gesendet',
+      buttons: { cancel: 'Abbrechen', save: 'Speichern', saving: 'Speichern...' },
+      toasts: { errorTitle: 'Fehler', errorMissingResponse: 'Bitte schreiben Sie eine Antwort', savedTitle: 'Gespeichert', savedDesc: 'Antwort erfolgreich gespeichert', errorSaveDesc: 'Fehler beim Speichern. Bitte erneut versuchen.' }
+    };
+    (translations as any)[lang].platformConnection = { title: 'Plattform-Verbindungen', description: 'Verbinden Sie Ihre Bewertungsplattformen für automatischen Import und Verwaltung', connected: 'Verbunden', disconnected: 'Nicht Verbunden', reviews: 'bewertungen', connect: 'Verbinden', manage: 'Verwalten' };
+  } else if (lang === 'ar') {
+    (translations as any)[lang].aiInstructions = {
+      title: 'تعليمات الذكاء الاصطناعي',
+      description: 'أضف تعليمات خاصة للذكاء الاصطناعي لتخصيص الرد',
+      fields: { instructions: 'تعليمات للذكاء الاصطناعي' },
+      placeholders: { instructions: 'مثال: التأكيد على جودة الخدمة، ذكر العروض الحالية...' },
+      helpText: 'ستساعد هذه التعليمات الذكاء الاصطناعي في إنتاج رد أكثر دقة',
+      examples: { title: 'أمثلة على التعليمات:', list: 'ذكر العروض الحالية, الاعتذار عن عدم التوفر, دعوة لحدث خاص, التأكيد على جودة المنتج' },
+      buttons: { cancel: 'إلغاء', save: 'حفظ', saving: 'جارٍ الحفظ...' },
+      toasts: { errorTitle: 'خطأ', errorMissingInstructions: 'يرجى إدخال تعليمات', savedTitle: 'تم الحفظ', savedDesc: 'تم حفظ التعليمات بنجاح', errorSaveDesc: 'خطأ في الحفظ. يرجى المحاولة مرة أخرى.' }
+    };
+    (translations as any)[lang].manualResponse = {
+      title: 'رد يدوي',
+      description: 'اكتب رداً شخصياً على هذه المراجعة',
+      fields: { response: 'ردك' },
+      placeholders: { response: 'اكتب رداً مخصصاً...' },
+      helpText: 'سيتم إرسال الرد للعميل بعد الموافقة',
+      buttons: { cancel: 'إلغاء', save: 'حفظ', saving: 'جارٍ الحفظ...' },
+      toasts: { errorTitle: 'خطأ', errorMissingResponse: 'يرجى كتابة رد', savedTitle: 'تم الحفظ', savedDesc: 'تم حفظ الرد بنجاح', errorSaveDesc: 'خطأ في الحفظ. يرجى المحاولة مرة أخرى.' }
+    };
+    (translations as any)[lang].platformConnection = { title: 'اتصالات المنصة', description: 'اربط منصات المراجعات للاستيراد والإدارة التلقائية', connected: 'متصل', disconnected: 'غير متصل', reviews: 'مراجعات', connect: 'اتصال', manage: 'إدارة' };
+  } else if (lang === 'ru') {
+    (translations as any)[lang].aiInstructions = {
+      title: 'Инструкции для ИИ',
+      description: 'Добавьте специальные инструкции для ИИ для настройки ответа',
+      fields: { instructions: 'Инструкции для ИИ' },
+      placeholders: { instructions: 'Например: подчеркнуть качество сервиса, упомянуть текущие акции...' },
+      helpText: 'Эти инструкции помогут ИИ создать более точный ответ',
+      examples: { title: 'Примеры инструкций:', list: 'Упомянуть текущие акции, Извиниться за недоступность, Пригласить на особое событие, Подчеркнуть качество продукта' },
+      buttons: { cancel: 'Отмена', save: 'Сохранить', saving: 'Сохранение...' },
+      toasts: { errorTitle: 'Ошибка', errorMissingInstructions: 'Пожалуйста, введите инструкции', savedTitle: 'Сохранено', savedDesc: 'Инструкции успешно сохранены', errorSaveDesc: 'Ошибка сохранения. Попробуйте еще раз.' }
+    };
+    (translations as any)[lang].manualResponse = {
+      title: 'Ручной Ответ',
+      description: 'Напишите личный ответ на этот отзыв',
+      fields: { response: 'Ваш Ответ' },
+      placeholders: { response: 'Напишите персонализированный ответ...' },
+      helpText: 'Ответ будет отправлен клиенту после одобрения',
+      buttons: { cancel: 'Отмена', save: 'Сохранить', saving: 'Сохранение...' },
+      toasts: { errorTitle: 'Ошибка', errorMissingResponse: 'Пожалуйста, напишите ответ', savedTitle: 'Сохранено', savedDesc: 'Ответ успешно сохранен', errorSaveDesc: 'Ошибка сохранения. Попробуйте еще раз.' }
+    };
+    (translations as any)[lang].platformConnection = { title: 'Подключения Платформ', description: 'Подключите платформы отзывов для автоматического импорта и управления', connected: 'Подключено', disconnected: 'Не Подключено', reviews: 'отзывов', connect: 'Подключить', manage: 'Управлять' };
+  }
+});
 (translations as any).en.businessSetup = {
   title: 'Business Setup',
   description: 'Tell us about your business so we can personalize AI responses.',

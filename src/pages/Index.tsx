@@ -113,7 +113,7 @@ const Index = () => {
               </a>
               <hr className="border-border" />
               <LanguageSwitcher />
-              <Link to="/login" className="block py-2">
+              <Link to="/login" className="block py-2" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" className="w-full text-sm justify-start">{t('nav.login')}</Button>
               </Link>
               </nav>

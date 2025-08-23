@@ -1,773 +1,99 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Globe,
-  Facebook,
-  Star,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  Settings
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, Plus } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Platform {
-  id: string;
   name: string;
-  icon: React.ReactNode;
   connected: boolean;
-  lastSync?: string;
   reviewCount?: number;
+  logo: string;
+  description: string;
 }
 
 const PlatformConnection = () => {
-  const [platforms, setPlatforms] = useState<Platform[]>([
+  const { t, language } = useTranslation();
+  const align = language === 'he' || language === 'ar' ? 'text-right' : 'text-left';
+  
+  const platforms: Platform[] = [
     {
-      id: "google",
-      name: "Google Reviews",
-      icon: <Globe className="h-5 w-5" />,
+      name: "Google",
       connected: false,
+      logo: "https://www.google.com/favicon.ico",
+      description: t('platforms.google.description')
     },
     {
-      id: "facebook",
-      name: "Facebook Reviews",
-      icon: <Facebook className="h-5 w-5" />,
-      connected: false,
+      name: "Facebook", 
+      connected: true,
+      reviewCount: 47,
+      logo: "https://www.facebook.com/favicon.ico", 
+      description: t('platforms.facebook.description')
     },
     {
-      id: "trustpilot",
       name: "Trustpilot",
-      icon: <Star className="h-5 w-5" />,
       connected: false,
-    },
-  ]);
-
-  const [showConfig, setShowConfig] = useState<string | null>(null);
-  const [showBusinessSelect, setShowBusinessSelect] = useState<{platform: string, businesses: any[]} | null>(null);
-  const [credentials, setCredentials] = useState<Record<string, string>>({});
-  const [syncing, setSyncing] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  // Check existing connections on component mount
-  React.useEffect(() => {
-    console.log('🔄 Checking existing platform connections...');
-    checkAllConnections();
-  }, []);
-
-  // Function to check all platform connections
-  const checkAllConnections = async () => {
-    console.log('🔍 Checking all platform connections...');
-    for (const platform of platforms) {
-      try {
-        await checkConnectionStatus(platform.id);
-      } catch (error) {
-        console.error(`Error checking ${platform.id}:`, error);
-      }
+      logo: "https://cdn.trustpilot.net/brand-assets/4.1.0/logo-black.svg",
+      description: t('platforms.trustpilot.description')
     }
-  };
-
-  const handleConnect = async (platformId: string) => {
-    try {
-      // Call edge function to test connection and store credentials
-      const { data, error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'connect',
-          platform: platformId,
-          credentials: credentials[platformId]
-        }
-      });
-
-      if (error) throw error;
-
-      setPlatforms(prev => prev.map(p => 
-        p.id === platformId 
-          ? { ...p, connected: true, lastSync: new Date().toISOString() }
-          : p
-      ));
-
-      setShowConfig(null);
-      setCredentials(prev => ({ ...prev, [platformId]: '' }));
-
-      toast({
-        title: "Platform Connected",
-        description: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Connection Failed",
-        description: error.message || "Failed to connect to platform",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSync = async (platformId: string) => {
-    setSyncing(platformId);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const { data, error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'sync',
-          platform: platformId
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      setPlatforms(prev => prev.map(p => 
-        p.id === platformId 
-          ? { 
-              ...p, 
-              lastSync: new Date().toISOString(),
-              reviewCount: data?.reviewCount || p.reviewCount
-            }
-          : p
-      ));
-
-      toast({
-        title: "Sync Complete",
-        description: `Imported ${data?.newReviews || 0} new reviews from ${platforms.find(p => p.id === platformId)?.name}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Sync Failed",
-        description: error.message || "Failed to sync reviews",
-        variant: "destructive",
-      });
-    } finally {
-      setSyncing(null);
-    }
-  };
-
-  const handleOAuthConnect = async (platform: string) => {
-    console.log('🚀 Starting OAuth connection for:', platform);
-    
-    try {
-      // Get user session for auth
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      // Get OAuth URL from edge function
-      console.log('📞 Calling sync-reviews for OAuth URL...');
-      const { data, error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'get_oauth_url',
-          platform: platform
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error('❌ Error getting OAuth URL:', error);
-        throw error;
-      }
-
-      console.log('📋 OAuth URL received:', data.oauth_url);
-
-      // Open OAuth popup window with proper permissions
-      console.log('🪟 Opening popup for platform:', platform);
-      const popup = window.open(
-        data.oauth_url,
-        `oauth_${platform}`,
-        'width=500,height=600,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=no'
-      );
-      
-      if (!popup) {
-        console.error('❌ Failed to open popup');
-        throw new Error('Failed to open popup window. Please allow popups for this site.');
-      }
-      
-      console.log('✅ Popup opened successfully');
-
-      // Listen for messages from popup
-      const messageListener = (event: MessageEvent) => {
-        console.log('=== Received message from popup ===');
-        console.log('Event data:', event.data);
-        console.log('Event origin:', event.origin);
-        console.log('Expected platform:', platform);
-        console.log('Data has success:', event.data && event.data.success);
-        console.log('Platform matches:', event.data && event.data.platform === platform);
-        
-        // Accept messages from Supabase domain for OAuth callback
-        const validOrigins = [
-          'https://epwriqkyqxwewwcxbnsu.supabase.co',
-          window.location.origin
-        ];
-        
-        console.log('Valid origins:', validOrigins);
-        console.log('Message origin valid:', validOrigins.includes(event.origin));
-        
-        if (event.data && event.data.success && event.data.platform === platform) {
-          console.log('✅ Success message received - fetching businesses');
-          
-          // OAuth successful - now get businesses for user to select
-          fetchBusinessesForSelection(platform);
-          cleanup();
-        } else if (event.data && event.data.error) {
-          console.log('❌ Error message received:', event.data.error);
-          
-          toast({
-            title: "שגיאה בהתחברות",
-            description: event.data.error,
-            variant: "destructive",
-          });
-          
-          cleanup();
-        }
-      };
-
-      // Cleanup function
-      const cleanup = () => {
-        console.log('🧹 Cleaning up OAuth popup');
-        if (popup && !popup.closed) {
-          popup.close();
-        }
-        window.removeEventListener('message', messageListener);
-        if (checkClosedRef.current) {
-          clearInterval(checkClosedRef.current);
-        }
-      };
-
-      // Store interval reference
-      const checkClosedRef = { current: null as NodeJS.Timeout | null };
-
-      window.addEventListener('message', messageListener);
-
-      // Enhanced fallback: Aggressively check for OAuth completion
-      const connectionCheckInterval = setInterval(async () => {
-        console.log('🔄 Checking OAuth completion...');
-        
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return;
-
-          const { data } = await supabase.functions.invoke('sync-reviews', {
-            body: { 
-              action: 'check_connection',
-              platform: platform
-            },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          });
-
-          if (data?.connected) {
-            console.log('✅ OAuth completed - connection detected! Fetching businesses...');
-            clearInterval(connectionCheckInterval);
-            cleanup();
-            
-            // Fetch businesses immediately when connection is detected
-            fetchBusinessesForSelection(platform);
-          }
-        } catch (error) {
-          console.error('Error checking connection:', error);
-        }
-      }, 2000); // Check every 2 seconds
-
-      // Fallback: Listen for OAuth completion by checking if window is closed
-      checkClosedRef.current = setInterval(() => {
-        if (popup?.closed) {
-          console.log('🔍 Popup closed manually - cleaning up');
-          cleanup();
-          clearInterval(connectionCheckInterval);
-        }
-      }, 1000);
-
-      // Stop all checks after 60 seconds
-      setTimeout(() => {
-        console.log('⏰ Stopping all OAuth checks');
-        clearInterval(connectionCheckInterval);
-        cleanup();
-      }, 60000);
-
-    } catch (error: any) {
-      console.error('❌ OAuth connection error:', error);
-      toast({
-        title: "Connection Failed",
-        description: error.message || "Failed to initiate OAuth connection",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchBusinessesForSelection = async (platformId: string) => {
-    try {
-      console.log('🏢 Fetching businesses for platform:', platformId);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const { data, error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'get_businesses',
-          platform: platformId
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      console.log('📋 Businesses received:', data.businesses);
-      if (data.businesses && data.businesses.length > 0) {
-        setShowBusinessSelect({ platform: platformId, businesses: data.businesses });
-      } else {
-        // No businesses found, just mark as connected
-        updatePlatformConnection(platformId);
-        toast({
-          title: "התחברות הושלמה",
-          description: `התחברת בהצלחה ל${platformId === 'google' ? 'גוגל' : 'פייסבוק'} (לא נמצאו עסקים)`,
-        });
-      }
-    } catch (error: any) {
-      console.error('Error fetching businesses:', error);
-      toast({
-        title: "שגיאה בקבלת רשימת עסקים",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const selectBusiness = async (businessId: string, businessName: string) => {
-    try {
-      console.log('🎯 Selecting business:', businessId, 'for platform:', showBusinessSelect?.platform);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const { error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'select_business',
-          platform: showBusinessSelect?.platform,
-          businessId: businessId
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      updatePlatformConnection(showBusinessSelect!.platform);
-      setShowBusinessSelect(null);
-      
-      toast({
-        title: "העסק נבחר בהצלחה",
-        description: `בחרת בעסק: ${businessName}`,
-      });
-    } catch (error: any) {
-      console.error('Error selecting business:', error);
-      toast({
-        title: "שגיאה בבחירת עסק",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updatePlatformConnection = (platformId: string) => {
-    setPlatforms(prev => prev.map(p => 
-      p.id === platformId 
-        ? { ...p, connected: true, lastSync: new Date().toISOString() }
-        : p
-    ));
-    setShowConfig(null);
-  };
-
-  const checkConnectionStatus = async (platformId: string) => {
-    console.log('🔍 Checking connection status for:', platformId);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No session available for connection check');
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'check_connection',
-          platform: platformId
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      console.log('Connection check result:', data);
-      if (data.connected) {
-        console.log('✅ Platform is connected - updating UI');
-        setPlatforms(prev => prev.map(p => 
-          p.id === platformId 
-            ? { ...p, connected: true, lastSync: new Date().toISOString() }
-            : p
-        ));
-
-        toast({
-          title: "התחברות הושלמה",
-          description: `התחברת בהצלחה ל${platformId === 'google' ? 'גוגל' : 'פייסבוק'}`,
-        });
-        
-        // Close the modal if it's open
-        setShowConfig(null);
-      } else {
-        console.log('❌ Platform is not connected');
-      }
-    } catch (error: any) {
-      console.error('Failed to check connection status:', error);
-    }
-  };
-
-  const handleDisconnect = async (platformId: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const { error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'disconnect',
-          platform: platformId
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      setPlatforms(prev => prev.map(p => 
-        p.id === platformId 
-          ? { ...p, connected: false, lastSync: undefined, reviewCount: undefined }
-          : p
-      ));
-
-      toast({
-        title: "Platform Disconnected",
-        description: `Disconnected from ${platforms.find(p => p.id === platformId)?.name}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Disconnect Failed",
-        description: error.message || "Failed to disconnect platform",
-        variant: "destructive",
-      });
-    }
-  };
+  ];
 
   return (
-    <Card>
+    <Card className="mb-8">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
-          חיבורי פלטפורמות
+        <CardTitle className={`flex items-center gap-2 ${align}`}>
+          <ExternalLink className="h-5 w-5" />
+          {t('platformConnection.title')}
         </CardTitle>
-        <CardDescription>
-          חבר את פלטפורמות הביקורת שלך לייבוא וניהול אוטומטי של ביקורות
+        <CardDescription className={align}>
+          {t('platformConnection.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {platforms.map((platform) => (
-            <div key={platform.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex-shrink-0">{platform.icon}</div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-medium truncate">{platform.name}</h3>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    {platform.connected ? (
-                      <>
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          מחובר
-                        </Badge>
-                        {platform.lastSync && (
-                          <span className="text-xs text-muted-foreground hidden sm:inline">
-                            סינכרון אחרון: {new Date(platform.lastSync).toLocaleDateString('he-IL')}
-                          </span>
-                        )}
-                        {platform.reviewCount && (
-                          <span className="text-xs text-muted-foreground">
-                            {platform.reviewCount} ביקורות
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <Badge variant="outline" className="text-xs">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        לא מחובר
-                      </Badge>
-                    )}
-                  </div>
+            <div key={platform.name} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={platform.logo} 
+                    alt={platform.name}
+                    className="w-6 h-6"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <h4 className="font-medium">{platform.name}</h4>
                 </div>
+                <Badge 
+                  variant={platform.connected ? "default" : "secondary"}
+                  className={platform.connected ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}
+                >
+                  {platform.connected ? t('platformConnection.connected') : t('platformConnection.disconnected')}
+                </Badge>
               </div>
-
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {platform.connected ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSync(platform.id)}
-                      disabled={syncing === platform.id}
-                      className="text-xs sm:text-sm"
-                    >
-                      {syncing === platform.id ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      <span className="hidden sm:inline ml-1">סינכרון</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDisconnect(platform.id)}
-                      className="text-xs sm:text-sm"
-                    >
-                      <span className="hidden sm:inline">נתק</span>
-                      <span className="sm:hidden">✕</span>
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    {(platform.id === 'google' || platform.id === 'facebook') ? (
-                      <Button
-                        onClick={() => handleOAuthConnect(platform.id)}
-                        size="sm"
-                        className="text-xs sm:text-sm bg-primary hover:bg-primary/90"
-                      >
-                        <Globe className="h-4 w-4 mr-2" />
-                        התחבר עם OAuth
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => setShowConfig(platform.id)}
-                        size="sm"
-                      >
-                        Connect
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
+              
+              <p className={`text-sm text-gray-600 dark:text-gray-400 mb-4 ${align}`}>
+                {platform.description}
+              </p>
+              
+              {platform.connected && platform.reviewCount && (
+                <p className={`text-sm text-blue-600 dark:text-blue-400 mb-4 ${align}`}>
+                  {platform.reviewCount} {t('platformConnection.reviews')}
+                </p>
+              )}
+              
+              <Button 
+                size="sm" 
+                variant={platform.connected ? "outline" : "default"}
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {platform.connected ? t('platformConnection.manage') : t('platformConnection.connect')}
+              </Button>
             </div>
           ))}
-
-          {/* Configuration Modal */}
-          {showConfig && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <Card className="w-full max-w-md mx-4">
-                <CardHeader>
-                  <CardTitle>
-                    Connect {platforms.find(p => p.id === showConfig)?.name}
-                  </CardTitle>
-                  <CardDescription>
-                    הזן את פרטי החיבור שלך לפלטפורמה
-                  </CardDescription>
-                </CardHeader>
-                 <CardContent className="space-y-4">
-                   {showConfig === "google" && (
-                     <div className="space-y-4">
-                       <div>
-                         <Label htmlFor="google-email">אימייל Google</Label>
-                         <Input
-                           id="google-email"
-                           type="email"
-                           placeholder="name@gmail.com"
-                           value={credentials.google_email || ''}
-                           onChange={(e) => setCredentials(prev => ({ ...prev, google_email: e.target.value }))}
-                         />
-                       </div>
-                       <div>
-                         <Label htmlFor="google-password">סיסמה</Label>
-                         <Input
-                           id="google-password"
-                           type="password"
-                           placeholder="הזן את הסיסמה שלך"
-                           value={credentials.google_password || ''}
-                           onChange={(e) => setCredentials(prev => ({ ...prev, google_password: e.target.value }))}
-                         />
-                       </div>
-                       <div className="text-center">
-                         <span className="text-sm text-muted-foreground">או</span>
-                       </div>
-                       <Button
-                         variant="outline"
-                         className="w-full"
-                         onClick={() => handleOAuthConnect('google')}
-                       >
-                         <Globe className="h-4 w-4 mr-2" />
-                         התחבר עם Google
-                       </Button>
-                     </div>
-                   )}
-                   {showConfig === "facebook" && (
-                     <div className="space-y-4">
-                       <div>
-                         <Label htmlFor="facebook-email">אימייל Facebook</Label>
-                         <Input
-                           id="facebook-email"
-                           type="email"
-                           placeholder="name@example.com"
-                           value={credentials.facebook_email || ''}
-                           onChange={(e) => setCredentials(prev => ({ ...prev, facebook_email: e.target.value }))}
-                         />
-                       </div>
-                       <div>
-                         <Label htmlFor="facebook-password">סיסמה</Label>
-                         <Input
-                           id="facebook-password"
-                           type="password"
-                           placeholder="הזן את הסיסמה שלך"
-                           value={credentials.facebook_password || ''}
-                           onChange={(e) => setCredentials(prev => ({ ...prev, facebook_password: e.target.value }))}
-                         />
-                       </div>
-                       <div className="text-center">
-                         <span className="text-sm text-muted-foreground">או</span>
-                       </div>
-                       <Button
-                         variant="outline"
-                         className="w-full"
-                         onClick={() => handleOAuthConnect('facebook')}
-                       >
-                         <Facebook className="h-4 w-4 mr-2" />
-                         התחבר עם Facebook
-                       </Button>
-                     </div>
-                   )}
-                   {showConfig === "trustpilot" && (
-                     <div className="space-y-4">
-                       <div>
-                         <Label htmlFor="trustpilot-email">אימייל Trustpilot</Label>
-                         <Input
-                           id="trustpilot-email"
-                           type="email"
-                           placeholder="name@example.com"
-                           value={credentials.trustpilot_email || ''}
-                           onChange={(e) => setCredentials(prev => ({ ...prev, trustpilot_email: e.target.value }))}
-                         />
-                       </div>
-                       <div>
-                         <Label htmlFor="trustpilot-password">סיסמה</Label>
-                         <Input
-                           id="trustpilot-password"
-                           type="password"
-                           placeholder="הזן את הסיסמה שלך"
-                           value={credentials.trustpilot_password || ''}
-                           onChange={(e) => setCredentials(prev => ({ ...prev, trustpilot_password: e.target.value }))}
-                         />
-                       </div>
-                     </div>
-                   )}
-                  
-                  <div className="flex gap-2 pt-4">
-                    <Button
-                      onClick={() => handleConnect(showConfig)}
-                      disabled={!credentials[showConfig]}
-                      className="flex-1"
-                    >
-                      Connect
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowConfig(null)}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Business Selection Modal */}
-          {showBusinessSelect && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <Card className="w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
-                <CardHeader>
-                  <CardTitle>
-                    בחר את העסק שלך
-                  </CardTitle>
-                  <CardDescription>
-                    בחר את העסק שברצונך לחבר למערכת מתוך רשימת העסקים שלך ב-{showBusinessSelect.platform === 'google' ? 'גוגל' : 'פייסבוק'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-y-auto max-h-96">
-                  <div className="space-y-3">
-                    {showBusinessSelect.businesses.map((business) => (
-                      <div 
-                        key={business.id} 
-                        className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-                        onClick={() => selectBusiness(business.id, business.name)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-lg">{business.name}</h4>
-                            {business.address && (
-                              <p className="text-sm text-muted-foreground mt-1">{business.address}</p>
-                            )}
-                            {business.category && (
-                              <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                {business.category}
-                              </span>
-                            )}
-                            {business.account && (
-                              <p className="text-xs text-muted-foreground mt-1">חשבון: {business.account}</p>
-                            )}
-                          </div>
-                          <Button 
-                            size="sm" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              selectBusiness(business.id, business.name);
-                            }}
-                          >
-                            בחר
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-4 mt-4 border-t">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowBusinessSelect(null)}
-                      className="flex-1"
-                    >
-                      ביטול
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

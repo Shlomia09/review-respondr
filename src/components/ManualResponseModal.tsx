@@ -1,38 +1,34 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Review {
-  id: string;
-  customer_name: string;
-  content: string;
-  rating: number;
-  platform: string;
-}
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ManualResponseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  review: Review | null;
+  review: any;
   onSuccess: () => void;
 }
 
 export const ManualResponseModal = ({ isOpen, onClose, review, onSuccess }: ManualResponseModalProps) => {
-  const [manualResponse, setManualResponse] = useState("");
+  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t, language } = useTranslation();
+  const isRTL = language === 'he' || language === 'ar';
+  const align = isRTL ? 'text-right' : 'text-left';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!manualResponse.trim() || !review) {
+    if (!response.trim()) {
       toast({
-        title: "שגיאה",
-        description: "אנא כתוב תגובה",
+        title: t('manualResponse.toasts.errorTitle'),
+        description: t('manualResponse.toasts.errorMissingResponse'),
         variant: "destructive",
       });
       return;
@@ -44,26 +40,25 @@ export const ManualResponseModal = ({ isOpen, onClose, review, onSuccess }: Manu
       const { error } = await supabase
         .from('reviews')
         .update({ 
-          manual_response: manualResponse,
-          response_status: 'approved' // Manual responses are automatically approved
+          manual_response: response.trim(),
+          response_status: 'approved'
         })
         .eq('id', review.id);
 
       if (error) throw error;
 
       toast({
-        title: "תגובה נשמרה",
-        description: "התגובה הידנית נשמרה בהצלחה",
+        title: t('manualResponse.toasts.savedTitle'),
+        description: t('manualResponse.toasts.savedDesc'),
       });
-
-      setManualResponse("");
+      
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Error saving manual response:', error);
       toast({
-        title: "שגיאה",
-        description: "לא הצלחנו לשמור את התגובה",
+        title: t('manualResponse.toasts.errorTitle'),
+        description: t('manualResponse.toasts.errorSaveDesc'),
         variant: "destructive",
       });
     } finally {
@@ -71,66 +66,55 @@ export const ManualResponseModal = ({ isOpen, onClose, review, onSuccess }: Manu
     }
   };
 
-  const handleClose = () => {
-    setManualResponse("");
-    onClose();
-  };
-
   if (!review) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-3 pb-4">
-          <DialogTitle className="text-right text-lg font-semibold">תגובה ידנית</DialogTitle>
-          <DialogDescription className="text-right text-sm text-muted-foreground leading-relaxed">
-            כתוב תגובה אישית לביקורת של {review.customer_name}
+          <DialogTitle className={`${align} text-lg font-semibold`}>{t('manualResponse.title')}</DialogTitle>
+          <DialogDescription className={`${align} text-sm text-muted-foreground leading-relaxed`}>
+            {t('manualResponse.description')}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Review Display */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm text-gray-500">
-                {review.platform} • {review.rating}/5
-              </div>
-              <h4 className="font-medium truncate mr-2">{review.customer_name}</h4>
-            </div>
-            <p className="text-sm text-gray-700 dark:text-gray-300 text-right leading-relaxed break-words">
-              "{review.content}"
+        {/* Review Content */}
+        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-6">
+          <div className="mb-3">
+            <strong className="text-sm font-medium">{review.customer_name} - {review.rating}⭐</strong>
+          </div>
+          <p className={`text-sm text-gray-700 dark:text-gray-300 ${align} leading-relaxed break-words`}>
+            "{review.content}"
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="manual_response" className={`${align} block text-sm font-medium`}>
+              {t('manualResponse.fields.response')}
+            </Label>
+            <Textarea
+              id="manual_response"
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              placeholder={t('manualResponse.placeholders.response')}
+              className={`${align} min-h-[120px] resize-none`}
+              required
+            />
+            <p className={`text-xs text-muted-foreground ${align} mt-2`}>
+              {t('manualResponse.helpText')}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="manual_response" className="text-right block text-sm font-medium">
-                התגובה שלך
-              </Label>
-              <Textarea
-                id="manual_response"
-                value={manualResponse}
-                onChange={(e) => setManualResponse(e.target.value)}
-                placeholder="כתוב כאן את התגובה האישית שלך לביקורת..."
-                className="text-right min-h-[120px] resize-none"
-                rows={5}
-                required
-              />
-              <p className="text-xs text-muted-foreground text-right mt-2">
-                {manualResponse.length} תווים
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-                ביטול
-              </Button>
-              <Button type="submit" disabled={loading} className="min-w-[120px]">
-                {loading ? "שומר..." : "שמירת תגובה"}
-              </Button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+              {t('manualResponse.buttons.cancel')}
+            </Button>
+            <Button type="submit" disabled={loading} className="min-w-[100px]">
+              {loading ? t('manualResponse.buttons.saving') : t('manualResponse.buttons.save')}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
