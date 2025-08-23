@@ -63,7 +63,7 @@ interface Review {
 }
 
 const Dashboard = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
@@ -116,9 +116,10 @@ const Dashboard = () => {
 
       setHasBusinessProfile(!!data);
       
-      // Show setup modal if no profile exists
+      // Show setup modal if no profile exists and user didn't skip
       if (!data) {
-        setShowBusinessSetup(true);
+        const skipped = localStorage.getItem('skipBusinessSetup') === 'true';
+        if (!skipped) setShowBusinessSetup(true);
       }
     } catch (error) {
       console.error('Error checking business profile:', error);
@@ -231,7 +232,7 @@ const Dashboard = () => {
           customerName: review.customer_name,
           rating: review.rating,
           platform: review.platform,
-          businessType: 'עסק כללי',
+          businessType: t('businessSetup.types.other'),
           aiInstructions: review.ai_instructions
         },
         headers: {
@@ -376,7 +377,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -392,6 +393,7 @@ const Dashboard = () => {
               <Button variant="outline" size="sm" className="sm:hidden">
                 <Plus className="h-4 w-4" />
               </Button>
+              <LanguageSwitcher />
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -651,6 +653,7 @@ const Dashboard = () => {
           isOpen={showBusinessSetup}
           onClose={() => setShowBusinessSetup(false)}
           onComplete={handleBusinessSetupComplete}
+          onSkip={() => { localStorage.setItem('skipBusinessSetup', 'true'); setShowBusinessSetup(false); }}
         />
         
         <ManualResponseModal

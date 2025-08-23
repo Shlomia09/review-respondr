@@ -150,41 +150,41 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete, onSkip }: Busi
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="business_description" className="text-right block text-sm font-medium">
-              תיאור העסק
+            <Label htmlFor="business_description" className={`${align} block text-sm font-medium`}>
+              {t('businessSetup.fields.description')}
             </Label>
             <Textarea
               id="business_description"
               value={formData.business_description}
               onChange={(e) => setFormData(prev => ({ ...prev, business_description: e.target.value }))}
-              placeholder="תאר בקצרה מה העסק מציע, מה המיוחד בו..."
-              className="text-right resize-none"
+              placeholder={t('businessSetup.placeholders.description')}
+              className={`${align} resize-none`}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="target_audience" className="text-right block text-sm font-medium">
-              קהל היעד
+            <Label htmlFor="target_audience" className={`${align} block text-sm font-medium`}>
+              {t('businessSetup.fields.targetAudience')}
             </Label>
             <Input
               id="target_audience"
               value={formData.target_audience}
               onChange={(e) => setFormData(prev => ({ ...prev, target_audience: e.target.value }))}
-              placeholder="משפחות עם ילדים, צעירים, אנשי עסקים..."
-              className="text-right"
+              placeholder={t('businessSetup.placeholders.targetAudience')}
+              className={align}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="business_tone" className="text-right block text-sm font-medium">
-              טון התגובות
+            <Label htmlFor="business_tone" className={`${align} block text-sm font-medium`}>
+              {t('businessSetup.fields.tone')}
             </Label>
             <Select 
               value={formData.business_tone} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, business_tone: value }))}
             >
-              <SelectTrigger className="text-right">
+              <SelectTrigger className={align}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -198,28 +198,39 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete, onSkip }: Busi
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="special_instructions" className="text-right block text-sm font-medium">
-              הוראות מיוחדות למערכת
+            <Label htmlFor="special_instructions" className={`${align} block text-sm font-medium`}>
+              {t('businessSetup.fields.specialInstructions')}
             </Label>
             <Textarea
               id="special_instructions"
               value={formData.special_instructions}
               onChange={(e) => setFormData(prev => ({ ...prev, special_instructions: e.target.value }))}
-              placeholder="הוראות נוספות למערכת AI על איך להגיב..."
-              className="text-right resize-none"
+              placeholder={t('businessSetup.placeholders.specialInstructions')}
+              className={`${align} resize-none`}
               rows={3}
             />
-            <p className="text-xs text-muted-foreground text-right mt-1">
-              למשל: תמיד להזכיר את המבצעים, להזמין לאירועים מיוחדים
-            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                if (onSkip) onSkip();
+                else {
+                  localStorage.setItem('skipBusinessSetup', 'true');
+                  onClose();
+                }
+              }}
+              disabled={loading}
+            >
+              {t('businessSetup.buttons.dontShowAgain')}
+            </Button>
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              ביטול
+              {t('businessSetup.buttons.cancel')}
             </Button>
             <Button type="submit" disabled={loading} className="min-w-[100px]">
-              {loading ? "שומר..." : "שמירה"}
+              {loading ? t('businessSetup.buttons.saving') : t('businessSetup.buttons.save')}
             </Button>
           </div>
         </form>

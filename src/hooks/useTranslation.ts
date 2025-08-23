@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 
 export type Language = 'he' | 'en' | 'es' | 'de' | 'ar' | 'ru';
 
@@ -1076,7 +1076,362 @@ translations.ru = {
 
 const defaultLanguage: Language = 'en';
 
-export const useTranslation = () => {
+// Add Business Setup translations for all languages
+(translations as any).en.businessSetup = {
+  title: 'Business Setup',
+  description: 'Tell us about your business so we can personalize AI responses.',
+  fields: {
+    businessName: 'Business Name',
+    businessType: 'Business Type',
+    description: 'Business Description',
+    targetAudience: 'Target Audience',
+    tone: 'Response Tone',
+    specialInstructions: 'Special Instructions for AI',
+  },
+  placeholders: {
+    businessName: 'e.g., Cafe Aroma',
+    businessType: 'Select business type',
+    description: 'Briefly describe what your business offers...',
+    targetAudience: 'Families, young adults, business people...',
+    specialInstructions: 'Additional guidance for AI on how to respond...'
+  },
+  tone: {
+    professional: 'Professional',
+    friendly: 'Friendly',
+    casual: 'Casual',
+    luxury: 'Luxury',
+  },
+  types: {
+    restaurant: 'Restaurant',
+    cafe: 'Cafe',
+    retail_store: 'Retail Store',
+    beauty_salon: 'Beauty Salon',
+    medical_clinic: 'Medical Clinic',
+    fitness_gym: 'Fitness / Gym',
+    hotel: 'Hotel',
+    automotive: 'Automotive',
+    technology: 'Technology',
+    consulting: 'Consulting',
+    education: 'Education',
+    real_estate: 'Real Estate',
+    entertainment: 'Entertainment',
+    other: 'Other'
+  },
+  buttons: {
+    cancel: 'Cancel',
+    save: 'Save',
+    saving: 'Saving...',
+    dontShowAgain: "Don't show again",
+  },
+  toasts: {
+    errorTitle: 'Missing information',
+    errorMissingFields: 'Please fill in the required fields.',
+    savedTitle: 'Saved',
+    savedDesc: 'Your business profile has been saved successfully.',
+    errorSaveDesc: 'We could not save your business profile. Please try again.'
+  }
+};
+
+(translations as any).he.businessSetup = {
+  title: 'הגדרת עסק',
+  description: 'ספר לנו על העסק כדי שנתאים את תגובות ה-AI.',
+  fields: {
+    businessName: 'שם העסק',
+    businessType: 'סוג העסק',
+    description: 'תיאור העסק',
+    targetAudience: 'קהל היעד',
+    tone: 'טון התגובות',
+    specialInstructions: 'הוראות מיוחדות למערכת',
+  },
+  placeholders: {
+    businessName: 'לדוגמה: קפה ארומה',
+    businessType: 'בחר סוג עסק',
+    description: 'תאר בקצרה מה העסק מציע...',
+    targetAudience: 'משפחות עם ילדים, צעירים, אנשי עסקים...',
+    specialInstructions: 'הוראות נוספות למערכת AI על איך להגיב...'
+  },
+  tone: {
+    professional: 'מקצועי',
+    friendly: 'ידידותי',
+    casual: 'קליל',
+    luxury: 'יוקרתי',
+  },
+  types: {
+    restaurant: 'מסעדה',
+    cafe: 'בית קפה',
+    retail_store: 'חנות קמעונאית',
+    beauty_salon: 'סלון יופי',
+    medical_clinic: 'מרפאה',
+    fitness_gym: 'כושר / חדר כושר',
+    hotel: 'מלון',
+    automotive: 'רכב',
+    technology: 'טכנולוגיה',
+    consulting: 'ייעוץ',
+    education: 'חינוך',
+    real_estate: 'נדל"ן',
+    entertainment: 'בידור',
+    other: 'אחר'
+  },
+  buttons: {
+    cancel: 'ביטול',
+    save: 'שמירה',
+    saving: 'שומר...',
+    dontShowAgain: 'אל תציג שוב',
+  },
+  toasts: {
+    errorTitle: 'חסר פרטים',
+    errorMissingFields: 'אנא מלא את השדות החיוניים.',
+    savedTitle: 'נשמר',
+    savedDesc: 'פרטי העסק נשמרו בהצלחה.',
+    errorSaveDesc: 'לא הצלחנו לשמור את פרטי העסק. נסה שוב.'
+  }
+};
+
+(translations as any).es.businessSetup = {
+  title: 'Configuración del Negocio',
+  description: 'Cuéntanos sobre tu negocio para personalizar las respuestas de IA.',
+  fields: {
+    businessName: 'Nombre del negocio',
+    businessType: 'Tipo de negocio',
+    description: 'Descripción del negocio',
+    targetAudience: 'Público objetivo',
+    tone: 'Tono de respuesta',
+    specialInstructions: 'Instrucciones especiales para IA',
+  },
+  placeholders: {
+    businessName: 'p. ej., Cafe Aroma',
+    businessType: 'Selecciona el tipo de negocio',
+    description: 'Describe brevemente lo que ofrece tu negocio...',
+    targetAudience: 'Familias, jóvenes, ejecutivos...',
+    specialInstructions: 'Guía adicional para IA sobre cómo responder...'
+  },
+  tone: {
+    professional: 'Profesional',
+    friendly: 'Amigable',
+    casual: 'Informal',
+    luxury: 'De lujo',
+  },
+  types: {
+    restaurant: 'Restaurante',
+    cafe: 'Café',
+    retail_store: 'Tienda minorista',
+    beauty_salon: 'Salón de belleza',
+    medical_clinic: 'Clínica médica',
+    fitness_gym: 'Gimnasio',
+    hotel: 'Hotel',
+    automotive: 'Automotriz',
+    technology: 'Tecnología',
+    consulting: 'Consultoría',
+    education: 'Educación',
+    real_estate: 'Bienes raíces',
+    entertainment: 'Entretenimiento',
+    other: 'Otro'
+  },
+  buttons: {
+    cancel: 'Cancelar',
+    save: 'Guardar',
+    saving: 'Guardando...',
+    dontShowAgain: 'No mostrar de nuevo',
+  },
+  toasts: {
+    errorTitle: 'Falta información',
+    errorMissingFields: 'Por favor completa los campos obligatorios.',
+    savedTitle: 'Guardado',
+    savedDesc: 'El perfil de tu negocio se guardó correctamente.',
+    errorSaveDesc: 'No pudimos guardar el perfil del negocio. Inténtalo de nuevo.'
+  }
+};
+
+(translations as any).de.businessSetup = {
+  title: 'Unternehmens-Setup',
+  description: 'Erzählen Sie uns von Ihrem Unternehmen, um KI-Antworten zu personalisieren.',
+  fields: {
+    businessName: 'Unternehmensname',
+    businessType: 'Unternehmenstyp',
+    description: 'Unternehmensbeschreibung',
+    targetAudience: 'Zielgruppe',
+    tone: 'Antwort-Ton',
+    specialInstructions: 'Spezielle Anweisungen für KI',
+  },
+  placeholders: {
+    businessName: 'z. B. Cafe Aroma',
+    businessType: 'Unternehmenstyp auswählen',
+    description: 'Beschreiben Sie kurz, was Ihr Unternehmen anbietet...',
+    targetAudience: 'Familien, junge Erwachsene, Geschäftsleute...',
+    specialInstructions: 'Zusätzliche Anleitung für die KI, wie geantwortet werden soll...'
+  },
+  tone: {
+    professional: 'Professionell',
+    friendly: 'Freundlich',
+    casual: 'Locker',
+    luxury: 'Luxuriös',
+  },
+  types: {
+    restaurant: 'Restaurant',
+    cafe: 'Café',
+    retail_store: 'Einzelhandelsgeschäft',
+    beauty_salon: 'Schönheitssalon',
+    medical_clinic: 'Klinik',
+    fitness_gym: 'Fitnessstudio',
+    hotel: 'Hotel',
+    automotive: 'Automobil',
+    technology: 'Technologie',
+    consulting: 'Beratung',
+    education: 'Bildung',
+    real_estate: 'Immobilien',
+    entertainment: 'Unterhaltung',
+    other: 'Andere'
+  },
+  buttons: {
+    cancel: 'Abbrechen',
+    save: 'Speichern',
+    saving: 'Speichern...',
+    dontShowAgain: 'Nicht mehr anzeigen',
+  },
+  toasts: {
+    errorTitle: 'Fehlende Informationen',
+    errorMissingFields: 'Bitte füllen Sie die Pflichtfelder aus.',
+    savedTitle: 'Gespeichert',
+    savedDesc: 'Ihr Unternehmensprofil wurde erfolgreich gespeichert.',
+    errorSaveDesc: 'Das Unternehmensprofil konnte nicht gespeichert werden. Bitte erneut versuchen.'
+  }
+};
+
+(translations as any).ar.businessSetup = {
+  title: 'إعداد العمل',
+  description: 'أخبرنا عن عملك لنخصص ردود الذكاء الاصطناعي.',
+  fields: {
+    businessName: 'اسم العمل',
+    businessType: 'نوع العمل',
+    description: 'وصف العمل',
+    targetAudience: 'الجمهور المستهدف',
+    tone: 'نبرة الرد',
+    specialInstructions: 'تعليمات خاصة للذكاء الاصطناعي',
+  },
+  placeholders: {
+    businessName: 'مثال: كافيه أرومي',
+    businessType: 'اختر نوع العمل',
+    description: 'صف باختصار ما يقدمه عملك...',
+    targetAudience: 'العائلات، الشباب، رجال الأعمال...',
+    specialInstructions: 'إرشادات إضافية للذكاء الاصطناعي حول كيفية الرد...'
+  },
+  tone: {
+    professional: 'احترافي',
+    friendly: 'ودود',
+    casual: 'غير رسمي',
+    luxury: 'فاخر',
+  },
+  types: {
+    restaurant: 'مطعم',
+    cafe: 'مقهى',
+    retail_store: 'متجر بيع بالتجزئة',
+    beauty_salon: 'صالون تجميل',
+    medical_clinic: 'عيادة',
+    fitness_gym: 'نادي رياضي',
+    hotel: 'فندق',
+    automotive: 'سيارات',
+    technology: 'تقنية',
+    consulting: 'استشارات',
+    education: 'تعليم',
+    real_estate: 'عقارات',
+    entertainment: 'ترفيه',
+    other: 'أخرى'
+  },
+  buttons: {
+    cancel: 'إلغاء',
+    save: 'حفظ',
+    saving: 'جارٍ الحفظ...',
+    dontShowAgain: 'عدم الإظهار مرة أخرى',
+  },
+  toasts: {
+    errorTitle: 'معلومات ناقصة',
+    errorMissingFields: 'يرجى تعبئة الحقول المطلوبة.',
+    savedTitle: 'تم الحفظ',
+    savedDesc: 'تم حفظ ملف عملك بنجاح.',
+    errorSaveDesc: 'تعذر حفظ ملف العمل. يرجى المحاولة مرة أخرى.'
+  }
+};
+
+(translations as any).ru.businessSetup = {
+  title: 'Настройка бизнеса',
+  description: 'Расскажите о вашем бизнесе, чтобы персонализировать ответы ИИ.',
+  fields: {
+    businessName: 'Название компании',
+    businessType: 'Тип бизнеса',
+    description: 'Описание бизнеса',
+    targetAudience: 'Целевая аудитория',
+    tone: 'Тон ответа',
+    specialInstructions: 'Особые инструкции для ИИ',
+  },
+  placeholders: {
+    businessName: 'например, Cafe Aroma',
+    businessType: 'Выберите тип бизнеса',
+    description: 'Кратко опишите, что предлагает ваш бизнес...',
+    targetAudience: 'Семьи, молодые люди, бизнес-аудитория...',
+    specialInstructions: 'Дополнительные указания для ИИ по стилю ответов...'
+  },
+  tone: {
+    professional: 'Профессиональный',
+    friendly: 'Дружелюбный',
+    casual: 'Неформальный',
+    luxury: 'Премиальный',
+  },
+  types: {
+    restaurant: 'Ресторан',
+    cafe: 'Кафе',
+    retail_store: 'Розничный магазин',
+    beauty_salon: 'Салон красоты',
+    medical_clinic: 'Клиника',
+    fitness_gym: 'Фитнес / Зал',
+    hotel: 'Отель',
+    automotive: 'Авто',
+    technology: 'Технологии',
+    consulting: 'Консалтинг',
+    education: 'Образование',
+    real_estate: 'Недвижимость',
+    entertainment: 'Развлечения',
+    other: 'Другое'
+  },
+  buttons: {
+    cancel: 'Отмена',
+    save: 'Сохранить',
+    saving: 'Сохранение...',
+    dontShowAgain: 'Больше не показывать',
+  },
+  toasts: {
+    errorTitle: 'Отсутствуют данные',
+    errorMissingFields: 'Пожалуйста, заполните обязательные поля.',
+    savedTitle: 'Сохранено',
+    savedDesc: 'Профиль вашего бизнеса успешно сохранен.',
+    errorSaveDesc: 'Не удалось сохранить профиль. Попробуйте еще раз.'
+  }
+};
+
+// Translation context to share language across the app
+interface TranslationContextValue {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const fallbackTranslate = (lang: Language, key: string): string => {
+  const keys = key.split('.');
+  let value: any = (translations as any)[lang];
+  for (const k of keys) value = value?.[k];
+  if (typeof value === 'string') return value;
+  // fallback to English
+  value = (translations as any).en;
+  for (const k of keys) value = value?.[k];
+  return typeof value === 'string' ? value : key;
+};
+
+const TranslationContext = createContext<TranslationContextValue>({
+  language: defaultLanguage,
+  setLanguage: () => {},
+  t: (key: string) => fallbackTranslate(defaultLanguage, key)
+});
+
+export const TranslationProvider = ({ children }: { children: React.ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
     return (saved as Language) || defaultLanguage;
@@ -1088,16 +1443,13 @@ export const useTranslation = () => {
     document.documentElement.setAttribute('dir', language === 'he' || language === 'ar' ? 'rtl' : 'ltr');
   }, [language]);
 
-  const t = (key: string): string => {
-    const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    
-    return typeof value === 'string' ? value : key;
-  };
+  const t = useCallback((key: string) => fallbackTranslate(language, key), [language]);
 
-  return { t, language, setLanguage };
+  return React.createElement(
+    TranslationContext.Provider,
+    { value: { language, setLanguage, t } },
+    children
+  );
 };
+
+export const useTranslation = () => useContext(TranslationContext);
