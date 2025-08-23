@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface DatabaseReview {
   id: string;
