@@ -40,7 +40,7 @@ const ReviewCard = ({
   onRegenerateResponse,
   isGenerating = false
 }: ReviewCardProps) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
       case "positive":
@@ -111,7 +111,9 @@ const ReviewCard = ({
             <div className="flex items-center gap-2 mb-2">
               <div className="flex">{renderStars(review.rating)}</div>
               <span className="text-sm text-muted-foreground">
-                {new Date(review.review_date).toLocaleDateString('he-IL')}
+                {new Date(review.review_date).toLocaleDateString(
+                  language === 'he' ? 'he-IL' : language === 'ar' ? 'ar' : language === 'es' ? 'es-ES' : language === 'de' ? 'de-DE' : language === 'ru' ? 'ru-RU' : 'en-US'
+                )}
               </span>
             </div>
           </div>
@@ -126,7 +128,7 @@ const ReviewCard = ({
       
       <CardContent className="space-y-4">
         <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed text-right">
+          <p className={`text-sm text-gray-700 dark:text-gray-300 leading-relaxed ${language === 'he' || language === 'ar' ? 'text-right' : 'text-left'}`}>
             "{review.content}"
           </p>
         </div>
@@ -145,7 +147,7 @@ const ReviewCard = ({
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed text-right">
+            <p className={`text-sm text-blue-800 dark:text-blue-200 leading-relaxed ${language === 'he' || language === 'ar' ? 'text-right' : 'text-left'}`}>
               {review.manual_response || review.ai_response || t('reviewCard.responseGenerated')}
             </p>
           </div>

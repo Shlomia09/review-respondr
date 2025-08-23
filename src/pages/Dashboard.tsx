@@ -384,6 +384,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <Logo />
+              <div className="hidden sm:block text-sm text-muted-foreground">{t('dashboard.title')}</div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <Button variant="outline" size="sm" className="hidden sm:flex">

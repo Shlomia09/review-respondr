@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface BusinessSetupModalProps {
   isOpen: boolean;
@@ -105,7 +106,10 @@ export const BusinessSetupModal = ({ isOpen, onClose, onComplete, onSkip }: Busi
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-3 pb-4">
-          <DialogTitle className={`text-lg font-semibold ${align}`}>{t('businessSetup.title')}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className={`text-lg font-semibold ${align}`}>{t('businessSetup.title')}</DialogTitle>
+            <LanguageSwitcher />
+          </div>
           <DialogDescription className={`text-sm text-muted-foreground leading-relaxed ${align}`}>
             {t('businessSetup.description')}
           </DialogDescription>
