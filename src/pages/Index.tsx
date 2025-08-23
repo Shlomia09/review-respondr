@@ -6,10 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Star, MessageSquare, TrendingUp, Zap, Globe, Shield, Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SEOHead } from "@/components/SEOHead";
 
 const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { t, language } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -34,6 +38,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead />
+      
       {/* Header */}
       <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,23 +51,24 @@ const Index = () => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                תכונות
+                {t('nav.features')}
               </a>
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                תמחור
+                {t('nav.pricing')}
               </a>
               <a href="#customers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                לקוחות
+                {t('nav.customers')}
               </a>
             </nav>
             
             {/* Desktop Buttons */}
             <div className="hidden md:flex items-center gap-4">
+              <LanguageSwitcher />
               <Link to="/login">
-                <Button variant="ghost" className="text-sm">התחברות</Button>
+                <Button variant="ghost" className="text-sm">{t('nav.login')}</Button>
               </Link>
               <Link to="/signup">
-                <Button className="text-sm bg-primary text-primary-foreground hover:bg-primary/90">התחל עכשיו</Button>
+                <Button className="text-sm bg-primary text-primary-foreground hover:bg-primary/90">{t('nav.signup')}</Button>
               </Link>
             </div>
 
@@ -83,31 +90,32 @@ const Index = () => {
           {isMenuOpen && (
             <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-sm border-b border-border shadow-lg">
               <nav className="py-4 px-4 space-y-4">
-                <a 
-                  href="#features" 
-                  className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  תכונות
-                </a>
-                <a 
-                  href="#pricing" 
-                  className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  תמחור
-                </a>
-                <a 
-                  href="#customers" 
-                  className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  לקוחות
-                </a>
-                <hr className="border-border" />
-                <Link to="/login" className="block py-2">
-                  <Button variant="ghost" className="w-full text-sm justify-start">התחברות</Button>
-                </Link>
+              <a 
+                href="#features" 
+                className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t('nav.features')}
+              </a>
+              <a 
+                href="#pricing" 
+                className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t('nav.pricing')}
+              </a>
+              <a 
+                href="#customers" 
+                className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t('nav.customers')}
+              </a>
+              <hr className="border-border" />
+              <LanguageSwitcher />
+              <Link to="/login" className="block py-2">
+                <Button variant="ghost" className="w-full text-sm justify-start">{t('nav.login')}</Button>
+              </Link>
               </nav>
             </div>
           )}
@@ -128,19 +136,18 @@ const Index = () => {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="text-center lg:text-right">
+          <div className={`text-center ${language === 'ar' || language === 'he' ? 'lg:text-right' : 'lg:text-left'}`}>
             <h1 className="text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-              נהל את הביקורות שלך
-              <span className="block">במקום אחד באמצעות AI</span>
+              {t('hero.title')}
+              <span className="block">{t('hero.subtitle')}</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
-              התחבר אוטומטית לגוגל, פייסבוק ו-Trustpilot. 
-              ניתוח חכם, תגובות אוטומטיות ולוח בקרה מאוחד לכל הביקורות שלך.
+              {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link to="/signup">
                 <Button size="lg" className="text-lg px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground">
-                  התחל ניסיון חינמי
+                  {t('hero.cta')}
                 </Button>
               </Link>
             </div>
@@ -206,10 +213,10 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-4xl font-bold">G</span>
               </div>
-              <h3 className="text-xl font-bold mb-2">גוגל</h3>
-              <p className="text-sm font-medium text-primary mb-2">אינטגרציה מהירה של פלטפורמות</p>
+              <h3 className="text-xl font-bold mb-2">{t('platforms.google.title')}</h3>
+              <p className="text-sm font-medium text-primary mb-2">{t('platforms.google.subtitle')}</p>
               <p className="text-sm text-muted-foreground">
-                התחברות חלקה לפלטפורמות ביקורות
+                {t('platforms.google.description')}
               </p>
             </div>
             
@@ -217,10 +224,10 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-4xl font-bold text-blue-600">f</span>
               </div>
-              <h3 className="text-xl font-bold mb-2">פייסבוק</h3>
-              <p className="text-sm font-medium text-primary mb-2">ניתוח AI בזמן אמת</p>
+              <h3 className="text-xl font-bold mb-2">{t('platforms.facebook.title')}</h3>
+              <p className="text-sm font-medium text-primary mb-2">{t('platforms.facebook.subtitle')}</p>
               <p className="text-sm text-muted-foreground">
-                תובנות וסנטימנטים בקצות האצבעות שלך
+                {t('platforms.facebook.description')}
               </p>
             </div>
             
@@ -228,10 +235,10 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Star className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Trustpilot</h3>
-              <p className="text-sm font-medium text-primary mb-2">דוחות חכמים ותובנות</p>
+              <h3 className="text-xl font-bold mb-2">{t('platforms.trustpilot.title')}</h3>
+              <p className="text-sm font-medium text-primary mb-2">{t('platforms.trustpilot.subtitle')}</p>
               <p className="text-sm text-muted-foreground">
-                שפר את העסק שלך עם נתונים ניתנים לפעולה
+                {t('platforms.trustpilot.description')}
               </p>
             </div>
           </div>
@@ -269,17 +276,19 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="text-center lg:text-right">
+            <div className={`text-center ${language === 'ar' || language === 'he' ? 'lg:text-right' : 'lg:text-left'}`}>
               <blockquote className="text-2xl lg:text-3xl font-bold text-foreground mb-6">
-                "מאז ההרשמה, ראינו עלייה של 30% בפניות חדשות"
+                "{t('testimonial.quote')}"
               </blockquote>
               <div className="flex items-center justify-center lg:justify-start gap-4">
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium">YM</span>
+                  <span className="text-sm font-medium">
+                    {language === 'he' ? 'YM' : 'JM'}
+                  </span>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-foreground">יוסי מלכה</p>
-                  <p className="text-sm text-muted-foreground">מנהל שיווק</p>
+                <div className={language === 'ar' || language === 'he' ? 'text-right' : 'text-left'}>
+                  <p className="font-medium text-foreground">{t('testimonial.author')}</p>
+                  <p className="text-sm text-muted-foreground">{t('testimonial.role')}</p>
                 </div>
               </div>
             </div>
@@ -297,9 +306,9 @@ const Index = () => {
                   <MessageSquare className="w-3 h-3 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-2">סנכרון ביקורות</h4>
+                  <h4 className="font-semibold text-foreground mb-2">{t('features.sync.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    סנכרון אוטומטי של ביקורות מכל הפלטפורמות
+                    {t('features.sync.description')}
                   </p>
                 </div>
               </div>
@@ -309,9 +318,9 @@ const Index = () => {
                   <TrendingUp className="w-3 h-3 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-2">ניתוח סנטימנטים</h4>
+                  <h4 className="font-semibold text-foreground mb-2">{t('features.sentiment.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    זיהוי אוטומטי של רגשות ונושאים בביקורות
+                    {t('features.sentiment.description')}
                   </p>
                 </div>
               </div>
@@ -323,9 +332,9 @@ const Index = () => {
                   <MessageSquare className="w-3 h-3 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-2">תגובות אוטומטיות</h4>
+                  <h4 className="font-semibold text-foreground mb-2">{t('features.responses.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    יצירת תגובות מותאמות אישית באמצעות AI
+                    {t('features.responses.description')}
                   </p>
                 </div>
               </div>
@@ -335,9 +344,9 @@ const Index = () => {
                   <Globe className="w-3 h-3 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-2">תמיכה רב-לשונית</h4>
+                  <h4 className="font-semibold text-foreground mb-2">{t('features.multilingual.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    תמיכה מלאה בעברית, ערבית, אנגלית וספרדית
+                    {t('features.multilingual.description')}
                   </p>
                 </div>
               </div>
@@ -351,46 +360,47 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              בחר את התוכנית המתאימה לך
+              {t('pricing.title')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              מחינם ועד פתרון עסקי מלא
+              {t('pricing.subtitle')}
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Free Plan */}
             <div className="bg-card border border-border rounded-2xl p-6 text-center">
-              <h3 className="text-lg font-bold text-foreground mb-2">חינם</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{t('pricing.plans.free.name')}</h3>
               <div className="text-3xl font-bold text-foreground mb-4">
-                €0
-                <span className="text-sm text-muted-foreground font-normal">/חודש</span>
+                {t('pricing.plans.free.price')}
+                <span className="text-sm text-muted-foreground font-normal">/{language === 'he' ? 'חודש' : 'month'}</span>
               </div>
               
-              <ul className="space-y-3 mb-6 text-right text-sm">
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">תגובה אחת ביום</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">פלטפורמה אחת</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-end gap-2">
-                  <span className="text-muted-foreground">ניתוח סנטימנטים בסיסי</span>
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground text-xs">✓</span>
-                  </div>
-                </li>
+              <ul className={`space-y-3 mb-6 text-sm ${language === 'he' || language === 'ar' ? 'text-right' : 'text-left'}`}>
+                {t('pricing.plans.free.features').split(',').map((feature: string, index: number) => (
+                  <li key={index} className={`flex items-center gap-2 ${language === 'he' || language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+                    {language === 'he' || language === 'ar' ? (
+                      <>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                        <span className="text-muted-foreground">{feature.trim()}</span>
+                      </>
+                    )}
+                  </li>
+                ))}
               </ul>
               
               <Link to="/signup">
                 <Button variant="outline" size="lg" className="w-full">
-                  התחל חינם
+                  {t('nav.signup')}
                 </Button>
               </Link>
             </div>
@@ -528,14 +538,14 @@ const Index = () => {
       <section className="bg-gradient-to-r from-[hsl(220,30%,20%)] to-[hsl(220,25%,15%)] text-white py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-            התחל לנהל את המוניטין שלך עוד היום
+            {t('cta.title')}
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            חינמי למשך 14 יום, ללא כרטיס אשראי נדרש
+            {t('cta.subtitle')}
           </p>
           <Link to="/signup">
             <Button size="lg" className="text-lg px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground">
-              צור חשבון עכשיו
+              {t('cta.button')}
             </Button>
           </Link>
         </div>
@@ -548,7 +558,7 @@ const Index = () => {
             <Logo size="sm" />
           </div>
           <p className="text-muted-foreground text-sm">
-            © 2024 RevAI. כל הזכויות שמורות.
+            {t('footer.copyright')}
           </p>
         </div>
       </footer>
