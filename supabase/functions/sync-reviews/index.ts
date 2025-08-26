@@ -48,7 +48,11 @@ serve(async (req) => {
 
     console.log('Authenticated user:', user.id);
 
-    const { action, platform, credentials, businessId } = await req.json();
+    const requestBody = await req.json();
+    console.log('Request body:', JSON.stringify(requestBody));
+    
+    const { action, platform, credentials, businessId } = requestBody;
+    console.log('Action received:', action);
 
     switch (action) {
       case 'connect':
@@ -58,6 +62,7 @@ serve(async (req) => {
       case 'check_connection':
         return await checkConnection(platform, user.id, supabaseClient);
       case 'check_all_connections':
+        console.log('Handling check_all_connections action');
         return await checkAllConnections(user.id, supabaseClient);
       case 'get_businesses':
         return await getBusinesses(platform, user.id, supabaseClient);
@@ -68,7 +73,8 @@ serve(async (req) => {
       case 'disconnect':
         return await handleDisconnect(platform, user.id, supabaseClient);
       default:
-        throw new Error('Invalid action');
+        console.error('Invalid action received:', action);
+        throw new Error(`Invalid action: ${action}`);
     }
 
   } catch (error) {
