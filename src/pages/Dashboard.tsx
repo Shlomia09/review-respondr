@@ -377,7 +377,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">{t('dashboard.loading')}</p>
@@ -387,39 +387,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <Logo />
-              <div className="hidden sm:block text-sm text-muted-foreground">{t('dashboard.title')}</div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Plus className="h-4 w-4 mr-2" />
-                {t('dashboard.connectPlatform')}
-              </Button>
-              <Button variant="outline" size="sm" className="sm:hidden">
-                <Plus className="h-4 w-4" />
-              </Button>
-              <LanguageSwitcher />
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8">
-          <Card>
+    <div className="p-6 space-y-6" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+        <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.totalReviews')}</CardTitle>
               <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -680,7 +651,6 @@ const Dashboard = () => {
           review={selectedReview}
           onSuccess={handleAIInstructionsComplete}
         />
-      </div>
     </div>
   );
 };

@@ -9,6 +9,15 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import { Reviews } from "./pages/Reviews";
+import { AIResponses } from "./pages/AIResponses";
+import { Analytics } from "./pages/Analytics";
+import { SocialHub } from "./pages/SocialHub";
+import { Integrations } from "./pages/Integrations";
+import { Customers } from "./pages/Customers";
+import { Settings } from "./pages/Settings";
+import { Support } from "./pages/Support";
+import { Layout } from "./components/Layout";
 import { TranslationProvider } from "@/hooks/useTranslation";
 
 const queryClient = new QueryClient();
@@ -26,7 +35,18 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                
+                {/* Dashboard Routes with Layout */}
+                <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+                <Route path="/reviews" element={<Layout><Reviews /></Layout>} />
+                <Route path="/ai-responses" element={<Layout><AIResponses /></Layout>} />
+                <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+                <Route path="/social-hub" element={<Layout><SocialHub /></Layout>} />
+                <Route path="/integrations" element={<Layout><Integrations /></Layout>} />
+                <Route path="/customers" element={<Layout><Customers /></Layout>} />
+                <Route path="/settings" element={<Layout><Settings /></Layout>} />
+                <Route path="/support" element={<Layout><Support /></Layout>} />
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

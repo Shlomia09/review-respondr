@@ -183,6 +183,34 @@ const translations: Translations = {
       regenerateResponse: 'צור תגובה חדשה',
       sendResponse: 'שלח תגובה'
     },
+    sidebar: {
+      navigation: "ניווט",
+      reviews: "ביקורות",
+      aiResponses: "תגובות AI",
+      analytics: "אנליטיקה",
+      socialHub: "מרכז חברתי",
+      integrations: "אינטגרציות",
+      customers: "לקוחות",
+      settings: "הגדרות",
+      support: "תמיכה"
+    },
+    header: {
+      searchPlaceholder: "חיפוש ביקורות, פוסטים, לקוחות...",
+      notifications: "התראות",
+      viewAllNotifications: "הצג את כל ההתראות",
+      myAccount: "החשבון שלי",
+      settings: "הגדרות", 
+      support: "תמיכה",
+      logout: "התנתק"
+    },
+    notifications: {
+      newReview: "ביקורת חדשה",
+      newReviewMessage: "קיבלת ביקורת חדשה בגוגל",
+      lowRating: "דירוג נמוך",
+      lowRatingMessage: "ביקורת עם דירוג כוכב אחד",
+      aiResponse: "תגובת AI",
+      aiResponseMessage: "תגובת AI חדשה נוצרה"
+    },
     footer: {
       copyright: '© 2024 RevAI. כל הזכויות שמורות.'
     }
@@ -358,6 +386,34 @@ const translations: Translations = {
       approveResponse: 'Approve Response',
       regenerateResponse: 'Generate New Response',
       sendResponse: 'Send Response'
+    },
+    sidebar: {
+      navigation: "Navigation",
+      reviews: "Reviews",
+      aiResponses: "AI Responses",
+      analytics: "Analytics",
+      socialHub: "Social Hub",
+      integrations: "Integrations",
+      customers: "Customers",
+      settings: "Settings",
+      support: "Support"
+    },
+    header: {
+      searchPlaceholder: "Search reviews, posts, customers...",
+      notifications: "Notifications",
+      viewAllNotifications: "View All Notifications",
+      myAccount: "My Account",
+      settings: "Settings",
+      support: "Support", 
+      logout: "Logout"
+    },
+    notifications: {
+      newReview: "New Review",
+      newReviewMessage: "You received a new review on Google",
+      lowRating: "Low Rating",
+      lowRatingMessage: "A review with 1-star rating",
+      aiResponse: "AI Response",
+      aiResponseMessage: "New AI response generated"
     },
     footer: {
       copyright: '© 2024 RevAI. All rights reserved.'
