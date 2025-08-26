@@ -156,19 +156,29 @@ const PlatformConnection = () => {
 
         // Listen for OAuth completion
         const messageListener = (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
-          
-          if (event.data.type === 'oauth_success') {
+          // Accept messages from our app origin AND Supabase Functions origin
+          const allowedOrigins = [
+            window.location.origin,
+            'https://epwriqkyqxwewwcxbnsu.supabase.co'
+          ];
+          if (!allowedOrigins.includes(event.origin)) return;
+
+          const isSuccess = event.data?.type === 'oauth_success' || event.data?.success === true;
+          const isError = event.data?.type === 'oauth_error' || !!event.data?.error;
+
+          if (isSuccess) {
             popup?.close();
             toast.success(t('platforms.connected'));
+            setConnectingPlatform(null);
             // Fetch businesses after successful connection
             setTimeout(() => {
               fetchBusinesses(platformName);
-            }, 1000);
+            }, 500);
             window.removeEventListener('message', messageListener);
-          } else if (event.data.type === 'oauth_error') {
+          } else if (isError) {
             popup?.close();
             toast.error(t('errors.connectionFailed'));
+            setConnectingPlatform(null);
             window.removeEventListener('message', messageListener);
           }
         };
