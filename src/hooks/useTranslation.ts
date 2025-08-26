@@ -1223,7 +1223,21 @@ const defaultLanguage: Language = 'en';
       buttons: { cancel: 'Cancelar', save: 'Guardar', saving: 'Guardando...' },
       toasts: { errorTitle: 'Error', errorMissingResponse: 'Por favor escribe una respuesta', savedTitle: 'Guardado', savedDesc: 'Respuesta guardada exitosamente', errorSaveDesc: 'Error al guardar. Inténtalo de nuevo.' }
     };
-    (translations as any)[lang].platformConnection = { title: 'Conexiones de Plataforma', description: 'Conecta tus plataformas de reseñas para importación y gestión automática', connected: 'Conectado', disconnected: 'No Conectado', reviews: 'reseñas', connect: 'Conectar', manage: 'Gestionar' };
+    (translations as any)[lang].platformConnection = { 
+      title: 'Conexiones de Plataforma', 
+      description: 'Conecta tus plataformas de reseñas para importación y gestión automática', 
+      connected: 'Conectado', 
+      disconnected: 'No Conectado', 
+      reviews: 'reseñas', 
+      connect: 'Conectar', 
+      manage: 'Gestionar',
+      selectBusiness: 'Seleccionar Tu Negocio',
+      loadingBusinesses: 'Cargando negocios...',
+      businessSelectionDescription: 'Por favor selecciona el negocio que quieres conectar:',
+      chooseBusiness: 'Elegir un negocio',
+      businessSelected: 'Negocio seleccionado exitosamente',
+      noBusinessesFound: 'No se encontraron negocios. Asegúrate de tener Google My Business configurado.'
+    };
   } else if (lang === 'de') {
     (translations as any)[lang].aiInstructions = {
       title: 'KI-Anweisungen',
@@ -1244,7 +1258,21 @@ const defaultLanguage: Language = 'en';
       buttons: { cancel: 'Abbrechen', save: 'Speichern', saving: 'Speichern...' },
       toasts: { errorTitle: 'Fehler', errorMissingResponse: 'Bitte schreiben Sie eine Antwort', savedTitle: 'Gespeichert', savedDesc: 'Antwort erfolgreich gespeichert', errorSaveDesc: 'Fehler beim Speichern. Bitte erneut versuchen.' }
     };
-    (translations as any)[lang].platformConnection = { title: 'Plattform-Verbindungen', description: 'Verbinden Sie Ihre Bewertungsplattformen für automatischen Import und Verwaltung', connected: 'Verbunden', disconnected: 'Nicht Verbunden', reviews: 'bewertungen', connect: 'Verbinden', manage: 'Verwalten' };
+    (translations as any)[lang].platformConnection = { 
+      title: 'Plattform-Verbindungen', 
+      description: 'Verbinden Sie Ihre Bewertungsplattformen für automatischen Import und Verwaltung', 
+      connected: 'Verbunden', 
+      disconnected: 'Nicht Verbunden', 
+      reviews: 'bewertungen', 
+      connect: 'Verbinden', 
+      manage: 'Verwalten',
+      selectBusiness: 'Ihr Unternehmen auswählen',
+      loadingBusinesses: 'Unternehmen werden geladen...',
+      businessSelectionDescription: 'Bitte wählen Sie das Unternehmen aus, das Sie verbinden möchten:',
+      chooseBusiness: 'Ein Unternehmen wählen',
+      businessSelected: 'Unternehmen erfolgreich ausgewählt',
+      noBusinessesFound: 'Keine Unternehmen gefunden. Stellen Sie sicher, dass Google My Business eingerichtet ist.'
+    };
   } else if (lang === 'ar') {
     (translations as any)[lang].aiInstructions = {
       title: 'تعليمات الذكاء الاصطناعي',
@@ -1265,7 +1293,21 @@ const defaultLanguage: Language = 'en';
       buttons: { cancel: 'إلغاء', save: 'حفظ', saving: 'جارٍ الحفظ...' },
       toasts: { errorTitle: 'خطأ', errorMissingResponse: 'يرجى كتابة رد', savedTitle: 'تم الحفظ', savedDesc: 'تم حفظ الرد بنجاح', errorSaveDesc: 'خطأ في الحفظ. يرجى المحاولة مرة أخرى.' }
     };
-    (translations as any)[lang].platformConnection = { title: 'اتصالات المنصة', description: 'اربط منصات المراجعات للاستيراد والإدارة التلقائية', connected: 'متصل', disconnected: 'غير متصل', reviews: 'مراجعات', connect: 'اتصال', manage: 'إدارة' };
+    (translations as any)[lang].platformConnection = { 
+      title: 'اتصالات المنصة', 
+      description: 'اربط منصات المراجعات للاستيراد والإدارة التلقائية', 
+      connected: 'متصل', 
+      disconnected: 'غير متصل', 
+      reviews: 'مراجعات', 
+      connect: 'اتصال', 
+      manage: 'إدارة',
+      selectBusiness: 'اختر عملك',
+      loadingBusinesses: 'تحميل الأعمال...',
+      businessSelectionDescription: 'يرجى اختيار العمل الذي تريد ربطه:',
+      chooseBusiness: 'اختر عملاً',
+      businessSelected: 'تم اختيار العمل بنجاح',
+      noBusinessesFound: 'لم يتم العثور على أعمال. تأكد من إعداد Google My Business.'
+    };
   } else if (lang === 'ru') {
     (translations as any)[lang].aiInstructions = {
       title: 'Инструкции для ИИ',
@@ -1286,7 +1328,21 @@ const defaultLanguage: Language = 'en';
       buttons: { cancel: 'Отмена', save: 'Сохранить', saving: 'Сохранение...' },
       toasts: { errorTitle: 'Ошибка', errorMissingResponse: 'Пожалуйста, напишите ответ', savedTitle: 'Сохранено', savedDesc: 'Ответ успешно сохранен', errorSaveDesc: 'Ошибка сохранения. Попробуйте еще раз.' }
     };
-    (translations as any)[lang].platformConnection = { title: 'Подключения Платформ', description: 'Подключите платформы отзывов для автоматического импорта и управления', connected: 'Подключено', disconnected: 'Не Подключено', reviews: 'отзывов', connect: 'Подключить', manage: 'Управлять' };
+    (translations as any)[lang].platformConnection = { 
+      title: 'Подключения Платформ', 
+      description: 'Подключите платформы отзывов для автоматического импорта и управления', 
+      connected: 'Подключено', 
+      disconnected: 'Не Подключено', 
+      reviews: 'отзывов', 
+      connect: 'Подключить', 
+      manage: 'Управлять',
+      selectBusiness: 'Выберите Ваш Бизнес',
+      loadingBusinesses: 'Загрузка бизнесов...',
+      businessSelectionDescription: 'Пожалуйста, выберите бизнес, который хотите подключить:',
+      chooseBusiness: 'Выберите бизнес',
+      businessSelected: 'Бизнес успешно выбран',
+      noBusinessesFound: 'Бизнесы не найдены. Убедитесь, что Google My Business настроен.'
+    };
   }
 });
 (translations as any).en.businessSetup = {
@@ -1699,6 +1755,22 @@ const addErrorMessages = (translations: any) => {
         fr: 'Déconnexion échouée',
         ar: 'فشل قطع الاتصال',
         de: 'Trennung fehlgeschlagen'
+      },
+      businessFetchFailed: {
+        he: 'שגיאה בשליפת העסקים',
+        en: 'Failed to fetch businesses',
+        es: 'Error al obtener negocios',
+        fr: 'Erreur lors de la récupération des entreprises',
+        ar: 'فشل في جلب الأعمال',
+        de: 'Fehler beim Abrufen der Unternehmen'
+      },
+      businessSelectionFailed: {
+        he: 'שגיאה בבחירת העסק',
+        en: 'Failed to select business',
+        es: 'Error al seleccionar negocio',
+        fr: 'Erreur lors de la sélection de l\'entreprise',
+        ar: 'فشل في اختيار العمل',
+        de: 'Fehler bei der Auswahl des Unternehmens'
       }
     },
     platforms: {
@@ -1715,8 +1787,16 @@ const addErrorMessages = (translations: any) => {
         en: 'Platform disconnected successfully',
         es: 'Plataforma desconectada exitosamente',
         fr: 'Plateforme déconnectée avec succès',
-        ar: 'تم قطع الاتصال بالمنصة بنجاح',
+        ar: 'تم قطع اتصال المنصة بنجاح',
         de: 'Plattform erfolgreich getrennt'
+      },
+      businessSelected: {
+        he: 'העסק נבחר בהצלחה',
+        en: 'Business selected successfully',
+        es: 'Negocio seleccionado exitosamente',
+        fr: 'Entreprise sélectionnée avec succès',
+        ar: 'تم اختيار العمل بنجاح',
+        de: 'Unternehmen erfolgreich ausgewählt'
       }
     }
   };

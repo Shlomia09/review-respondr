@@ -6,6 +6,8 @@ import { ExternalLink, Plus, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Platform {
   name: string;
@@ -21,12 +23,23 @@ interface PlatformStatus {
   reviewCount?: number;
 }
 
+interface Business {
+  id: string;
+  name: string;
+  address: string;
+}
+
 const PlatformConnection = () => {
   const { t, language } = useTranslation();
   const align = language === 'he' || language === 'ar' ? 'text-right' : 'text-left';
   const [platformStatuses, setPlatformStatuses] = useState<PlatformStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
+  const [showBusinessSelection, setShowBusinessSelection] = useState(false);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [selectedBusiness, setSelectedBusiness] = useState<string>('');
+  const [currentPlatform, setCurrentPlatform] = useState<string>('');
+  const [loadingBusinesses, setLoadingBusinesses] = useState(false);
   
   const platforms: Omit<Platform, 'connected' | 'reviewCount'>[] = [
     {
@@ -70,6 +83,50 @@ const PlatformConnection = () => {
     }
   };
 
+  const fetchBusinesses = async (platformName: string) => {
+    setLoadingBusinesses(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'get_businesses', 
+          platform: platformName.toLowerCase() 
+        }
+      });
+
+      if (error) throw error;
+      
+      setBusinesses(data.businesses || []);
+      setCurrentPlatform(platformName);
+      setShowBusinessSelection(true);
+    } catch (error) {
+      console.error('Error fetching businesses:', error);
+      toast.error(t('errors.businessFetchFailed'));
+    } finally {
+      setLoadingBusinesses(false);
+    }
+  };
+
+  const selectBusiness = async (businessId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'select_business', 
+          platform: currentPlatform.toLowerCase(),
+          businessId 
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success(t('platforms.businessSelected'));
+      setShowBusinessSelection(false);
+      checkPlatformConnections(); // Refresh connection status
+    } catch (error) {
+      console.error('Error selecting business:', error);
+      toast.error(t('errors.businessSelectionFailed'));
+    }
+  };
+
   const handleConnect = async (platformName: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -104,7 +161,10 @@ const PlatformConnection = () => {
           if (event.data.type === 'oauth_success') {
             popup?.close();
             toast.success(t('platforms.connected'));
-            checkPlatformConnections(); // Refresh connection status
+            // Fetch businesses after successful connection
+            setTimeout(() => {
+              fetchBusinesses(platformName);
+            }, 1000);
             window.removeEventListener('message', messageListener);
           } else if (event.data.type === 'oauth_error') {
             popup?.close();
@@ -240,6 +300,74 @@ const PlatformConnection = () => {
           })}
         </div>
       </CardContent>
+      
+      {/* Business Selection Dialog */}
+      <Dialog open={showBusinessSelection} onOpenChange={setShowBusinessSelection}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className={align}>
+              {t('platforms.selectBusiness')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {loadingBusinesses ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="ml-2">{t('platforms.loadingBusinesses')}</span>
+            </div>
+          ) : businesses.length > 0 ? (
+            <div className="space-y-4">
+              <p className={`text-sm text-gray-600 dark:text-gray-400 ${align}`}>
+                {t('platforms.businessSelectionDescription')}
+              </p>
+              
+              <Select onValueChange={setSelectedBusiness} value={selectedBusiness}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('platforms.chooseBusiness')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {businesses.map((business) => (
+                    <SelectItem key={business.id} value={business.id}>
+                      <div className="text-right">
+                        <div className="font-medium">{business.name}</div>
+                        <div className="text-sm text-gray-500">{business.address}</div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBusinessSelection(false)}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  onClick={() => selectedBusiness && selectBusiness(selectedBusiness)}
+                  disabled={!selectedBusiness}
+                >
+                  {t('common.confirm')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className={`text-gray-600 dark:text-gray-400 ${align}`}>
+                {t('platforms.noBusinessesFound')}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setShowBusinessSelection(false)}
+                className="mt-4"
+              >
+                {t('common.close')}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
