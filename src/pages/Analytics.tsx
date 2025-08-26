@@ -1,6 +1,7 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3 } from "lucide-react";
+import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 
 export function Analytics() {
   const { t } = useTranslation();
@@ -12,16 +13,7 @@ export function Analytics() {
         <h1 className="text-2xl font-bold">{t("sidebar.analytics")}</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("sidebar.analytics")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Analytics page will be implemented here.
-          </p>
-        </CardContent>
-      </Card>
+      <AnalyticsDashboard />
     </div>
   );
 }
