@@ -57,6 +57,8 @@ serve(async (req) => {
         return await getOAuthUrl(platform, user.id);
       case 'check_connection':
         return await checkConnection(platform, user.id, supabaseClient);
+      case 'check_all_connections':
+        return await checkAllConnections(user.id, supabaseClient);
       case 'get_businesses':
         return await getBusinesses(platform, user.id, supabaseClient);
       case 'select_business':
@@ -816,6 +818,56 @@ async function fetchTrustpilotReviews(apiKey: string, userId: string): Promise<R
 }
 
 // Add missing closing braces for any unclosed functions
+async function checkAllConnections(userId: string, supabase: any) {
+  console.log(`Checking all platform connections for user ${userId}`);
+  
+  const platforms = ['google', 'facebook', 'trustpilot'];
+  const platformStatuses = [];
+  
+  for (const platform of platforms) {
+    try {
+      // Check if user has valid tokens stored for this platform
+      const { data: tokenData } = await supabase
+        .from('platform_tokens')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', platform)
+        .single();
+
+      const connected = tokenData && tokenData.access_token && new Date(tokenData.expires_at) > new Date();
+      
+      // If connected, try to get review count
+      let reviewCount = 0;
+      if (connected) {
+        const { data: reviews } = await supabase
+          .from('reviews')
+          .select('id', { count: 'exact' })
+          .eq('user_id', userId)
+          .eq('platform', platform);
+        
+        reviewCount = reviews?.length || 0;
+      }
+      
+      platformStatuses.push({
+        platform,
+        connected,
+        reviewCount: connected ? reviewCount : undefined
+      });
+    } catch (error) {
+      console.error(`Error checking ${platform} connection:`, error);
+      platformStatuses.push({
+        platform,
+        connected: false
+      });
+    }
+  }
+
+  return new Response(
+    JSON.stringify({ platforms: platformStatuses }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
 async function testGoogleConnection(credentials: string): Promise<boolean> {
   // Placeholder for Google connection testing
   return true;

@@ -1628,11 +1628,11 @@ interface TranslationContextValue {
 
 const fallbackTranslate = (lang: Language, key: string): string => {
   const keys = key.split('.');
-  let value: any = (translations as any)[lang];
+  let value: any = (enhancedTranslations as any)[lang];
   for (const k of keys) value = value?.[k];
   if (typeof value === 'string') return value;
   // fallback to English
-  value = (translations as any).en;
+  value = (enhancedTranslations as any).en;
   for (const k of keys) value = value?.[k];
   return typeof value === 'string' ? value : key;
 };
@@ -1663,5 +1663,75 @@ export const TranslationProvider = ({ children }: { children: React.ReactNode })
     children
   );
 };
+
+// Add error messages and platform messages to translations
+const addErrorMessages = (translations: any) => {
+  const errorMessages = {
+    errors: {
+      connectionCheck: {
+        he: 'שגיאה בבדיקת חיבורים',
+        en: 'Error checking connections',
+        es: 'Error al verificar conexiones',
+        fr: 'Erreur lors de la vérification des connexions',
+        ar: 'خطأ في فحص الاتصالات',
+        de: 'Fehler beim Überprüfen der Verbindungen'
+      },
+      notLoggedIn: {
+        he: 'יש להתחבר למערכת',
+        en: 'Please log in to the system',
+        es: 'Por favor inicie sesión en el sistema',
+        fr: 'Veuillez vous connecter au système',
+        ar: 'يرجى تسجيل الدخول إلى النظام',
+        de: 'Bitte melden Sie sich im System an'
+      },
+      connectionFailed: {
+        he: 'החיבור נכשל',
+        en: 'Connection failed',
+        es: 'Conexión fallida',
+        fr: 'Connexion échouée',
+        ar: 'فشل الاتصال',
+        de: 'Verbindung fehlgeschlagen'
+      },
+      disconnectionFailed: {
+        he: 'ניתוק נכשל',
+        en: 'Disconnection failed',
+        es: 'Desconexión fallida',
+        fr: 'Déconnexion échouée',
+        ar: 'فشل قطع الاتصال',
+        de: 'Trennung fehlgeschlagen'
+      }
+    },
+    platforms: {
+      connected: {
+        he: 'פלטפורמה מחוברת בהצלחה',
+        en: 'Platform connected successfully',
+        es: 'Plataforma conectada exitosamente',
+        fr: 'Plateforme connectée avec succès',
+        ar: 'تم ربط المنصة بنجاح',
+        de: 'Plattform erfolgreich verbunden'
+      },
+      disconnected: {
+        he: 'פלטפורמה נותקה בהצלחה',
+        en: 'Platform disconnected successfully',
+        es: 'Plataforma desconectada exitosamente',
+        fr: 'Plateforme déconnectée avec succès',
+        ar: 'تم قطع الاتصال بالمنصة بنجاح',
+        de: 'Plattform erfolgreich getrennt'
+      }
+    }
+  };
+
+  // Add error messages to each language
+  Object.keys(translations).forEach(lang => {
+    if (translations[lang] && typeof translations[lang] === 'object') {
+      translations[lang] = { ...translations[lang], ...errorMessages };
+    }
+  });
+
+  return translations;
+};
+
+// Apply error messages to existing translations
+const enhancedTranslations = addErrorMessages(translations);
 
 export const useTranslation = () => useContext(TranslationContext);
