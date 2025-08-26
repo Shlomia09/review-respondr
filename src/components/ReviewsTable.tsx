@@ -93,19 +93,19 @@ export function ReviewsTable({
 
   const getSentimentBadge = (sentiment: string) => {
     const colors = {
-      positive: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      negative: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200", 
-      neutral: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+      positive: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+      negative: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300", 
+      neutral: "bg-muted text-muted-foreground"
     };
     return colors[sentiment as keyof typeof colors] || colors.neutral;
   };
 
   const getStatusBadge = (status: string) => {
     const configs = {
-      pending: { color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200", icon: Clock },
-      generated: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", icon: MessageSquare },
-      approved: { color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200", icon: CheckCircle },
-      sent: { color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200", icon: Send }
+      pending: { color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300", icon: Clock },
+      generated: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300", icon: MessageSquare },
+      approved: { color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300", icon: CheckCircle },
+      sent: { color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300", icon: Send }
     };
     const config = configs[status as keyof typeof configs] || configs.pending;
     const Icon = config.icon;
@@ -123,7 +123,7 @@ export function ReviewsTable({
       {[1,2,3,4,5].map(star => (
         <Star 
           key={star} 
-          className={`h-4 w-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+          className={`h-4 w-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
         />
       ))}
     </div>
@@ -276,7 +276,7 @@ export function ReviewsTable({
                         size="sm" 
                         onClick={() => onDeleteReview(review.id)}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </TableCell>
