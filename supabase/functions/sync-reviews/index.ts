@@ -333,10 +333,10 @@ async function selectBusiness(platform: string, businessId: string, userId: stri
 }
 
 async function fetchGoogleBusinesses(accessToken: string) {
-  console.log('🔍 Starting fetchGoogleBusinesses (live)...');
+  console.log('🔍 Starting fetchGoogleBusinesses...');
   console.log('🔑 Access token length:', accessToken?.length);
 
-  // Let's try a very simple approach first - check token permissions
+  // First check if APIs are enabled and working
   try {
     const tokenInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
     console.log('🧪 Token info response status:', tokenInfoResponse.status);
@@ -424,6 +424,11 @@ async function fetchGoogleBusinesses(accessToken: string) {
       const errorText = await accountsResponse.text();
       console.error('❌ Accounts API error status:', accountsResponse.status);
       console.error('❌ Accounts API error body:', errorText);
+      
+      if (accountsResponse.status === 429) {
+        throw new Error('Google API quota exceeded. You need to:\n1. Go to Google Cloud Console\n2. Enable Google My Business APIs\n3. Set up billing\n4. Increase quota limits');
+      }
+      
       console.log('🔄 Trying Business Profile API instead...');
       return await fetchGoogleBusinessProfileAPI(accessToken);
     }
