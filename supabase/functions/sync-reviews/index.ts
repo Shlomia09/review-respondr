@@ -345,6 +345,10 @@ async function fetchGoogleBusinesses(accessToken: string) {
       const tokenInfo = await tokenInfoResponse.json();
       console.log('🧪 Token scope:', tokenInfo.scope);
       console.log('🧪 Token audience:', tokenInfo.audience);
+      console.log('🧪 Token expires_in:', tokenInfo.expires_in);
+    } else {
+      const errorText = await tokenInfoResponse.text();
+      console.error('🧪 Token info error:', errorText);
     }
   } catch (e) {
     console.error('Token info check failed:', e);
