@@ -426,7 +426,15 @@ async function fetchGoogleBusinesses(accessToken: string) {
       console.error('❌ Accounts API error body:', errorText);
       
       if (accountsResponse.status === 429) {
-        throw new Error('Google API quota exceeded. You need to:\n1. Go to Google Cloud Console\n2. Enable Google My Business APIs\n3. Set up billing\n4. Increase quota limits');
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.details?.[0]?.metadata?.quota_limit_value === "0") {
+            throw new Error('🚫 Google My Business API is not enabled in your Google Cloud project.\n\n📋 To fix this:\n\n1. Go to console.cloud.google.com\n2. Select your project (project_number:1454990250) \n3. Go to "APIs & Services" → "Library"\n4. Search for "Google My Business API" and enable it\n5. Go to "APIs & Services" → "Quotas" \n6. Search for "My Business" quotas and increase limits\n7. Make sure billing is enabled for your project\n\n💡 After fixing, disconnect Google and reconnect to try again.');
+          }
+        } catch (parseError) {
+          // If we can't parse the error, show the general message
+        }
+        throw new Error('Google API quota exceeded. Enable Google My Business API and set up billing in Google Cloud Console.');
       }
       
       console.log('🔄 Trying Business Profile API instead...');
