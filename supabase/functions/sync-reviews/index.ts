@@ -283,32 +283,69 @@ async function handleDisconnect(platform: string, userId: string, supabase: any)
 }
 
 async function getBusinesses(platform: string, userId: string, supabase: any) {
-  console.log(`Getting businesses for ${platform} for user ${userId}`);
+  console.log(`📝 Getting businesses for ${platform} for user ${userId}`);
   
-  // Get stored tokens for the platform
-  const { data: tokenData } = await supabase
-    .from('platform_tokens')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('platform', platform)
-    .single();
+  try {
+    // Get stored tokens for the platform
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('platform_tokens')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('platform', platform)
+      .maybeSingle();
 
-  if (!tokenData || !tokenData.access_token) {
-    throw new Error('Platform not connected. Please connect first.');
+    console.log('📝 Token query result:', { tokenData, tokenError });
+
+    if (tokenError) {
+      console.error('❌ Error fetching tokens:', tokenError);
+      throw new Error(`Database error: ${tokenError.message}`);
+    }
+
+    if (!tokenData || !tokenData.access_token) {
+      console.log('❌ No token found for platform');
+      throw new Error('Platform not connected. Please connect first.');
+    }
+
+    console.log('✅ Token found, expires at:', tokenData.expires_at);
+    
+    // Check if token is expired
+    const now = new Date();
+    const expiresAt = new Date(tokenData.expires_at);
+    if (expiresAt <= now) {
+      console.log('❌ Token expired:', { now: now.toISOString(), expires: expiresAt.toISOString() });
+      throw new Error('Token expired. Please reconnect to the platform.');
+    }
+
+    let businesses = [];
+    
+    if (platform === 'google') {
+      console.log('📞 Calling fetchGoogleBusinesses...');
+      businesses = await fetchGoogleBusinesses(tokenData.access_token);
+      console.log('📊 Businesses returned:', businesses.length);
+    } else if (platform === 'facebook') {
+      console.log('📞 Calling fetchFacebookBusinesses...');
+      businesses = await fetchFacebookBusinesses(tokenData.access_token);
+      console.log('📊 Businesses returned:', businesses.length);
+    }
+
+    return new Response(
+      JSON.stringify({ businesses }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('❌ Error in getBusinesses:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        businesses: [],
+        debug: `Failed to get businesses for ${platform}` 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
-
-  let businesses = [];
-  
-  if (platform === 'google') {
-    businesses = await fetchGoogleBusinesses(tokenData.access_token);
-  } else if (platform === 'facebook') {
-    businesses = await fetchFacebookBusinesses(tokenData.access_token);
-  }
-
-  return new Response(
-    JSON.stringify({ businesses }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
 }
 
 async function selectBusiness(platform: string, businessId: string, userId: string, supabase: any) {
