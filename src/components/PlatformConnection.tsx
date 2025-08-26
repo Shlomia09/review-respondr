@@ -314,7 +314,7 @@ const PlatformConnection = () => {
                 size="sm" 
                 variant={platform.connected ? "outline" : "default"}
                 className="w-full"
-                onClick={() => platform.connected ? handleDisconnect(platform.name) : handleConnect(platform.name)}
+                onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConnect(platform.name)}
                 disabled={connectingPlatform === platform.name}
               >
                 {connectingPlatform === platform.name ? (
