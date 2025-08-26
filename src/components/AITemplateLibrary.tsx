@@ -176,7 +176,7 @@ export function AITemplateLibrary() {
           <Card key={template.id} className="relative">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <CardTitle className="text-sm font-medium">{template.name}</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{template.name}</CardTitle>
                 {template.isDefault && (
                   <Badge variant="secondary" className="text-xs">
                     {t('aiResponses.default')}

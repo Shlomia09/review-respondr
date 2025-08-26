@@ -103,9 +103,9 @@ export function AIResponseStats({ stats }: AIResponseStatsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, index) => (
           <Card key={index} className={getCardClasses(stat.color)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-5 w-5 ${getIconClasses(stat.color)}`} />
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{stat.title}</CardTitle>
+              <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${getIconClasses(stat.color)} flex-shrink-0`} />
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${getTextClasses(stat.color)}`}>

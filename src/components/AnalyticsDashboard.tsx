@@ -168,9 +168,9 @@ export function AnalyticsDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('analytics.totalReviews')}</CardTitle>
-            <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{t('analytics.totalReviews')}</CardTitle>
+            <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
@@ -184,9 +184,9 @@ export function AnalyticsDashboard() {
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('analytics.responseRate')}</CardTitle>
-            <Target className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{t('analytics.responseRate')}</CardTitle>
+            <Target className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-700 dark:text-green-300">
@@ -200,9 +200,9 @@ export function AnalyticsDashboard() {
         </Card>
 
         <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('analytics.avgRating')}</CardTitle>
-            <TrendingUp className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{t('analytics.avgRating')}</CardTitle>
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
@@ -216,9 +216,9 @@ export function AnalyticsDashboard() {
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('analytics.avgResponseTime')}</CardTitle>
-            <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{t('analytics.avgResponseTime')}</CardTitle>
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
