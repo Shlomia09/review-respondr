@@ -100,11 +100,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${collapsed ? "w-16" : "w-64"} border-r`}
+      className={`${collapsed ? "w-16" : "w-64"} border-r bg-sidebar text-sidebar-foreground`}
     >
       <SidebarContent className="py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className={`${collapsed ? "sr-only" : ""} px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider`}>
+          <SidebarGroupLabel className={`${collapsed ? "sr-only" : ""} px-3 text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider`}>
             {t("sidebar.navigation")}
           </SidebarGroupLabel>
           
