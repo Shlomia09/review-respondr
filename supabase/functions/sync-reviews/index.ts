@@ -320,12 +320,22 @@ async function getBusinesses(platform: string, userId: string, supabase: any) {
     
     if (platform === 'google') {
       console.log('📞 Calling fetchGoogleBusinesses...');
-      businesses = await fetchGoogleBusinesses(tokenData.access_token);
-      console.log('📊 Businesses returned:', businesses.length);
+      try {
+        businesses = await fetchGoogleBusinesses(tokenData.access_token);
+        console.log('📊 Businesses returned from Google:', businesses.length, JSON.stringify(businesses, null, 2));
+      } catch (googleError) {
+        console.error('❌ Google API Error:', googleError.message);
+        throw new Error(`Google API failed: ${googleError.message}`);
+      }
     } else if (platform === 'facebook') {
       console.log('📞 Calling fetchFacebookBusinesses...');
-      businesses = await fetchFacebookBusinesses(tokenData.access_token);
-      console.log('📊 Businesses returned:', businesses.length);
+      try {
+        businesses = await fetchFacebookBusinesses(tokenData.access_token);
+        console.log('📊 Businesses returned from Facebook:', businesses.length);
+      } catch (facebookError) {
+        console.error('❌ Facebook API Error:', facebookError.message);
+        throw new Error(`Facebook API failed: ${facebookError.message}`);
+      }
     }
 
     return new Response(
