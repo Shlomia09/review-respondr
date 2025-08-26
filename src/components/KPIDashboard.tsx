@@ -97,27 +97,29 @@ export function KPIDashboard({ stats }: KPIDashboardProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {kpiCards.map((card, index) => (
         <Card key={index} className={getVariantClasses(card.variant)}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-            <card.icon className={`h-5 w-5 ${getIconClasses(card.variant)}`} />
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-2">{card.title}</CardTitle>
+            <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${getIconClasses(card.variant)} flex-shrink-0`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${getTextClasses(card.variant)} flex items-center`}>
-              {card.value}
+            <div className={`text-2xl sm:text-3xl font-bold ${getTextClasses(card.variant)} flex flex-col sm:flex-row sm:items-center`}>
+              <span>{card.value}</span>
               {card.showStars && (
-                <div className="flex ml-2">
+                <div className="flex mt-1 sm:mt-0 sm:ml-2">
                   {[1,2,3,4,5].map(star => (
                     <Star 
                       key={star} 
-                      className={`h-4 w-4 ${star <= Math.round(stats.avgRating) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} 
+                      className={`h-3 w-3 sm:h-4 sm:w-4 ${star <= Math.round(stats.avgRating) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} 
                     />
                   ))}
                 </div>
               )}
             </div>
-            <p className={`text-xs ${getIconClasses(card.variant)} flex items-center mt-1`}>
-              <TrendingUp className="h-3 w-3 mr-1" />
-              {card.change}
+            <p className={`text-xs ${getIconClasses(card.variant)} flex flex-col sm:flex-row sm:items-center mt-1 space-y-1 sm:space-y-0`}>
+              <span className="flex items-center">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                {card.change}
+              </span>
             </p>
           </CardContent>
         </Card>
