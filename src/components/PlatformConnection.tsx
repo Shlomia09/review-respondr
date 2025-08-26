@@ -335,24 +335,24 @@ const PlatformConnection = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className={align}>
-              {t('platforms.selectBusiness')}
+              {t('platforms.selectBusiness') || 'בחר עסק'}
             </DialogTitle>
           </DialogHeader>
           
           {loadingBusinesses ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">{t('platforms.loadingBusinesses')}</span>
+              <span className="ml-2">{t('platforms.loadingBusinesses') || 'טוען עסקים...'}</span>
             </div>
           ) : businesses.length > 0 ? (
             <div className="space-y-4">
               <p className={`text-sm text-gray-600 dark:text-gray-400 ${align}`}>
-                {t('platforms.businessSelectionDescription')}
+                {t('platforms.businessSelectionDescription') || 'בחר את העסק שלך מהרשימה'}
               </p>
               
               <Select onValueChange={setSelectedBusiness} value={selectedBusiness}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('platforms.chooseBusiness')} />
+                  <SelectValue placeholder={t('platforms.chooseBusiness') || 'בחר עסק'} />
                 </SelectTrigger>
                 <SelectContent>
                   {businesses.map((business) => (
@@ -371,27 +371,27 @@ const PlatformConnection = () => {
                   variant="outline"
                   onClick={() => setShowBusinessSelection(false)}
                 >
-                  {t('common.cancel')}
+                  {t('common.cancel') || 'ביטול'}
                 </Button>
                 <Button
                   onClick={() => selectedBusiness && selectBusiness(selectedBusiness)}
                   disabled={!selectedBusiness}
                 >
-                  {t('common.confirm')}
+                  {t('common.confirm') || 'אישור'}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
               <p className={`text-gray-600 dark:text-gray-400 ${align}`}>
-                {t('platforms.noBusinessesFound')}
+                {t('platforms.noBusinessesFound') || 'לא נמצאו עסקים בחשבון Google הזה. ודא שלחשבון יש גישה לעסקים.'}
               </p>
               <Button
                 variant="outline"
                 onClick={() => setShowBusinessSelection(false)}
                 className="mt-4"
               >
-                {t('common.close')}
+                {t('common.close') || 'סגור'}
               </Button>
             </div>
           )}

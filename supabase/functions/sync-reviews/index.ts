@@ -483,13 +483,39 @@ async function fetchGoogleBusinesses(accessToken: string) {
     }
 
     console.log(`✅ Total businesses found: ${businesses.length}`);
+    if (businesses.length === 0) {
+      try {
+        console.log('🔎 No businesses from per-account listing, trying aggregated accounts/-/locations ...');
+        const aggResp = await fetch('https://mybusinessbusinessinformation.googleapis.com/v1/accounts/-/locations?readMask=name,title,displayName,storefrontAddress', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('📊 Aggregated locations status:', aggResp.status);
+        if (aggResp.ok) {
+          const aggData = await aggResp.json();
+          for (const location of aggData.locations || []) {
+            businesses.push({
+              id: location.name,
+              name: location.title || location.displayName || location.name,
+              address: location.storefrontAddress?.addressLines?.join(', ') || 'No address'
+            });
+          }
+          console.log(`✅ Aggregated added ${businesses.length} businesses`);
+        } else {
+          const aggErr = await aggResp.text();
+          console.error('❌ Aggregated locations error:', aggErr);
+        }
+      } catch (e) {
+        console.error('❌ Error calling aggregated locations:', e);
+      }
+    }
+    if (businesses.length === 0) {
+      console.log('🔄 Still empty, trying Business Profile API as final fallback...');
+      return await fetchGoogleBusinessProfileAPI(accessToken);
+    }
     return businesses;
-  } catch (error) {
-    console.error('❌ Error in fetchGoogleBusinesses:', error);
-    console.log('🔄 Trying Business Profile API as fallback...');
-    return await fetchGoogleBusinessProfileAPI(accessToken);
-  }
-}
 
 // Google Business Profile API (newest API)
 async function fetchGoogleBusinessProfileAPI(accessToken: string) {
