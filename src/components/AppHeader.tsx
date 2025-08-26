@@ -4,7 +4,7 @@ import { Bell, Search, LogOut, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Logo } from "@/components/ui/logo";
+import revaiLogo from "@/assets/revai-logo.png";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
@@ -56,7 +56,7 @@ export function AppHeader() {
         {/* Left side - Logo and Trigger */}
         <div className="flex items-center gap-4">
           <SidebarTrigger />
-          <Logo />
+          <img src={revaiLogo} alt="REVAI" className="h-8 w-auto" />
         </div>
 
         {/* Center - Search */}

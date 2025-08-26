@@ -211,6 +211,33 @@ const translations: Translations = {
       aiResponse: "תגובת AI",
       aiResponseMessage: "תגובת AI חדשה נוצרה"
     },
+    reviews: {
+      allReviews: "כל הביקורות",
+      searchReviews: "חיפוש ביקורות",
+      filterBySentiment: "סנן לפי סנטימנט",
+      filterByPlatform: "סנן לפי פלטפורמה", 
+      filterByStatus: "סנן לפי סטטוס",
+      allSentiments: "כל הסנטימנטים",
+      allPlatforms: "כל הפלטפורמות",
+      allStatuses: "כל הסטטוסים",
+      moreFilters: "עוד מסננים",
+      customer: "לקוח",
+      review: "ביקורת",
+      rating: "דירוג",
+      platform: "פלטפורמה",
+      date: "תאריך",
+      status: "סטטוס",
+      actions: "פעולות",
+      bulkApprove: "אשר מרובים",
+      bulkSend: "שלח מרובים",
+      noReviewsFound: "לא נמצאו ביקורות",
+      tryDifferentFilters: "נסה מסננים שונים",
+      success: "הצלחה",
+      bulkApproveSuccess: "ביקורות אושרו בהצלחה",
+      bulkSendSuccess: "ביקורות נשלחו בהצלחה",
+      deleteSuccess: "ביקורת נמחקה בהצלחה",
+      deleteError: "שגיאה במחיקת ביקורת"
+    },
     footer: {
       copyright: '© 2024 RevAI. כל הזכויות שמורות.'
     }
@@ -414,6 +441,33 @@ const translations: Translations = {
       lowRatingMessage: "A review with 1-star rating",
       aiResponse: "AI Response",
       aiResponseMessage: "New AI response generated"
+    },
+    reviews: {
+      allReviews: "All Reviews",
+      searchReviews: "Search reviews",
+      filterBySentiment: "Filter by sentiment",
+      filterByPlatform: "Filter by platform",
+      filterByStatus: "Filter by status", 
+      allSentiments: "All sentiments",
+      allPlatforms: "All platforms",
+      allStatuses: "All statuses",
+      moreFilters: "More filters",
+      customer: "Customer",
+      review: "Review", 
+      rating: "Rating",
+      platform: "Platform",
+      date: "Date",
+      status: "Status",
+      actions: "Actions",
+      bulkApprove: "Bulk Approve",
+      bulkSend: "Bulk Send",
+      noReviewsFound: "No reviews found",
+      tryDifferentFilters: "Try different filters",
+      success: "Success",
+      bulkApproveSuccess: "Reviews approved successfully",
+      bulkSendSuccess: "Reviews sent successfully", 
+      deleteSuccess: "Review deleted successfully",
+      deleteError: "Error deleting review"
     },
     footer: {
       copyright: '© 2024 RevAI. All rights reserved.'

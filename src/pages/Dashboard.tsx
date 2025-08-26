@@ -27,7 +27,7 @@ import {
   CheckCircle,
   Send
 } from "lucide-react";
-import { Logo } from "@/components/ui/logo";
+import { KPIDashboard } from "@/components/KPIDashboard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
@@ -387,71 +387,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 space-y-6" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.totalReviews')}</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg sm:text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">
-                +2 {t('dashboard.fromLastWeek')}
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.averageRating')}</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg sm:text-2xl font-bold">{stats.avgRating.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">
-                +0.2 {t('dashboard.fromLastWeek')}
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.responseRate')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg sm:text-2xl font-bold">{stats.responseRate.toFixed(0)}%</div>
-              <p className="text-xs text-muted-foreground">
-                +12% {t('dashboard.fromLastWeek')}
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-overflow-mobile">{t('dashboard.sentiment')}</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-1 sm:gap-2 flex-wrap">
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 badge-mobile text-xs">
-                  {stats.positive} {t('dashboard.positive')}
-                </Badge>
-                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 badge-mobile text-xs">
-                  {stats.negative} {t('dashboard.negative')}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="p-6 space-y-8" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Enhanced KPI Dashboard */}
+      <KPIDashboard stats={stats} />
 
-        {/* Platform Connections */}
-        <PlatformConnection />
+      {/* Platform Connections */}
+      <PlatformConnection />
 
-        {/* Reviews Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      {/* Reviews Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="new" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
