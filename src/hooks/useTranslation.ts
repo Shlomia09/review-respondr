@@ -117,6 +117,14 @@ const translations: Translations = {
       subtitle: 'הצטרף לאלפי עסקים שכבר משפרים את השירות שלהם',
       button: 'התחל ניסיון חינמי'
     },
+    common: {
+      error: 'שגיאה',
+      saving: 'שומר...',
+      save: 'שמור',
+      cancel: 'ביטול',
+      confirm: 'אישור',
+      close: 'סגור'
+    },
     dashboard: {
       title: 'לוח בקרה RevAI',
       subtitle: 'החלטות מהירות • ניתוח סנטימנטים',
@@ -529,6 +537,14 @@ const translations: Translations = {
       subtitle: 'Join thousands of businesses already improving their service',
       button: 'Start Free Trial'
     },
+    common: {
+      error: 'Error',
+      saving: 'Saving...',
+      save: 'Save',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      close: 'Close'
+    },
     dashboard: {
       title: 'RevAI Dashboard',
       subtitle: 'Quick decisions • Sentiment analysis',
@@ -823,6 +839,14 @@ translations.es = {
     subtitle: 'Únete a miles de empresas que ya mejoran su servicio',
     button: 'Iniciar Prueba Gratuita'
   },
+  common: {
+    error: 'Error',
+    saving: 'Guardando...',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
+    close: 'Cerrar'
+  },
   dashboard: {
     title: 'Panel RevAI',
     subtitle: 'Decisiones rápidas • Análisis de sentimientos',
@@ -1003,6 +1027,14 @@ translations.de = {
     title: 'Bereit Anzufangen?',
     subtitle: 'Schließen Sie sich Tausenden von Unternehmen an, die bereits ihren Service verbessern',
     button: 'Kostenlose Testversion Starten'
+  },
+  common: {
+    error: 'Fehler',
+    saving: 'Speichern...',
+    save: 'Speichern',
+    cancel: 'Abbrechen',
+    confirm: 'Bestätigen',
+    close: 'Schließen'
   },
   dashboard: {
     title: 'RevAI Dashboard',
@@ -1185,6 +1217,14 @@ translations.ar = {
     subtitle: 'انضم لآلاف الشركات التي تحسن خدماتها بالفعل',
     button: 'ابدأ النسخة التجريبية المجانية'
   },
+  common: {
+    error: 'خطأ',
+    saving: 'جارٍ الحفظ...',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    confirm: 'تأكيد',
+    close: 'إغلاق'
+  },
   dashboard: {
     title: 'لوحة تحكم RevAI',
     subtitle: 'قرارات سريعة • تحليل المشاعر',
@@ -1365,6 +1405,14 @@ translations.ru = {
     title: 'Готовы Начать?',
     subtitle: 'Присоединяйтесь к тысячам компаний, которые уже улучшают свой сервис',
     button: 'Начать Бесплатный Пробный Период'
+  },
+  common: {
+    error: 'Ошибка',
+    saving: 'Сохранение...',
+    save: 'Сохранить',
+    cancel: 'Отмена',
+    confirm: 'Подтвердить',
+    close: 'Закрыть'
   },
   dashboard: {
     title: 'Панель RevAI',
