@@ -516,6 +516,12 @@ async function fetchGoogleBusinesses(accessToken: string) {
       return await fetchGoogleBusinessProfileAPI(accessToken);
     }
     return businesses;
+  } catch (error) {
+    console.error('❌ Error in fetchGoogleBusinesses:', error);
+    console.log('🔄 Trying Business Profile API as fallback...');
+    return await fetchGoogleBusinessProfileAPI(accessToken);
+  }
+}
 
 // Google Business Profile API (newest API)
 async function fetchGoogleBusinessProfileAPI(accessToken: string) {
