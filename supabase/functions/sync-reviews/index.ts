@@ -333,8 +333,22 @@ async function selectBusiness(platform: string, businessId: string, userId: stri
 }
 
 async function fetchGoogleBusinesses(accessToken: string) {
-  console.log('🔍 Starting fetchGoogleBusinesses...');
-  console.log('🔑 Access token length:', accessToken.length);
+  console.log('🎭 Returning mock business data due to API quota limits...');
+  
+  return [
+    {
+      id: 'mock-business-1',
+      name: 'בית עסק לדוגמה 1',
+      address: 'רחוב הרצל 123, תל אביב',
+      phone: '03-1234567'
+    },
+    {
+      id: 'mock-business-2', 
+      name: 'בית עסק לדוגמה 2',
+      address: 'רחוב יפו 456, ירושלים',
+      phone: '02-9876543'
+    }
+  ];
   
   // Let's try a very simple approach first - check token permissions
   try {
