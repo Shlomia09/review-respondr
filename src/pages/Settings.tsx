@@ -207,7 +207,7 @@ export function Settings() {
       </div>
 
       <Tabs defaultValue="business" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2">
           <TabsTrigger value="business" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
             {t("settings.businessProfile")}

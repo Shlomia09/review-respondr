@@ -135,7 +135,7 @@ export function SocialContentGenerator() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="generator" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2">
           <TabsTrigger value="generator">{t('socialHub.contentGenerator')}</TabsTrigger>
           <TabsTrigger value="ideas">{t('socialHub.contentIdeas')}</TabsTrigger>
           <TabsTrigger value="templates">{t('socialHub.templates')}</TabsTrigger>

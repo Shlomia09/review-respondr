@@ -396,7 +396,7 @@ const Dashboard = () => {
 
       {/* Reviews Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2">
             <TabsTrigger value="new" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               {t('dashboard.newReviews')}
