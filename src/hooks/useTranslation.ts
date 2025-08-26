@@ -266,7 +266,8 @@ const translations: Translations = {
       fast: "מהיר",
       moderate: "בינוני",
       slow: "איטי"
-      socialHub: {
+    },
+    socialHub: {
         contentGenerator: "יוצר תוכן",
         calendar: "לוח זמנים",
         generateContent: "יצירת תוכן",
