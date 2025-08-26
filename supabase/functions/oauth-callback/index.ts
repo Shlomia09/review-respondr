@@ -121,151 +121,50 @@ serve(async (req) => {
     return new Response(`
       <html>
         <head>
-          <title>Connection Successful</title>
+          <title>All Set</title>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
+            html, body { height: 100%; margin: 0; }
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              margin: 0;
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-              color: white;
-              text-align: center;
-              direction: rtl;
+              display: flex; align-items: center; justify-content: center;
+              background: #0b1220; color: #fff; text-align: center;
             }
-            .container {
-              background: rgba(255, 255, 255, 0.15);
-              backdrop-filter: blur(10px);
-              padding: 3rem;
-              border-radius: 20px;
-              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-              max-width: 400px;
-              width: 90%;
-            }
-            .success { 
-              color: #10f5a8; 
-              font-size: 4rem; 
-              margin-bottom: 1rem;
-              animation: bounce 1s ease-in-out;
-            }
-            .title { 
-              font-size: 1.75rem; 
-              margin-bottom: 0.75rem; 
-              font-weight: 600;
-            }
-            .description { 
-              opacity: 0.9; 
-              margin-bottom: 2rem; 
-              font-size: 1.1rem;
-              line-height: 1.5;
-            }
-            .loading { 
-              opacity: 0.7;
-              font-size: 0.95rem;
-              animation: pulse 2s ease-in-out infinite;
-            }
-            .progress-bar {
-              width: 100%;
-              height: 4px;
-              background: rgba(255, 255, 255, 0.2);
-              border-radius: 2px;
-              overflow: hidden;
-              margin-top: 1rem;
-            }
-            .progress-fill {
-              height: 100%;
-              background: #10f5a8;
-              width: 0%;
-              animation: progress 3s ease-out forwards;
-            }
-            @keyframes bounce {
-              0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-              40% { transform: translateY(-10px); }
-              60% { transform: translateY(-5px); }
-            }
-            @keyframes pulse {
-              0%, 100% { opacity: 0.7; }
-              50% { opacity: 1; }
-            }
-            @keyframes progress {
-              0% { width: 0%; }
-              100% { width: 100%; }
-            }
+            .wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .logo { width: 56px; height: 56px; border-radius: 12px; background: radial-gradient(120% 120% at 20% 10%, #22d3ee 0%, #6366f1 40%, #22c55e 100%); box-shadow: 0 10px 30px rgba(99,102,241,.35); position: relative; }
+            .logo:after { content: ""; position: absolute; inset: 0; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0)); }
+            h1 { margin: 0; font-size: 24px; letter-spacing: .08em; }
+            p { margin: 0; opacity: .8; font-size: 14px; }
           </style>
         </head>
         <body>
-          <div class="container">
-            <div class="success">✓</div>
-            <div class="title">החיבור הושלם בהצלחה!</div>
-            <div class="description">
-              הפלטפורמה חוברה למערכת.<br>
-              כעת תוכל לבחור את העסק שלך.
-            </div>
-            <div class="loading">מעבד את המידע...</div>
-            <div class="progress-bar">
-              <div class="progress-fill"></div>
-            </div>
+          <div class="wrap">
+            <div class="logo" aria-label="RevAI logo"></div>
+            <h1>YOU ALL SET</h1>
+            <p>Connection completed successfully</p>
           </div>
           <script>
-            console.log('=== OAuth Success Page ===');
-            console.log('Platform:', '${platform}');
-            console.log('User ID:', '${userId}');
-            
-            // Enhanced message sending with better error handling
-            function sendSuccessMessage() {
-              const message = {
+            (function(){
+              const msg = {
+                type: 'oauth_success',
                 success: true,
                 platform: '${platform}',
                 userId: '${userId}',
                 timestamp: Date.now()
               };
-              
-              console.log('📢 Sending success message:', message);
-              
-              try {
-                // Try multiple methods to communicate success
-                if (window.opener && !window.opener.closed) {
-                  window.opener.postMessage(message, '*');
-                  console.log('✅ Message sent to opener window');
-                  
-                  // Also try to focus the parent window
-                  window.opener.focus();
-                }
-                
-                if (window.parent && window.parent !== window) {
-                  window.parent.postMessage(message, '*');
-                  console.log('✅ Message sent to parent window');
-                }
-                
-              } catch (e) {
-                console.error('❌ Error sending messages:', e);
+              function send(){
+                try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); } catch(e){}
+                try { if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); } catch(e){}
               }
-            }
-            
-            // Send message multiple times to ensure delivery
-            sendSuccessMessage();
-            setTimeout(sendSuccessMessage, 200);
-            setTimeout(sendSuccessMessage, 500);
-            setTimeout(sendSuccessMessage, 1000);
-            setTimeout(sendSuccessMessage, 2000);
-            
-            // Close window after showing progress
-            setTimeout(() => {
-              console.log('🔒 Closing OAuth popup window');
-              try {
-                if (window.opener) {
-                  window.opener.focus();
-                }
+              send();
+              setTimeout(send, 150);
+              setTimeout(send, 300);
+              setTimeout(function(){
+                try { if (window.opener) window.opener.focus(); } catch(e){}
                 window.close();
-              } catch (e) {
-                console.log('Could not close window, user will need to close manually:', e);
-                document.querySelector('.loading').textContent = 'ניתן לסגור את החלון';
-              }
-            }, 3500);
+              }, 900);
+            })();
           </script>
         </body>
       </html>

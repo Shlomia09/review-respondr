@@ -185,6 +185,25 @@ const PlatformConnection = () => {
 
         window.addEventListener('message', messageListener);
 
+        // Fallback: Poll connection status in case postMessage is blocked
+        const pollConnection = setInterval(async () => {
+          try {
+            const { data: status } = await supabase.functions.invoke('sync-reviews', {
+              body: { action: 'check_connection', platform: 'google' }
+            });
+            if (status?.connected) {
+              clearInterval(pollConnection);
+              popup?.close();
+              window.removeEventListener('message', messageListener);
+              toast.success(t('platforms.connected'));
+              setConnectingPlatform(null);
+              fetchBusinesses(platformName);
+            }
+          } catch (_) {
+            // ignore transient errors
+          }
+        }, 1000);
+
         // Handle popup close without completion
         const checkClosed = setInterval(() => {
           if (popup?.closed) {
