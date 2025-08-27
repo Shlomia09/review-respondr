@@ -225,6 +225,14 @@ const translations: Translations = {
       support: "תמיכה",
       logout: "התנתק"
     },
+    notifications: {
+      newReview: "ביקורת חדשה",
+      newReviewMessage: "קיבלת ביקורת חדשה שדורשת תשומת לב",
+      lowRating: "דירוג נמוך",
+      lowRatingMessage: "קיבלת ביקורת עם דירוג נמוך שדורש טיפול",
+      aiResponse: "תגובת AI",
+      aiResponseMessage: "תגובה אוטומטית נוצרה והועלתה בהצלחה"
+    },
     reviews: {
       allReviews: 'כל הביקורות',
       bulkApprove: 'אישור קבוצתי',
@@ -672,6 +680,14 @@ const translations: Translations = {
       settings: "Settings",
       support: "Support",
       logout: "Logout"
+    },
+    notifications: {
+      newReview: "New Review",
+      newReviewMessage: "You have received a new review that requires attention",
+      lowRating: "Low Rating",
+      lowRatingMessage: "You have received a review with a low rating that needs handling",
+      aiResponse: "AI Response",
+      aiResponseMessage: "An automated response has been generated and posted successfully"
     },
     reviews: {
       allReviews: 'All Reviews',
