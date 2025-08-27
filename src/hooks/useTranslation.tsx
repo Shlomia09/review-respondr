@@ -41,7 +41,15 @@ const translations: Translations = {
         title: 'Trustpilot',
         subtitle: 'דוחות חכמים ותובנות',
         description: 'שפר את העסק שלך עם נתונים ניתנים לפעולה'
-      }
+      },
+      connected: 'מחובר',
+      disconnected: 'לא מחובר',
+      businessSelected: 'העסק נבחר בהצלחה',
+      selectBusiness: 'בחר עסק',
+      loadingBusinesses: 'טוען עסקים...',
+      businessSelectionDescription: 'בחר את העסק שלך מהרשימה',
+      chooseBusiness: 'בחר עסק',
+      noBusinessesFound: 'לא נמצאו עסקים בחשבון זה'
     },
     features: {
       sync: {
@@ -275,6 +283,50 @@ const translations: Translations = {
       active: 'פעיל',
       inactive: 'לא פעיל',
       noCustomersFound: 'לא נמצאו לקוחות'
+    },
+    platformConnection: {
+      title: 'חיבורי פלטפורמות',
+      description: 'חבר את פלטפורמות הביקורות לייבוא וניהול אוטומטי של ביקורות',
+      connected: 'מחובר',
+      disconnected: 'לא מחובר',
+      reviews: 'ביקורות',
+      manage: 'ניהול',
+      connect: 'חיבור'
+    },
+    errors: {
+      connectionCheck: 'נכשלה בדיקת החיבורים',
+      businessFetchFailed: 'נכשלה טעינת עסקים',
+      businessSelectionFailed: 'נכשלה בחירת העסק',
+      notLoggedIn: 'עליך להתחבר',
+      connectionFailed: 'התחברות נכשלה',
+      disconnectionFailed: 'ניתוק נכשל'
+    },
+    aiInstructions: {
+      title: 'הוראות ל-AI',
+      description: 'הוסיפו הנחיות קצרות כדי להתאים את תגובת ה-AI לביקורת זו',
+      fields: {
+        instructions: 'הוראות'
+      },
+      placeholders: {
+        instructions: 'לדוגמה: הדגש את זמני השירות המהירים, שמור על טון ידידותי ומקצועי'
+      },
+      helpText: 'ההוראות יישמרו יחד עם הביקורת וישמשו ליצירת תגובות מדויקות יותר',
+      examples: {
+        title: 'דוגמאות להוראות',
+        list: 'הדגש שירות מהיר, הזכר אחריות מורחבת, בקש פרטים נוספים, הצע פנייה פרטית'
+      },
+      buttons: {
+        cancel: 'ביטול',
+        save: 'שמור',
+        saving: 'שומר...'
+      },
+      toasts: {
+        errorTitle: 'שגיאה',
+        errorMissingInstructions: 'אנא הזן הוראות לפני השמירה',
+        savedTitle: 'נשמר',
+        savedDesc: 'ההוראות נשמרו בהצלחה',
+        errorSaveDesc: 'שמירת ההוראות נכשלה, נסה שוב'
+      }
     }
   },
   en: {
@@ -307,7 +359,15 @@ const translations: Translations = {
         title: 'Trustpilot',
         subtitle: 'Smart reports and insights',
         description: 'Improve your business with actionable data'
-      }
+      },
+      connected: 'Connected',
+      disconnected: 'Not Connected',
+      businessSelected: 'Business selected successfully',
+      selectBusiness: 'Select Business',
+      loadingBusinesses: 'Loading businesses...',
+      businessSelectionDescription: 'Choose your business from the list',
+      chooseBusiness: 'Choose business',
+      noBusinessesFound: 'No businesses found for this account'
     },
     features: {
       sync: {
@@ -541,6 +601,50 @@ const translations: Translations = {
       active: 'Active',
       inactive: 'Inactive',
       noCustomersFound: 'No customers found'
+    },
+    platformConnection: {
+      title: 'Platform Connections',
+      description: 'Connect your review platforms for automatic import and management of reviews',
+      connected: 'Connected',
+      disconnected: 'Not Connected',
+      reviews: 'reviews',
+      manage: 'Manage',
+      connect: 'Connect'
+    },
+    errors: {
+      connectionCheck: 'Failed to check connections',
+      businessFetchFailed: 'Failed to load businesses',
+      businessSelectionFailed: 'Failed to select business',
+      notLoggedIn: 'You must be logged in',
+      connectionFailed: 'Connection failed',
+      disconnectionFailed: 'Disconnection failed'
+    },
+    aiInstructions: {
+      title: 'AI Instructions',
+      description: 'Add short instructions to tailor the AI response for this review',
+      fields: {
+        instructions: 'Instructions'
+      },
+      placeholders: {
+        instructions: 'Example: Emphasize fast service times, keep a friendly and professional tone'
+      },
+      helpText: 'Instructions will be saved with the review and used to generate more accurate responses',
+      examples: {
+        title: 'Instruction Examples',
+        list: 'Emphasize quick service, Mention extended warranty, Ask for more details, Offer private follow‑up'
+      },
+      buttons: {
+        cancel: 'Cancel',
+        save: 'Save',
+        saving: 'Saving...'
+      },
+      toasts: {
+        errorTitle: 'Error',
+        errorMissingInstructions: 'Please enter instructions before saving',
+        savedTitle: 'Saved',
+        savedDesc: 'Instructions saved successfully',
+        errorSaveDesc: 'Failed to save instructions, please try again'
+      }
     }
   }
 };
