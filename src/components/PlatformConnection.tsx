@@ -213,6 +213,84 @@ const PlatformConnection = () => {
           }
         }, 1000);
 
+      } else if (platformName === 'Facebook') {
+        const { data, error } = await supabase.functions.invoke('sync-reviews', {
+          body: { 
+            action: 'get_oauth_url', 
+            platform: 'facebook' 
+          }
+        });
+
+        if (error) throw error;
+
+        // Open OAuth URL in popup
+        const popup = window.open(
+          data.oauth_url,
+          'oauth',
+          'width=500,height=600,scrollbars=yes'
+        );
+
+        // Listen for OAuth completion
+        const messageListener = (event: MessageEvent) => {
+          // Accept messages from our app origin AND Supabase Functions origin
+          const allowedOrigins = [
+            window.location.origin,
+            'https://epwriqkyqxwewwcxbnsu.supabase.co'
+          ];
+          if (!allowedOrigins.includes(event.origin)) return;
+
+          const isSuccess = event.data?.type === 'oauth_success' || event.data?.success === true;
+          const isError = event.data?.type === 'oauth_error' || !!event.data?.error;
+
+          if (isSuccess) {
+            popup?.close();
+            toast.success(t('platforms.connected'));
+            setConnectingPlatform(null);
+            // Fetch businesses after successful connection
+            setTimeout(() => {
+              fetchBusinesses(platformName);
+            }, 500);
+            window.removeEventListener('message', messageListener);
+          } else if (isError) {
+            popup?.close();
+            toast.error(t('errors.connectionFailed'));
+            setConnectingPlatform(null);
+            window.removeEventListener('message', messageListener);
+          }
+        };
+
+        window.addEventListener('message', messageListener);
+
+        // Fallback: Poll connection status in case postMessage is blocked
+        const pollConnection = setInterval(async () => {
+          try {
+            const { data: status } = await supabase.functions.invoke('sync-reviews', {
+              body: { action: 'check_connection', platform: 'facebook' }
+            });
+            if (status?.connected) {
+              clearInterval(pollConnection);
+              popup?.close();
+              window.removeEventListener('message', messageListener);
+              toast.success(t('platforms.connected'));
+              setConnectingPlatform(null);
+              fetchBusinesses(platformName);
+            }
+          } catch (_) {
+            // ignore transient errors
+          }
+        }, 1000);
+
+        // Handle popup close without completion
+        const checkClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageListener);
+            setConnectingPlatform(null);
+          }
+        }, 1000);
+
+      } else {
+        toast.error(t('errors.platformNotSupported'));
       }
     } catch (error) {
       console.error('Error connecting to platform:', error);

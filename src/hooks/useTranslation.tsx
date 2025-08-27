@@ -307,7 +307,8 @@ const translations: Translations = {
       businessSelectionFailed: 'נכשלה בחירת העסק',
       notLoggedIn: 'עליך להתחבר',
       connectionFailed: 'התחברות נכשלה',
-      disconnectionFailed: 'ניתוק נכשל'
+      disconnectionFailed: 'ניתוק נכשל',
+      platformNotSupported: 'פלטפורמה לא נתמכת'
     },
     aiInstructions: {
       title: 'הוראות ל-AI',
@@ -763,7 +764,8 @@ const translations: Translations = {
       businessSelectionFailed: 'Failed to select business',
       notLoggedIn: 'You must be logged in',
       connectionFailed: 'Connection failed',
-      disconnectionFailed: 'Disconnection failed'
+      disconnectionFailed: 'Disconnection failed',
+      platformNotSupported: 'Platform not supported'
     },
     aiInstructions: {
       title: 'AI Instructions',
