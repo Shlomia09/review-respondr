@@ -584,7 +584,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     
     if (params) {
       return Object.entries(params).reduce((text, [param, val]) => {
-        const regex = new RegExp(`{{${param}}}`, 'g');
+        const regex = new RegExp('{{' + param + '}}', 'g');
         return text.replace(regex, String(val));
       }, value);
     }
