@@ -142,7 +142,7 @@ async function getOAuthUrl(platform: string, userId: string) {
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `scope=${encodeURIComponent('pages_show_list,email,public_profile')}&` +
+        `scope=${encodeURIComponent('pages_show_list,public_profile')}&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
       break;
