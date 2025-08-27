@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import * as React from 'react';
 
 export type Language = 'he' | 'en' | 'es' | 'de' | 'ar' | 'ru';
 
@@ -915,22 +915,22 @@ interface TranslationContextType {
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
+const TranslationContext = React.createContext<TranslationContextType | undefined>(undefined);
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
+  const [language, setLanguageState] = React.useState<Language>(() => {
     const saved = localStorage.getItem('language');
     return (saved as Language) || 'he';
   });
 
-  const setLanguage = useCallback((newLanguage: Language) => {
+  const setLanguage = React.useCallback((newLanguage: Language) => {
     setLanguageState(newLanguage);
     localStorage.setItem('language', newLanguage);
     document.documentElement.setAttribute('dir', newLanguage === 'he' || newLanguage === 'ar' ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', newLanguage);
   }, []);
 
-  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+  const t = React.useCallback((key: string, params?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let value: any = translations[language];
     
@@ -956,7 +956,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     return value;
   }, [language]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     document.documentElement.setAttribute('dir', language === 'he' || language === 'ar' ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', language);
   }, [language]);
@@ -969,7 +969,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 }
 
 export const useTranslation = () => {
-  const context = useContext(TranslationContext);
+  const context = React.useContext(TranslationContext);
   if (context === undefined) {
     throw new Error('useTranslation must be used within a TranslationProvider');
   }
