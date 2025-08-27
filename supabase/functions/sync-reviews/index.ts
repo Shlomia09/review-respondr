@@ -132,10 +132,15 @@ async function getOAuthUrl(platform: string, userId: string) {
       
     case 'facebook':
       const facebookAppId = Deno.env.get('FACEBOOK_APP_ID') || Deno.env.get('FB_APP_ID') || Deno.env.get('FACEBOOK_APPID');
+      console.log('🔍 Facebook App ID check:', facebookAppId ? `Found: ${facebookAppId.substring(0, 5)}...` : 'NOT FOUND');
+      console.log('🔍 Available env vars:', Object.keys(Deno.env.toObject()).filter(k => k.toLowerCase().includes('facebook')));
+      
       if (!facebookAppId) {
         console.error('❌ FACEBOOK_APP_ID missing in Edge Function env. Flags → SUPABASE_URL:', !!Deno.env.get('SUPABASE_URL'), 'SERVICE_ROLE:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), 'FACEBOOK_APP_SECRET:', !!Deno.env.get('FACEBOOK_APP_SECRET'));
         throw new Error('Facebook App ID not configured (set FACEBOOK_APP_ID in Supabase Edge Function secrets)');
       }
+      
+      console.log('🎯 Generating Facebook OAuth URL with App ID:', facebookAppId);
       
       // Request only basic, review-free scopes to avoid "Invalid Scopes" during setup.
       // We can request additional scopes (e.g., pages_read_engagement) later after App Review.
@@ -145,6 +150,8 @@ async function getOAuthUrl(platform: string, userId: string) {
         `scope=${encodeURIComponent('pages_show_list,public_profile')}&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
+        
+      console.log('✅ Facebook OAuth URL generated successfully');
       break;
       
     default:
