@@ -215,8 +215,9 @@ export function ReviewsTable({
         </div>
 
         {/* Reviews Table */}
-        <div className="rounded-md border">
-          <Table>
+        <div className="w-full overflow-x-auto">
+          <div className="rounded-md border min-w-[800px]">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -284,6 +285,7 @@ export function ReviewsTable({
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
         
         {filteredReviews.length === 0 && (

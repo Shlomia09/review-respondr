@@ -246,8 +246,9 @@ function CustomersTable({ customers }: CustomersTableProps) {
   };
 
   return (
-    <div className="rounded-md border">
-      <Table>
+    <div className="w-full overflow-x-auto">
+      <div className="rounded-md border min-w-[700px]">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>{t("customers.name")}</TableHead>
@@ -330,7 +331,8 @@ function CustomersTable({ customers }: CustomersTableProps) {
             ))
           )}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   );
 }
