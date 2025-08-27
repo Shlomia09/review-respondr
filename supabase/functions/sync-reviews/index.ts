@@ -136,10 +136,12 @@ async function getOAuthUrl(platform: string, userId: string) {
         throw new Error('Facebook App ID not configured');
       }
       
+      // Request only basic, review-free scopes to avoid "Invalid Scopes" during setup.
+      // We can request additional scopes (e.g., pages_read_engagement) later after App Review.
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `scope=${encodeURIComponent('pages_show_list,pages_read_engagement')}&` +
+        `scope=${encodeURIComponent('pages_show_list,email,public_profile')}&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
       break;
