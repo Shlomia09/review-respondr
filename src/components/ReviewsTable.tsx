@@ -23,7 +23,10 @@ import {
   Trash2,
   CheckCircle,
   Clock,
-  MessageSquare
+  MessageSquare,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -64,6 +67,8 @@ export function ReviewsTable({
   const [platformFilter, setPlatformFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [businessFilter, setBusinessFilter] = useState("all");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Get unique business names for filter
   const uniqueBusinesses = Array.from(
@@ -82,9 +87,48 @@ export function ReviewsTable({
     return matchesSearch && matchesSentiment && matchesPlatform && matchesStatus && matchesBusiness;
   });
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedReviews = [...filteredReviews].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    let aValue: any = a[sortColumn as keyof Review];
+    let bValue: any = b[sortColumn as keyof Review];
+    
+    // Handle dates
+    if (sortColumn === 'review_date') {
+      aValue = new Date(aValue).getTime();
+      bValue = new Date(bValue).getTime();
+    }
+    
+    // Handle strings
+    if (typeof aValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+    
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) return <ArrowUpDown className="h-4 w-4 ml-1" />;
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="h-4 w-4 ml-1" /> : 
+      <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedReviews(new Set(filteredReviews.map(r => r.id)));
+      setSelectedReviews(new Set(sortedReviews.map(r => r.id)));
     } else {
       setSelectedReviews(new Set());
     }
@@ -245,22 +289,70 @@ export function ReviewsTable({
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox 
-                    checked={selectedReviews.size === filteredReviews.length && filteredReviews.length > 0}
+                    checked={selectedReviews.size === sortedReviews.length && sortedReviews.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>{t('reviews.customer')}</TableHead>
+                <TableHead>
+                  <button 
+                    onClick={() => handleSort('customer_name')}
+                    className="flex items-center hover:text-foreground"
+                  >
+                    {t('reviews.customer')}
+                    {getSortIcon('customer_name')}
+                  </button>
+                </TableHead>
                 <TableHead>{t('reviews.review')}</TableHead>
-                <TableHead>{t('reviews.rating')}</TableHead>
-                <TableHead>{t('reviews.sentiment')}</TableHead>
-                <TableHead>{t('reviews.platform')}</TableHead>
-                <TableHead>{t('reviews.date')}</TableHead>
-                <TableHead>{t('reviews.status')}</TableHead>
+                <TableHead>
+                  <button 
+                    onClick={() => handleSort('rating')}
+                    className="flex items-center hover:text-foreground"
+                  >
+                    {t('reviews.rating')}
+                    {getSortIcon('rating')}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button 
+                    onClick={() => handleSort('sentiment')}
+                    className="flex items-center hover:text-foreground"
+                  >
+                    {t('reviews.sentiment')}
+                    {getSortIcon('sentiment')}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button 
+                    onClick={() => handleSort('platform')}
+                    className="flex items-center hover:text-foreground"
+                  >
+                    {t('reviews.platform')}
+                    {getSortIcon('platform')}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button 
+                    onClick={() => handleSort('review_date')}
+                    className="flex items-center hover:text-foreground"
+                  >
+                    {t('reviews.date')}
+                    {getSortIcon('review_date')}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button 
+                    onClick={() => handleSort('response_status')}
+                    className="flex items-center hover:text-foreground"
+                  >
+                    {t('reviews.status')}
+                    {getSortIcon('response_status')}
+                  </button>
+                </TableHead>
                 <TableHead className="text-right">{t('reviews.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReviews.map((review) => (
+              {sortedReviews.map((review) => (
                 <TableRow key={review.id}>
                   <TableCell>
                     <Checkbox 
@@ -311,7 +403,7 @@ export function ReviewsTable({
           </div>
         </div>
         
-        {filteredReviews.length === 0 && (
+        {sortedReviews.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>{t('reviews.noReviewsFound')}</p>
