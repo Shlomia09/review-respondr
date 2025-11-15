@@ -608,18 +608,9 @@ async function getBusinesses(platform: string, userId: string, supabase: any) {
 async function selectBusiness(platform: string, businessId: string, businessName: string | undefined, userId: string, supabase: any) {
   console.log(`Selecting business ${businessId} (${businessName || 'no-name'}) for ${platform} for user ${userId}`);
   
-  // Update the platform_tokens record with the selected business
-  const { error: updateError } = await supabase
-    .from('platform_tokens')
-    .update({ business_id: businessId })
-    .eq('user_id', userId)
-    .eq('platform', platform);
-
-  if (updateError) {
-    console.error('Error updating business selection:', updateError);
-    throw new Error('Failed to select business');
-  }
-
+  // For Facebook, the same token can access multiple pages, so we don't update the token's business_id
+  // Instead, we just create/update the platform_connections record
+  
   // Persist a human-readable name in platform_connections for UI display
   try {
     const { data: existing } = await supabase
@@ -627,21 +618,31 @@ async function selectBusiness(platform: string, businessId: string, businessName
       .select('id')
       .eq('user_id', userId)
       .eq('platform', platform)
+      .eq('business_id', businessId)
       .maybeSingle();
 
     if (existing) {
       await supabase
         .from('platform_connections')
-        .update({ business_id: businessId, business_name: businessName || null, updated_at: new Date().toISOString() })
+        .update({ business_name: businessName || null, updated_at: new Date().toISOString() })
         .eq('id', existing.id);
     } else {
       await supabase
         .from('platform_connections')
-        .insert({ user_id: userId, platform, business_id: businessId, business_name: businessName || null, connected_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        .insert({ 
+          user_id: userId, 
+          platform, 
+          business_id: businessId, 
+          business_name: businessName || null, 
+          is_active: true,
+          connected_at: new Date().toISOString(), 
+          created_at: new Date().toISOString(), 
+          updated_at: new Date().toISOString() 
+        });
     }
   } catch (e) {
     console.error('⚠️ Could not upsert platform_connections with name:', e);
-    // Non-fatal for the flow
+    throw new Error('Failed to create/update connection');
   }
 
   return new Response(
