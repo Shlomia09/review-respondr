@@ -779,24 +779,55 @@ async function fetchGoogleBusinessesOldAPI(accessToken: string) {
 
 async function fetchFacebookBusinesses(accessToken: string) {
   try {
-    const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+    // Get Facebook App Secret from environment
+    const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
+    if (!appSecret) {
+      console.error('❌ FACEBOOK_APP_SECRET not found');
+      return [];
+    }
+
+    // Generate appsecret_proof required for server-side API calls
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(appSecret);
+    const messageData = encoder.encode(accessToken);
+    
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign('HMAC', key, messageData);
+    const appsecretProof = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    console.log('🔐 Generated appsecret_proof for Facebook API');
+
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}`
+    );
     
     if (!response.ok) {
-      console.error('Facebook businesses API error:', await response.text());
+      const errorText = await response.text();
+      console.error('❌ Facebook businesses API error:', errorText);
       return [];
     }
 
     const data = await response.json();
+    console.log('✅ Facebook API response:', JSON.stringify(data, null, 2));
+    
     return data.data?.map((page: any) => ({
       id: page.id,
       name: page.name,
       category: page.category || 'Business'
     })) || [];
   } catch (error) {
-    console.error('Error fetching Facebook businesses:', error);
+    console.error('❌ Error fetching Facebook businesses:', error);
     return [];
   }
-
 }
 
 // Platform-specific review fetchers
@@ -876,9 +907,34 @@ async function fetchGoogleReviews(accessToken: string, userId: string): Promise<
 
 async function fetchFacebookReviews(accessToken: string, userId: string): Promise<ReviewData[]> {
   try {
+    // Get Facebook App Secret from environment
+    const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
+    if (!appSecret) {
+      console.error('❌ FACEBOOK_APP_SECRET not found');
+      return [];
+    }
+
+    // Generate appsecret_proof
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(appSecret);
+    const messageData = encoder.encode(accessToken);
+    
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign('HMAC', key, messageData);
+    const appsecretProof = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
     // Get user's pages
     const pagesResponse = await fetch(
-      `https://graph.facebook.com/me/accounts?access_token=${accessToken}`
+      `https://graph.facebook.com/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}`
     );
 
     if (!pagesResponse.ok) {
@@ -888,10 +944,17 @@ async function fetchFacebookReviews(accessToken: string, userId: string): Promis
     const pagesData = await pagesResponse.json();
     const reviews: ReviewData[] = [];
 
-    // For each page, get reviews
+    // For each page, get reviews (using page access token with its own appsecret_proof)
     for (const page of pagesData.data || []) {
+      // Generate appsecret_proof for page token
+      const pageMessageData = encoder.encode(page.access_token);
+      const pageSignature = await crypto.subtle.sign('HMAC', key, pageMessageData);
+      const pageAppsecretProof = Array.from(new Uint8Array(pageSignature))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
       const reviewsResponse = await fetch(
-        `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&fields=reviewer,rating,review_text,created_time`
+        `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time`
       );
 
       if (reviewsResponse.ok) {
