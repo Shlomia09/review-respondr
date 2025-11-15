@@ -171,14 +171,15 @@ export function Reviews() {
 
   const handleSendResponse = async (reviewId: string) => {
     try {
-      // For now, just update status to 'sent'
-      // In the future, this will actually send to the platform
-      const { error } = await supabase
-        .from('reviews')
-        .update({ response_status: 'sent' })
-        .eq('id', reviewId);
+      const { data, error } = await supabase.functions.invoke('send-review-response', {
+        body: { reviewId }
+      });
 
       if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: t('reviews.success'),
@@ -190,7 +191,7 @@ export function Reviews() {
       console.error('Error sending response:', error);
       toast({
         title: t('dashboard.error'),
-        description: t('reviews.responseSentFailed'),
+        description: error instanceof Error ? error.message : t('reviews.responseSentFailed'),
         variant: "destructive",
       });
     }
