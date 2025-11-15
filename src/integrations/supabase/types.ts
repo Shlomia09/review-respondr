@@ -77,6 +77,256 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          phone: string
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone: string
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversation_notes: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          note_text: string
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          note_text: string
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          note_text?: string
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_notes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_announcements: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          message: string
+          read_by: string[] | null
+          target_roles: Database["public"]["Enums"]["user_role"][]
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          message: string
+          read_by?: string[] | null
+          target_roles?: Database["public"]["Enums"]["user_role"][]
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string
+          read_by?: string[] | null
+          target_roles?: Database["public"]["Enums"]["user_role"][]
+          title?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          direction: string
+          id: string
+          media_url: string | null
+          message_type: string
+          metadata: Json | null
+          sender: string
+          status: string | null
+          text: string | null
+          thread_id: string
+          timestamp: string | null
+          type: string
+          wa_message_id: string | null
+          whatsapp_message_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          direction: string
+          id?: string
+          media_url?: string | null
+          message_type?: string
+          metadata?: Json | null
+          sender?: string
+          status?: string | null
+          text?: string | null
+          thread_id: string
+          timestamp?: string | null
+          type: string
+          wa_message_id?: string | null
+          whatsapp_message_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          media_url?: string | null
+          message_type?: string
+          metadata?: Json | null
+          sender?: string
+          status?: string | null
+          text?: string | null
+          thread_id?: string
+          timestamp?: string | null
+          type?: string
+          wa_message_id?: string | null
+          whatsapp_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          body: string
+          contact_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          body: string
+          contact_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          body?: string
+          contact_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phone_calls: {
+        Row: {
+          call_type: string
+          contact_id: string | null
+          created_at: string
+          customer_name: string | null
+          duration: number | null
+          ended_at: string | null
+          id: string
+          manager_notes: string | null
+          notes: string | null
+          phone_number: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          call_type?: string
+          contact_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          duration?: number | null
+          ended_at?: string | null
+          id?: string
+          manager_notes?: string | null
+          notes?: string | null
+          phone_number: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          call_type?: string
+          contact_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          duration?: number | null
+          ended_at?: string | null
+          id?: string
+          manager_notes?: string | null
+          notes?: string | null
+          phone_number?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_connections: {
         Row: {
           access_token: string | null
@@ -158,6 +408,48 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          admin_level: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          language_preference: string
+          manager_notes: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          whatsapp_access_token: string | null
+          whatsapp_business_id: string | null
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          admin_level?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          language_preference?: string
+          manager_notes?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          whatsapp_access_token?: string | null
+          whatsapp_business_id?: string | null
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          admin_level?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          language_preference?: string
+          manager_notes?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          whatsapp_access_token?: string | null
+          whatsapp_business_id?: string | null
+          whatsapp_phone?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           ai_instructions: string | null
@@ -174,7 +466,7 @@ export type Database = {
           review_date: string
           sentiment: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           ai_instructions?: string | null
@@ -191,7 +483,7 @@ export type Database = {
           review_date?: string
           sentiment: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           ai_instructions?: string | null
@@ -208,7 +500,275 @@ export type Database = {
           review_date?: string
           sentiment?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sales_conversation_examples: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          key_points: string[] | null
+          techniques_used: string[] | null
+          title: string
+          transcript: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          key_points?: string[] | null
+          techniques_used?: string[] | null
+          title: string
+          transcript: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          key_points?: string[] | null
+          techniques_used?: string[] | null
+          title?: string
+          transcript?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          contact_id: string
+          created_at: string
+          due_at: string | null
+          id: string
+          source_message_id: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          source_message_id?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          source_message_id?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_source_message_id_fkey"
+            columns: ["source_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message_type: string
+          priority: string
+          read_at: string | null
+          recipient_id: string | null
+          sender_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          priority?: string
+          read_at?: string | null
+          recipient_id?: string | null
+          sender_id: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          priority?: string
+          read_at?: string | null
+          recipient_id?: string | null
+          sender_id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      threads: {
+        Row: {
+          channel: string
+          contact_id: string
+          created_at: string
+          id: string
+          manager_notes: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel?: string
+          contact_id: string
+          created_at?: string
+          id?: string
+          manager_notes?: string | null
           user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          id?: string
+          manager_notes?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "threads_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcripts: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          lang: string | null
+          message_id: string
+          text: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          lang?: string | null
+          message_id: string
+          text: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          lang?: string | null
+          message_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activity: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_analytics: {
+        Row: {
+          conversations_today: number | null
+          last_updated: string | null
+          messages_today: number | null
+          total_contacts: number | null
+          total_conversations: number | null
+          total_messages: number | null
+          user_id: string
+        }
+        Insert: {
+          conversations_today?: number | null
+          last_updated?: string | null
+          messages_today?: number | null
+          total_contacts?: number | null
+          total_conversations?: number | null
+          total_messages?: number | null
+          user_id: string
+        }
+        Update: {
+          conversations_today?: number | null
+          last_updated?: string | null
+          messages_today?: number | null
+          total_contacts?: number | null
+          total_conversations?: number | null
+          total_messages?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -217,10 +777,80 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrypt_token: { Args: { encrypted_token: string }; Returns: string }
+      encrypt_token: { Args: { token_value: string }; Returns: string }
+      get_employee_performance: {
+        Args: never
+        Returns: {
+          conversations_this_week: number
+          conversations_today: number
+          employee_id: string
+          employee_name: string
+          employee_role: string
+          employee_since: string
+          messages_today: number
+          response_rate: number
+          total_contacts: number
+          total_conversations: number
+          total_messages: number
+        }[]
+      }
+      get_user_connections: {
+        Args: never
+        Returns: {
+          access_token: string
+          business_id: string
+          business_name: string
+          connected_at: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_sync: string
+          platform: string
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      get_user_tokens: {
+        Args: never
+        Returns: {
+          access_token: string
+          business_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          platform: string
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["user_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      refresh_user_analytics: {
+        Args: { target_user_id?: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "manager" | "agent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -347,6 +977,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "manager", "agent"],
+    },
   },
 } as const
