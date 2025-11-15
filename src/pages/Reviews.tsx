@@ -80,25 +80,41 @@ export function Reviews() {
 
   const handleBulkAction = async (action: string, selectedIds: string[]) => {
     try {
-      let updates: any = {};
-      
-      if (action === 'approve') {
-        updates = { response_status: 'approved' };
-      } else if (action === 'send') {
-        updates = { response_status: 'sent' };
+      if (action === 'generateAI') {
+        // Generate AI responses for all selected reviews
+        const promises = selectedIds.map(id => 
+          supabase.functions.invoke('generate-review-response', {
+            body: { reviewId: id }
+          })
+        );
+        
+        await Promise.all(promises);
+        
+        toast({
+          title: t('reviews.success'),
+          description: `${selectedIds.length} ${t('reviews.bulkAIGenerated')}`,
+        });
+      } else {
+        let updates: any = {};
+        
+        if (action === 'approve') {
+          updates = { response_status: 'approved' };
+        } else if (action === 'send') {
+          updates = { response_status: 'sent' };
+        }
+
+        const { error } = await supabase
+          .from('reviews')
+          .update(updates)
+          .in('id', selectedIds);
+
+        if (error) throw error;
+
+        toast({
+          title: t('reviews.success'),
+          description: t(`reviews.bulk${action.charAt(0).toUpperCase() + action.slice(1)}Success`),
+        });
       }
-
-      const { error } = await supabase
-        .from('reviews')
-        .update(updates)
-        .in('id', selectedIds);
-
-      if (error) throw error;
-
-      toast({
-        title: t('reviews.success'),
-        description: t(`reviews.bulk${action.charAt(0).toUpperCase() + action.slice(1)}Success`),
-      });
       
       await fetchReviews();
     } catch (error) {
@@ -117,6 +133,61 @@ export function Reviews() {
 
   const handleEditResponse = (review: Review) => {
     setEditResponseModal({ open: true, review });
+  };
+
+  const handleGenerateAIResponse = async (reviewId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-review-response', {
+        body: { reviewId }
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: t('reviews.success'),
+        description: t('reviews.aiResponseGenerated'),
+      });
+
+      await fetchReviews();
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      toast({
+        title: t('dashboard.error'),
+        description: error instanceof Error ? error.message : t('reviews.aiResponseFailed'),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendResponse = async (reviewId: string) => {
+    try {
+      // For now, just update status to 'sent'
+      // In the future, this will actually send to the platform
+      const { error } = await supabase
+        .from('reviews')
+        .update({ response_status: 'sent' })
+        .eq('id', reviewId);
+
+      if (error) throw error;
+
+      toast({
+        title: t('reviews.success'),
+        description: t('reviews.responseSentSuccess'),
+      });
+
+      await fetchReviews();
+    } catch (error) {
+      console.error('Error sending response:', error);
+      toast({
+        title: t('dashboard.error'),
+        description: t('reviews.responseSentFailed'),
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteReview = async (reviewId: string) => {
@@ -170,6 +241,8 @@ export function Reviews() {
         onViewReview={handleViewReview}
         onEditResponse={handleEditResponse}
         onDeleteReview={handleDeleteReview}
+        onGenerateAIResponse={handleGenerateAIResponse}
+        onSendResponse={handleSendResponse}
       />
 
       <ViewReviewModal
