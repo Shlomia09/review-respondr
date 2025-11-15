@@ -22,6 +22,9 @@ interface Review {
   response_status: 'pending' | 'generated' | 'approved' | 'sent';
   business_name?: string;
   business_id?: string;
+  requires_manual_attention?: boolean;
+  attention_reason?: string;
+  attention_priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 interface ViewReviewModalProps {
@@ -101,6 +104,37 @@ export function ViewReviewModal({ review, open, onOpenChange }: ViewReviewModalP
             <h4 className="font-semibold mb-2">{t('reviews.reviewContent')}</h4>
             <p className="text-sm whitespace-pre-wrap">{review.content}</p>
           </div>
+
+          {/* Manual Attention Required */}
+          {review.requires_manual_attention && (
+            <div className={`
+              border rounded-lg p-4 
+              ${review.attention_priority === 'urgent' ? 'bg-red-50 border-red-500 dark:bg-red-950 dark:border-red-500' : ''}
+              ${review.attention_priority === 'high' ? 'bg-orange-50 border-orange-500 dark:bg-orange-950 dark:border-orange-500' : ''}
+              ${review.attention_priority === 'medium' ? 'bg-yellow-50 border-yellow-500 dark:bg-yellow-950 dark:border-yellow-500' : ''}
+              ${!review.attention_priority || review.attention_priority === 'low' ? 'bg-blue-50 border-blue-500 dark:bg-blue-950 dark:border-blue-500' : ''}
+            `}>
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                ⚠️ {t('reviews.requiresAttention')}
+                {review.attention_priority && (
+                  <Badge 
+                    variant="outline" 
+                    className={`
+                      ${review.attention_priority === 'urgent' ? 'border-red-600 text-red-600' : ''}
+                      ${review.attention_priority === 'high' ? 'border-orange-600 text-orange-600' : ''}
+                      ${review.attention_priority === 'medium' ? 'border-yellow-600 text-yellow-600' : ''}
+                      ${review.attention_priority === 'low' ? 'border-blue-600 text-blue-600' : ''}
+                    `}
+                  >
+                    {t(`reviews.priority.${review.attention_priority}`)}
+                  </Badge>
+                )}
+              </h4>
+              {review.attention_reason && (
+                <p className="text-sm">{review.attention_reason}</p>
+              )}
+            </div>
+          )}
 
           {/* AI Response */}
           {review.ai_response && (

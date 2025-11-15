@@ -278,7 +278,14 @@ const translations: Translations = {
       responseSentSuccess: 'התגובה נשלחה בהצלחה',
       responseSentFailed: 'שליחת התגובה נכשלה',
       bulkGenerateAI: 'יצירת תגובות AI',
-      bulkAIGenerated: 'תגובות AI נוצרו בהצלחה'
+      bulkAIGenerated: 'תגובות AI נוצרו בהצלחה',
+      requiresAttention: 'דורש טיפול ידני',
+      priority: {
+        low: 'נמוך',
+        medium: 'בינוני',
+        high: 'גבוה',
+        urgent: 'דחוף'
+      }
     },
     manualResponse: {
       title: 'כתיבת תגובה ידנית',
@@ -795,7 +802,14 @@ const translations: Translations = {
       responseSentSuccess: 'Response sent successfully',
       responseSentFailed: 'Failed to send response',
       bulkGenerateAI: 'Generate AI Responses',
-      bulkAIGenerated: 'AI responses generated successfully'
+      bulkAIGenerated: 'AI responses generated successfully',
+      requiresAttention: 'Requires Manual Attention',
+      priority: {
+        low: 'Low',
+        medium: 'Medium',
+        high: 'High',
+        urgent: 'Urgent'
+      }
     },
     manualResponse: {
       title: 'Write Manual Response',

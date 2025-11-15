@@ -21,6 +21,9 @@ interface Review {
   response_status: 'pending' | 'generated' | 'approved' | 'sent';
   business_name?: string;
   business_id?: string;
+  requires_manual_attention?: boolean;
+  attention_reason?: string;
+  attention_priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 export function Reviews() {
@@ -63,6 +66,9 @@ export function Reviews() {
         response_status: dbReview.response_status || 'pending',
         business_name: dbReview.business_name,
         business_id: dbReview.business_id,
+        requires_manual_attention: dbReview.requires_manual_attention || false,
+        attention_reason: dbReview.attention_reason,
+        attention_priority: dbReview.attention_priority,
       }));
       
       setReviews(transformedReviews);

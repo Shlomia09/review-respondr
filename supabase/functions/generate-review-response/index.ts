@@ -117,7 +117,7 @@ Generate a thoughtful response to this ${sentiment} review.`;
 
     console.log('Generating AI response for review:', reviewId);
 
-    // Call Lovable AI
+    // Call Lovable AI with tool calling to detect if review requires manual attention
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -130,6 +130,40 @@ Generate a thoughtful response to this ${sentiment} review.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'generate_response_with_attention',
+              description: 'Generate a review response and determine if it requires manual attention from the business owner',
+              parameters: {
+                type: 'object',
+                properties: {
+                  response: {
+                    type: 'string',
+                    description: 'The generated response to the review'
+                  },
+                  requires_manual_attention: {
+                    type: 'boolean',
+                    description: 'Whether this review requires manual attention (e.g., specific order issues, complaints that need investigation, refund requests)'
+                  },
+                  attention_reason: {
+                    type: 'string',
+                    description: 'Brief explanation of why manual attention is needed (if requires_manual_attention is true)'
+                  },
+                  attention_priority: {
+                    type: 'string',
+                    enum: ['low', 'medium', 'high', 'urgent'],
+                    description: 'Priority level for manual attention (urgent for refunds/legal issues, high for specific complaints, medium for follow-ups, low for minor issues)'
+                  }
+                },
+                required: ['response', 'requires_manual_attention'],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: 'function', function: { name: 'generate_response_with_attention' } }
       }),
     });
 
@@ -146,20 +180,37 @@ Generate a thoughtful response to this ${sentiment} review.`;
     }
 
     const aiData = await aiResponse.json();
-    const generatedResponse = aiData.choices[0]?.message?.content;
+    
+    // Extract tool call result
+    const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
+    if (!toolCall || !toolCall.function?.arguments) {
+      throw new Error('No response generated from AI');
+    }
+
+    const result = JSON.parse(toolCall.function.arguments);
+    const generatedResponse = result.response;
+    const requiresAttention = result.requires_manual_attention || false;
+    const attentionReason = result.attention_reason || null;
+    const attentionPriority = result.attention_priority || null;
 
     if (!generatedResponse) {
       throw new Error('No response generated from AI');
     }
 
-    console.log('AI response generated successfully');
+    console.log('AI response generated successfully', { 
+      requiresAttention, 
+      attentionPriority 
+    });
 
-    // Save the AI response to the review
+    // Save the AI response and attention flags to the review
     const { error: updateError } = await supabase
       .from('reviews')
       .update({
         ai_response: generatedResponse,
         response_status: 'generated',
+        requires_manual_attention: requiresAttention,
+        attention_reason: attentionReason,
+        attention_priority: attentionPriority,
         updated_at: new Date().toISOString()
       })
       .eq('id', reviewId);
