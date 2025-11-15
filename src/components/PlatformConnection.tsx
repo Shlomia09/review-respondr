@@ -388,20 +388,33 @@ const PlatformConnection = () => {
                 </p>
               )}
               
-              <Button 
-                size="sm" 
-                variant={platform.connected ? "outline" : "default"}
-                className="w-full"
-                onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConnect(platform.name)}
-                disabled={connectingPlatform === platform.name}
-              >
-                {connectingPlatform === platform.name ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4 mr-2" />
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant={platform.connected ? "outline" : "default"}
+                  className={platform.connected ? "flex-1" : "w-full"}
+                  onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConnect(platform.name)}
+                  disabled={connectingPlatform === platform.name}
+                >
+                  {connectingPlatform === platform.name ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 mr-2" />
+                  )}
+                  {platform.connected ? t('platformConnection.manage') : t('platformConnection.connect')}
+                </Button>
+                
+                {platform.connected && (
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    className="flex-shrink-0"
+                    onClick={() => handleDisconnect(platform.name)}
+                  >
+                    {t('platformConnection.disconnect') || 'ניתוק'}
+                  </Button>
                 )}
-                {platform.connected ? t('platformConnection.manage') : t('platformConnection.connect')}
-              </Button>
+              </div>
             </div>
             );
           })}

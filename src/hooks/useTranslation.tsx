@@ -299,7 +299,8 @@ const translations: Translations = {
       disconnected: 'לא מחובר',
       reviews: 'ביקורות',
       manage: 'ניהול',
-      connect: 'חיבור'
+      connect: 'חיבור',
+      disconnect: 'ניתוק'
     },
     errors: {
       connectionCheck: 'נכשלה בדיקת החיבורים',
@@ -756,7 +757,8 @@ const translations: Translations = {
       disconnected: 'Not Connected',
       reviews: 'reviews',
       manage: 'Manage',
-      connect: 'Connect'
+      connect: 'Connect',
+      disconnect: 'Disconnect'
     },
     errors: {
       connectionCheck: 'Failed to check connections',
