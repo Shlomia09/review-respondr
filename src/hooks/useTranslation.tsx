@@ -304,7 +304,9 @@ const translations: Translations = {
       sync: 'סנכרן',
       syncing: 'מסנכרן ביקורות...',
       syncSuccess: 'סונכרנו ביקורות חדשות:',
-      syncFailed: 'נכשל בסנכרון ביקורות'
+      syncFailed: 'נכשל בסנכרון ביקורות',
+      connectedPage: 'דף מחובר',
+      selectPageFirst: 'אנא בחר דף לפני הסנכרון'
     },
     errors: {
       connectionCheck: 'נכשלה בדיקת החיבורים',
