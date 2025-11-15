@@ -1340,6 +1340,41 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
       
+      // Fetch page information to get business details
+      console.log(`📋 Fetching page details for business: ${businessId}`);
+      const pageInfoResponse = await fetch(
+        `https://graph.facebook.com/${businessId}?access_token=${pageAccessToken}&appsecret_proof=${pageAppsecretProof}&fields=name,about,category,description,phone,emails,website,location`
+      );
+
+      let pageInfo = null;
+      if (pageInfoResponse.ok) {
+        pageInfo = await pageInfoResponse.json();
+        console.log(`✅ Got page info for business ${businessId}`);
+
+        // Update platform_connections with business details
+        const { error: updateError } = await supabase
+          .from('platform_connections')
+          .update({
+            business_description: pageInfo.description || pageInfo.about || null,
+            business_category: pageInfo.category || null,
+            business_phone: pageInfo.phone || null,
+            business_email: pageInfo.emails?.[0] || null,
+            business_website: pageInfo.website || null,
+            business_address: pageInfo.location ? 
+              `${pageInfo.location.street || ''}, ${pageInfo.location.city || ''}, ${pageInfo.location.country || ''}`.trim() : null,
+            business_about: pageInfo.about || null,
+          })
+          .eq('platform', 'facebook')
+          .eq('business_id', businessId)
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating business details:', updateError);
+        } else {
+          console.log(`✅ Updated business details for business ${businessId}`);
+        }
+      }
+      
       // Try endpoint to get reviews (ratings endpoint only; /reviews is deprecated/unsupported)
       const endpoints = [
         `https://graph.facebook.com/${businessId}/ratings?fields=reviewer,rating,review_text,created_time,recommendation_type`
@@ -1385,6 +1420,8 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 sentiment: sentiment,
                 review_date: review.created_time,
                 user_id: userId,
+                business_id: businessId,
+                business_name: pageInfo?.name || null,
               });
             }
             break; // Found reviews, stop trying other endpoints
@@ -1424,6 +1461,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
       for (const page of pagesData.data || []) {
         console.log(`📄 Processing page: ${page.name} (${page.id})`);
         
+        // First, fetch page details to get business information
+        console.log(`📋 Fetching page details for: ${page.name}`);
+        
         // Generate appsecret_proof for page token
         const pageMessageData = encoder.encode(page.access_token);
         const pageSignature = await crypto.subtle.sign('HMAC', key, pageMessageData);
@@ -1431,6 +1471,41 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
           .map(b => b.toString(16).padStart(2, '0'))
           .join('');
 
+        // Fetch page information including business details
+        const pageInfoResponse = await fetch(
+          `https://graph.facebook.com/${page.id}?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=name,about,category,description,phone,emails,website,location`
+        );
+
+        let pageInfo = null;
+        if (pageInfoResponse.ok) {
+          pageInfo = await pageInfoResponse.json();
+          console.log(`✅ Got page info for ${page.name}`);
+
+          // Update platform_connections with business details
+          const { error: updateError } = await supabase
+            .from('platform_connections')
+            .update({
+              business_description: pageInfo.description || pageInfo.about || null,
+              business_category: pageInfo.category || null,
+              business_phone: pageInfo.phone || null,
+              business_email: pageInfo.emails?.[0] || null,
+              business_website: pageInfo.website || null,
+              business_address: pageInfo.location ? 
+                `${pageInfo.location.street || ''}, ${pageInfo.location.city || ''}, ${pageInfo.location.country || ''}`.trim() : null,
+              business_about: pageInfo.about || null,
+            })
+            .eq('platform', 'facebook')
+            .eq('business_id', page.id)
+            .eq('user_id', userId);
+
+          if (updateError) {
+            console.error('Error updating business details:', updateError);
+          } else {
+            console.log(`✅ Updated business details for ${page.name}`);
+          }
+        }
+
+        // Now fetch ratings for this page
         const reviewsResponse = await fetch(
           `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time,recommendation_type`
         );
@@ -1464,6 +1539,8 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               sentiment: sentiment,
               review_date: review.created_time,
               user_id: userId,
+              business_id: page.id,
+              business_name: pageInfo?.name || page.name || null,
             });
           }
         } else {
