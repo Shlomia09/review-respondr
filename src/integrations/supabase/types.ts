@@ -334,8 +334,10 @@ export type Database = {
           business_name: string | null
           connected_at: string
           created_at: string
+          display_order: number | null
           expires_at: string | null
           id: string
+          is_active: boolean | null
           last_sync: string | null
           platform: string
           refresh_token: string | null
@@ -348,8 +350,10 @@ export type Database = {
           business_name?: string | null
           connected_at?: string
           created_at?: string
+          display_order?: number | null
           expires_at?: string | null
           id?: string
+          is_active?: boolean | null
           last_sync?: string | null
           platform: string
           refresh_token?: string | null
@@ -362,8 +366,10 @@ export type Database = {
           business_name?: string | null
           connected_at?: string
           created_at?: string
+          display_order?: number | null
           expires_at?: string | null
           id?: string
+          is_active?: boolean | null
           last_sync?: string | null
           platform?: string
           refresh_token?: string | null
@@ -454,6 +460,8 @@ export type Database = {
         Row: {
           ai_instructions: string | null
           ai_response: string | null
+          business_id: string | null
+          business_name: string | null
           content: string
           created_at: string
           customer_email: string | null
@@ -471,6 +479,8 @@ export type Database = {
         Insert: {
           ai_instructions?: string | null
           ai_response?: string | null
+          business_id?: string | null
+          business_name?: string | null
           content: string
           created_at?: string
           customer_email?: string | null
@@ -488,6 +498,8 @@ export type Database = {
         Update: {
           ai_instructions?: string | null
           ai_response?: string | null
+          business_id?: string | null
+          business_name?: string | null
           content?: string
           created_at?: string
           customer_email?: string | null

@@ -17,6 +17,8 @@ interface Review {
   ai_response?: string;
   manual_response?: string;
   response_status: 'pending' | 'generated' | 'approved' | 'sent';
+  business_name?: string;
+  business_id?: string;
 }
 
 export function Reviews() {
@@ -48,7 +50,9 @@ export function Reviews() {
         review_date: dbReview.review_date,
         ai_response: dbReview.ai_response,
         manual_response: dbReview.manual_response,
-        response_status: dbReview.response_status || 'pending'
+        response_status: dbReview.response_status || 'pending',
+        business_name: dbReview.business_name,
+        business_id: dbReview.business_id,
       }));
       
       setReviews(transformedReviews);

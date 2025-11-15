@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ConnectedAccountsList from "./ConnectedAccountsList";
 
 interface Platform {
   name: string;
@@ -17,12 +18,14 @@ interface Platform {
   description: string;
 }
 
-interface PlatformStatus {
+interface ConnectionInfo {
+  id: string;
   platform: string;
   connected: boolean;
   reviewCount?: number;
   businessId?: string;
   businessName?: string;
+  lastSync?: string;
 }
 
 interface Business {
@@ -34,7 +37,7 @@ interface Business {
 const PlatformConnection = () => {
   const { t, language } = useTranslation();
   const align = language === 'he' || language === 'ar' ? 'text-right' : 'text-left';
-  const [platformStatuses, setPlatformStatuses] = useState<PlatformStatus[]>([]);
+  const [connections, setConnections] = useState<ConnectionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
   const [showBusinessSelection, setShowBusinessSelection] = useState(false);
@@ -42,6 +45,7 @@ const PlatformConnection = () => {
   const [selectedBusiness, setSelectedBusiness] = useState<string>('');
   const [currentPlatform, setCurrentPlatform] = useState<string>('');
   const [loadingBusinesses, setLoadingBusinesses] = useState(false);
+  const [syncingAccount, setSyncingAccount] = useState<string | null>(null);
   
   const platforms: Omit<Platform, 'connected' | 'reviewCount'>[] = [
     {
@@ -76,7 +80,7 @@ const PlatformConnection = () => {
 
       if (error) throw error;
       
-      setPlatformStatuses(data.platforms || []);
+      setConnections(data.connections || []);
     } catch (error) {
       console.error('Error checking platform connections:', error);
       toast.error(t('errors.connectionCheck'));
@@ -304,26 +308,19 @@ const PlatformConnection = () => {
     }
   };
 
-  const handleSyncReviews = async (platformName: string) => {
+  const handleSyncAccount = async (accountId: string, platform: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-try {
-  // Prevent sync without selecting a business for Facebook
-  if (platformName === 'Facebook') {
-    const status = platformStatuses.find(s => s.platform.toLowerCase() === 'facebook');
-    if (!status?.businessId) {
-      toast.error(t('platformConnection.selectPageFirst'));
-      return;
-    }
-  }
-
-  toast.loading(t('platformConnection.syncing'));
+    setSyncingAccount(accountId);
+    try {
+      toast.loading(t('platformConnection.syncing'));
       
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
-          action: 'sync', 
-          platform: platformName.toLowerCase()
+          action: 'sync_by_connection', 
+          connectionId: accountId,
+          platform: platform.toLowerCase()
         }
       });
 
@@ -335,41 +332,76 @@ try {
     } catch (error) {
       console.error('Error syncing reviews:', error);
       toast.error(t('platformConnection.syncFailed'));
+    } finally {
+      setSyncingAccount(null);
     }
   };
 
-  const handleDisconnect = async (platformName: string) => {
+  const handleSyncAll = async (platform: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setSyncingAccount(`all_${platform}`);
+    try {
+      toast.loading(t('platformConnection.syncingAll'));
+      
+      const { data, error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'sync_all_platform', 
+          platform: platform.toLowerCase()
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`${t('platformConnection.syncSuccess')} ${data?.newReviews || 0}/${data?.reviewCount || 0}`);
+      
+      await checkPlatformConnections();
+    } catch (error) {
+      console.error('Error syncing all accounts:', error);
+      toast.error(t('platformConnection.syncFailed'));
+    } finally {
+      setSyncingAccount(null);
+    }
+  };
+
+  const handleDisconnectAccount = async (accountId: string, platform: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     try {
       const { error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
-          action: 'disconnect',
-          platform: platformName.toLowerCase() 
+          action: 'disconnect_account',
+          connectionId: accountId,
+          platform: platform.toLowerCase() 
         }
       });
 
       if (error) throw error;
       
       toast.success(t('platforms.disconnected'));
-      checkPlatformConnections(); // Refresh connection status
+      checkPlatformConnections();
     } catch (error) {
-      console.error('Error disconnecting platform:', error);
+      console.error('Error disconnecting account:', error);
       toast.error(t('errors.disconnectionFailed'));
     }
   };
 
-const getPlatformData = (platform: any): Platform & { businessId?: string; businessName?: string } => {
-  const status = platformStatuses.find(s => s.platform.toLowerCase() === platform.name.toLowerCase());
-  return {
-    ...platform,
-    connected: status?.connected || false,
-    reviewCount: status?.reviewCount,
-    businessId: status?.businessId,
-    businessName: status?.businessName,
-  } as any;
-};
+  const getPlatformData = (platform: any) => {
+    const platformConnections = connections.filter(
+      c => c.platform.toLowerCase() === platform.name.toLowerCase() && c.connected
+    );
+    
+    const totalReviews = platformConnections.reduce((sum, conn) => sum + (conn.reviewCount || 0), 0);
+    
+    return {
+      ...platform,
+      connected: platformConnections.length > 0,
+      reviewCount: totalReviews,
+      connections: platformConnections
+    };
+  };
 
   if (loading) {
     return (
@@ -422,23 +454,31 @@ const getPlatformData = (platform: any): Platform & { businessId?: string; busin
                 {platform.description}
               </p>
               
-{platform.connected && platform.reviewCount !== undefined && (
-  <p className={`text-sm text-blue-600 dark:text-blue-400 mb-1 ${align}`}>
-    {platform.reviewCount} {t('platformConnection.reviews')}
-  </p>
-)}
-{platform.connected && platform.name === 'Facebook' && (platform as any).businessName && (
-  <p className={`text-sm text-muted-foreground mb-4 ${align}`}>
-    {t('platformConnection.connectedPage')}: {(platform as any).businessName}
-  </p>
-)}
+              {platform.connected && platform.reviewCount !== undefined && platform.reviewCount > 0 && (
+                <p className={`text-sm text-blue-600 dark:text-blue-400 mb-4 ${align}`}>
+                  {t('platformConnection.total')}: {platform.reviewCount} {t('platformConnection.reviews')}
+                </p>
+              )}
+
+              {platform.connected && (platform as any).connections && (platform as any).connections.length > 0 && (
+                <div className="mb-4">
+                  <ConnectedAccountsList
+                    accounts={(platform as any).connections}
+                    onSync={handleSyncAccount}
+                    onSyncAll={handleSyncAll}
+                    onDisconnect={handleDisconnectAccount}
+                    syncing={syncingAccount}
+                    align={align}
+                  />
+                </div>
+              )}
               
               <div className="flex gap-2">
                 <Button 
                   size="sm" 
                   variant={platform.connected ? "outline" : "default"}
-                  className={platform.connected ? "flex-1" : "w-full"}
-onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConnect(platform.name)}
+                  className="w-full"
+                  onClick={() => handleConnect(platform.name)}
                   disabled={connectingPlatform === platform.name}
                 >
                   {connectingPlatform === platform.name ? (
@@ -446,29 +486,8 @@ onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConne
                   ) : (
                     <Plus className="w-4 h-4 mr-2" />
                   )}
-                  {platform.connected ? t('platformConnection.manage') : t('platformConnection.connect')}
+                  {platform.connected ? t('platformConnection.addAccount') : t('platformConnection.connect')}
                 </Button>
-                
-                {platform.connected && (
-                  <>
-                    <Button 
-                      size="sm" 
-                      variant="default"
-                      className="flex-shrink-0"
-                      onClick={() => handleSyncReviews(platform.name)}
-                    >
-                      {t('platformConnection.sync')}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      className="flex-shrink-0"
-                      onClick={() => handleDisconnect(platform.name)}
-                    >
-                      {t('platformConnection.disconnect') || 'ניתוק'}
-                    </Button>
-                  </>
-                )}
               </div>
             </div>
             );

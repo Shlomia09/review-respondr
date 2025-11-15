@@ -38,6 +38,8 @@ interface Review {
   ai_response?: string;
   manual_response?: string;
   response_status: 'pending' | 'generated' | 'approved' | 'sent';
+  business_name?: string;
+  business_id?: string;
 }
 
 interface ReviewsTableProps {
@@ -61,6 +63,12 @@ export function ReviewsTable({
   const [sentimentFilter, setSentimentFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [businessFilter, setBusinessFilter] = useState("all");
+
+  // Get unique business names for filter
+  const uniqueBusinesses = Array.from(
+    new Set(reviews.map(r => r.business_name).filter(Boolean))
+  ).sort();
 
   const filteredReviews = reviews.filter(review => {
     const matchesSearch = 
@@ -69,8 +77,9 @@ export function ReviewsTable({
     const matchesSentiment = sentimentFilter === "all" || review.sentiment === sentimentFilter;
     const matchesPlatform = platformFilter === "all" || review.platform.toLowerCase() === platformFilter;
     const matchesStatus = statusFilter === "all" || review.response_status === statusFilter;
+    const matchesBusiness = businessFilter === "all" || review.business_name === businessFilter;
     
-    return matchesSearch && matchesSentiment && matchesPlatform && matchesStatus;
+    return matchesSearch && matchesSentiment && matchesPlatform && matchesStatus && matchesBusiness;
   });
 
   const handleSelectAll = (checked: boolean) => {
@@ -160,7 +169,7 @@ export function ReviewsTable({
       
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -192,6 +201,20 @@ export function ReviewsTable({
               <SelectItem value="google">Google</SelectItem>
               <SelectItem value="facebook">Facebook</SelectItem>
               <SelectItem value="trustpilot">Trustpilot</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={businessFilter} onValueChange={setBusinessFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('reviews.filterByBusiness')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('reviews.allBusinesses')}</SelectItem>
+              {uniqueBusinesses.map((business) => (
+                <SelectItem key={business} value={business || ''}>
+                  {business}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           
