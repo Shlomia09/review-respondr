@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.ai-assistant]
 verify_jwt = true
+
+[functions.send-review-response]
+verify_jwt = true
