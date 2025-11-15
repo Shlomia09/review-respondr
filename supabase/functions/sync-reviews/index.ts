@@ -1308,10 +1308,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
       
-      // Try multiple endpoints to get reviews
+      // Try endpoint to get reviews (ratings endpoint only; /reviews is deprecated/unsupported)
       const endpoints = [
-        `https://graph.facebook.com/${businessId}/ratings?fields=reviewer,rating,review_text,created_time,recommendation_type`,
-        `https://graph.facebook.com/${businessId}/reviews?fields=reviewer,rating,review_text,created_time,recommendation_type`,
+        `https://graph.facebook.com/${businessId}/ratings?fields=reviewer,rating,review_text,created_time,recommendation_type`
       ];
       
       for (const endpoint of endpoints) {
@@ -1347,6 +1346,15 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
         } else {
           const errorText = await reviewsResponse.text();
           console.error(`❌ Endpoint failed: ${errorText}`);
+          try {
+            const errJson = JSON.parse(errorText);
+            const code = errJson?.error?.code;
+            if (code === 283) {
+              throw new Error('FACEBOOK_MISSING_PERMISSIONS: The app needs pages_read_user_content (and pages_read_engagement). Please reconnect Facebook and approve all requested permissions.');
+            }
+          } catch (_) {
+            // ignore JSON parse failure
+          }
         }
       }
     } else {
@@ -1393,6 +1401,18 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               review_date: review.created_time,
               user_id: userId,
             });
+          }
+        } else {
+          const errorText = await reviewsResponse.text();
+          console.error(`❌ Page ratings fetch failed: ${errorText}`);
+          try {
+            const errJson = JSON.parse(errorText);
+            const code = errJson?.error?.code;
+            if (code === 283) {
+              throw new Error('FACEBOOK_MISSING_PERMISSIONS: The app needs pages_read_user_content (and pages_read_engagement). Please reconnect Facebook and approve all requested permissions.');
+            }
+          } catch (_) {
+            // ignore JSON parse failure
           }
         }
       }
