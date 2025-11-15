@@ -269,6 +269,29 @@ const translations: Translations = {
       deleteSuccess: 'הביקורת נמחקה בהצלחה',
       deleteError: 'מחיקת הביקורת נכשלה'
     },
+    manualResponse: {
+      title: 'כתיבת תגובה ידנית',
+      description: 'כתוב תגובה מותאמת אישית לביקורת זו',
+      fields: {
+        response: 'תגובה'
+      },
+      placeholders: {
+        response: 'כתוב את תגובתך כאן...'
+      },
+      helpText: 'התגובה תישמר ותסומן כממתינה לאישור',
+      buttons: {
+        cancel: 'ביטול',
+        save: 'שמור',
+        saving: 'שומר...'
+      },
+      toasts: {
+        errorTitle: 'שגיאה',
+        errorMissingResponse: 'אנא כתוב תגובה לפני השמירה',
+        savedTitle: 'נשמר בהצלחה',
+        savedDesc: 'התגובה הידנית נשמרה בהצלחה',
+        errorSaveDesc: 'שגיאה בשמירת התגובה'
+      }
+    },
     analytics: {
       sentimentTrend: 'מגמת סנטימנטים',
       platformComparison: 'השוואת פלטפורמות',
@@ -751,6 +774,29 @@ const translations: Translations = {
       failedSaveResponse: 'Failed to save response',
       deleteSuccess: 'Review deleted successfully',
       deleteError: 'Failed to delete review'
+    },
+    manualResponse: {
+      title: 'Write Manual Response',
+      description: 'Write a custom response to this review',
+      fields: {
+        response: 'Response'
+      },
+      placeholders: {
+        response: 'Write your response here...'
+      },
+      helpText: 'The response will be saved and marked as pending approval',
+      buttons: {
+        cancel: 'Cancel',
+        save: 'Save',
+        saving: 'Saving...'
+      },
+      toasts: {
+        errorTitle: 'Error',
+        errorMissingResponse: 'Please write a response before saving',
+        savedTitle: 'Saved Successfully',
+        savedDesc: 'Manual response saved successfully',
+        errorSaveDesc: 'Error saving response'
+      }
     },
     analytics: {
       sentimentTrend: 'Sentiment Trend',
