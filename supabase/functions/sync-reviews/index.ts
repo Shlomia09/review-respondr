@@ -143,12 +143,12 @@ async function getOAuthUrl(platform: string, userId: string) {
       
       console.log('🎯 Generating Facebook OAuth URL with App ID:', facebookAppId);
       
-      // Request only basic, review-free scopes to avoid "Invalid Scopes" during setup.
-      // We can request additional scopes (e.g., pages_read_engagement) later after App Review.
+      // Request pages_show_list and pages_manage_metadata to get all pages the user manages
+      // (not just pages they own)
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `scope=${encodeURIComponent('pages_show_list,public_profile')}&` +
+        `scope=${encodeURIComponent('pages_show_list,pages_manage_metadata,public_profile')}&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
         
@@ -806,24 +806,41 @@ async function fetchFacebookBusinesses(accessToken: string) {
 
     console.log('🔐 Generated appsecret_proof for Facebook API');
 
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}`
-    );
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Facebook businesses API error:', errorText);
-      return [];
+    let allPages: any[] = [];
+    let nextUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}&limit=100`;
+
+    // Fetch all pages with pagination support
+    while (nextUrl) {
+      const response = await fetch(nextUrl);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Facebook businesses API error:', errorText);
+        break;
+      }
+
+      const data = await response.json();
+      console.log(`✅ Facebook API response (batch): Found ${data.data?.length || 0} pages`);
+      
+      if (data.data && data.data.length > 0) {
+        allPages = allPages.concat(data.data);
+      }
+
+      // Check if there are more pages
+      nextUrl = data.paging?.next || null;
+      if (nextUrl) {
+        console.log('📄 Fetching next page of results...');
+      }
     }
 
-    const data = await response.json();
-    console.log('✅ Facebook API response:', JSON.stringify(data, null, 2));
+    console.log(`✅ Total Facebook pages found: ${allPages.length}`);
+    console.log('📋 Page details:', JSON.stringify(allPages.map(p => ({ id: p.id, name: p.name, category: p.category })), null, 2));
     
-    return data.data?.map((page: any) => ({
+    return allPages.map((page: any) => ({
       id: page.id,
       name: page.name,
       category: page.category || 'Business'
-    })) || [];
+    }));
   } catch (error) {
     console.error('❌ Error fetching Facebook businesses:', error);
     return [];
