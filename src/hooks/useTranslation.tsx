@@ -256,7 +256,18 @@ const translations: Translations = {
       status: 'סטטוס',
       actions: 'פעולות',
       noReviewsFound: 'לא נמצאו ביקורות',
-      tryDifferentFilters: 'נסה מסננים אחרים'
+      tryDifferentFilters: 'נסה מסננים אחרים',
+      reviewDetails: 'פרטי ביקורת',
+      viewReviewDescription: 'צפייה בפרטי הביקורת המלאים',
+      business: 'עסק',
+      reviewContent: 'תוכן הביקורת',
+      response: 'תגובה',
+      manualResponse: 'תגובה ידנית',
+      success: 'הצלחה',
+      responseSaved: 'התגובה נשמרה בהצלחה',
+      failedSaveResponse: 'שמירת התגובה נכשלה',
+      deleteSuccess: 'הביקורת נמחקה בהצלחה',
+      deleteError: 'מחיקת הביקורת נכשלה'
     },
     analytics: {
       sentimentTrend: 'מגמת סנטימנטים',
@@ -728,7 +739,18 @@ const translations: Translations = {
       status: 'Status',
       actions: 'Actions',
       noReviewsFound: 'No reviews found',
-      tryDifferentFilters: 'Try different filters'
+      tryDifferentFilters: 'Try different filters',
+      reviewDetails: 'Review Details',
+      viewReviewDescription: 'View full review details',
+      business: 'Business',
+      reviewContent: 'Review Content',
+      response: 'Response',
+      manualResponse: 'Manual Response',
+      success: 'Success',
+      responseSaved: 'Response saved successfully',
+      failedSaveResponse: 'Failed to save response',
+      deleteSuccess: 'Review deleted successfully',
+      deleteError: 'Failed to delete review'
     },
     analytics: {
       sentimentTrend: 'Sentiment Trend',
