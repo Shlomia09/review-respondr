@@ -51,7 +51,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Request body:', JSON.stringify(requestBody));
     
-    const { action, platform, credentials, businessId } = requestBody;
+    const { action, platform, credentials, businessId, businessName } = requestBody;
     console.log('Action received:', action);
 
     switch (action) {
@@ -67,7 +67,7 @@ serve(async (req) => {
       case 'get_businesses':
         return await getBusinesses(platform, user.id, supabaseClient);
       case 'select_business':
-        return await selectBusiness(platform, businessId, user.id, supabaseClient);
+        return await selectBusiness(platform, businessId, businessName, user.id, supabaseClient);
       case 'sync':
         return await handleSync(platform, user.id, supabaseClient);
       case 'disconnect':
@@ -380,8 +380,8 @@ async function getBusinesses(platform: string, userId: string, supabase: any) {
   }
 }
 
-async function selectBusiness(platform: string, businessId: string, userId: string, supabase: any) {
-  console.log(`Selecting business ${businessId} for ${platform} for user ${userId}`);
+async function selectBusiness(platform: string, businessId: string, businessName: string | undefined, userId: string, supabase: any) {
+  console.log(`Selecting business ${businessId} (${businessName || 'no-name'}) for ${platform} for user ${userId}`);
   
   // Update the platform_tokens record with the selected business
   const { error: updateError } = await supabase
@@ -393,6 +393,30 @@ async function selectBusiness(platform: string, businessId: string, userId: stri
   if (updateError) {
     console.error('Error updating business selection:', updateError);
     throw new Error('Failed to select business');
+  }
+
+  // Persist a human-readable name in platform_connections for UI display
+  try {
+    const { data: existing } = await supabase
+      .from('platform_connections')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('platform', platform)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('platform_connections')
+        .update({ business_id: businessId, business_name: businessName || null, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('platform_connections')
+        .insert({ user_id: userId, platform, business_id: businessId, business_name: businessName || null, connected_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    }
+  } catch (e) {
+    console.error('⚠️ Could not upsert platform_connections with name:', e);
+    // Non-fatal for the flow
   }
 
   return new Response(
@@ -1177,24 +1201,32 @@ async function checkAllConnections(userId: string, supabase: any) {
           .eq('platform', platform);
         reviewCount = reviews?.length || 0;
 
-        // If Facebook and business is selected, fetch page name for display
         if (platform === 'facebook' && selectedBusinessId) {
           try {
-            const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
-            if (appSecret && tokenData?.access_token) {
-              const encoder = new TextEncoder();
-              const keyData = encoder.encode(appSecret);
-              const messageData = encoder.encode(tokenData.access_token);
-              const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-              const signature = await crypto.subtle.sign('HMAC', key, messageData);
-              const appsecretProof = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-              const pageInfoRes = await fetch(`https://graph.facebook.com/${selectedBusinessId}?fields=name&access_token=${tokenData.access_token}&appsecret_proof=${appsecretProof}`);
-              if (pageInfoRes.ok) {
-                const info = await pageInfoRes.json();
-                selectedBusinessName = info?.name || undefined;
-              } else {
-                console.log('⚠️ Could not fetch page name, status:', pageInfoRes.status);
+            // Prefer stored name from platform_connections if available
+            const { data: connection } = await supabase
+              .from('platform_connections')
+              .select('business_name')
+              .eq('user_id', userId)
+              .eq('platform', platform)
+              .maybeSingle();
+            if (connection?.business_name) {
+              selectedBusinessName = connection.business_name;
+            } else {
+              // Fallback: fetch from Graph API
+              const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
+              if (appSecret && tokenData?.access_token) {
+                const encoder = new TextEncoder();
+                const keyData = encoder.encode(appSecret);
+                const messageData = encoder.encode(tokenData.access_token);
+                const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+                const signature = await crypto.subtle.sign('HMAC', key, messageData);
+                const appsecretProof = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+                const pageInfoRes = await fetch(`https://graph.facebook.com/${selectedBusinessId}?fields=name&access_token=${tokenData.access_token}&appsecret_proof=${appsecretProof}`);
+                if (pageInfoRes.ok) {
+                  const info = await pageInfoRes.json();
+                  selectedBusinessName = info?.name || undefined;
+                }
               }
             }
           } catch (e) {
