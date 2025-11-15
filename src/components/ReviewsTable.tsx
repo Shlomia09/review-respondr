@@ -44,6 +44,9 @@ interface Review {
   response_status: 'pending' | 'generated' | 'approved' | 'sent';
   business_name?: string;
   business_id?: string;
+  requires_manual_attention?: boolean;
+  attention_reason?: string;
+  attention_priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 interface ReviewsTableProps {
@@ -374,7 +377,25 @@ export function ReviewsTable({
                       onCheckedChange={(checked) => handleSelectReview(review.id, checked as boolean)}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{review.customer_name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col gap-1">
+                      <span>{review.customer_name}</span>
+                      {review.requires_manual_attention && (
+                        <Badge 
+                          variant="outline" 
+                          className={`
+                            w-fit text-xs
+                            ${review.attention_priority === 'urgent' ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-950' : ''}
+                            ${review.attention_priority === 'high' ? 'border-orange-500 text-orange-500 bg-orange-50 dark:bg-orange-950' : ''}
+                            ${review.attention_priority === 'medium' ? 'border-yellow-500 text-yellow-500 bg-yellow-50 dark:bg-yellow-950' : ''}
+                            ${!review.attention_priority || review.attention_priority === 'low' ? 'border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-950' : ''}
+                          `}
+                        >
+                          ⚠️ {t('reviews.requiresAttention')}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="max-w-xs truncate">{review.content}</TableCell>
                   <TableCell>{renderStars(review.rating)}</TableCell>
                   <TableCell>

@@ -481,6 +481,8 @@ export type Database = {
         Row: {
           ai_instructions: string | null
           ai_response: string | null
+          attention_priority: string | null
+          attention_reason: string | null
           business_id: string | null
           business_name: string | null
           content: string
@@ -491,6 +493,7 @@ export type Database = {
           manual_response: string | null
           platform: string
           rating: number
+          requires_manual_attention: boolean | null
           response_status: string
           review_date: string
           sentiment: string
@@ -500,6 +503,8 @@ export type Database = {
         Insert: {
           ai_instructions?: string | null
           ai_response?: string | null
+          attention_priority?: string | null
+          attention_reason?: string | null
           business_id?: string | null
           business_name?: string | null
           content: string
@@ -510,6 +515,7 @@ export type Database = {
           manual_response?: string | null
           platform: string
           rating: number
+          requires_manual_attention?: boolean | null
           response_status?: string
           review_date?: string
           sentiment: string
@@ -519,6 +525,8 @@ export type Database = {
         Update: {
           ai_instructions?: string | null
           ai_response?: string | null
+          attention_priority?: string | null
+          attention_reason?: string | null
           business_id?: string | null
           business_name?: string | null
           content?: string
@@ -529,6 +537,7 @@ export type Database = {
           manual_response?: string | null
           platform?: string
           rating?: number
+          requires_manual_attention?: boolean | null
           response_status?: string
           review_date?: string
           sentiment?: string
