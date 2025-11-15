@@ -408,23 +408,39 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
       throw new Error('Unsupported platform');
   }
 
-  // Insert new reviews with business info
+  // Insert new reviews with business info (manual dedup to avoid onConflict requirement)
   const newReviews = [];
   for (const review of reviews) {
-    const { data, error } = await supabase
+    // Check if review already exists for this user/business/platform/date/content
+    const { data: existsData, error: existsErr } = await supabase
       .from('reviews')
-      .upsert({
-        ...review,
-        user_id: userId,
-        business_id: connection.business_id,
-        business_name: connection.business_name,
-      }, {
-        onConflict: 'customer_name,platform,review_date',
-        ignoreDuplicates: true
-      });
+      .select('id')
+      .eq('user_id', userId)
+      .eq('platform', review.platform)
+      .eq('business_id', connection.business_id)
+      .eq('review_date', review.review_date)
+      .eq('content', review.content)
+      .limit(1);
 
-    if (!error) {
-      newReviews.push(review);
+    if (existsErr) {
+      console.error('Existence check failed:', existsErr);
+    }
+
+    if (!existsData || existsData.length === 0) {
+      const { error: insertErr } = await supabase
+        .from('reviews')
+        .insert({
+          ...review,
+          user_id: userId,
+          business_id: connection.business_id,
+          business_name: connection.business_name,
+        });
+
+      if (insertErr) {
+        console.error('Insert review failed:', insertErr);
+      } else {
+        newReviews.push(review);
+      }
     }
   }
 
@@ -492,22 +508,38 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
           break;
       }
 
-      // Insert reviews
+      // Insert reviews with manual dedup (avoid onConflict requirement)
       for (const review of reviews) {
-        const { error } = await supabase
+        const { data: existsData, error: existsErr } = await supabase
           .from('reviews')
-          .upsert({
-            ...review,
-            user_id: userId,
-            business_id: connection.business_id,
-            business_name: connection.business_name,
-          }, {
-            onConflict: 'customer_name,platform,review_date',
-            ignoreDuplicates: true
-          });
+          .select('id')
+          .eq('user_id', userId)
+          .eq('platform', review.platform)
+          .eq('business_id', connection.business_id)
+          .eq('review_date', review.review_date)
+          .eq('content', review.content)
+          .limit(1);
 
-        if (!error) {
-          totalNewReviews++;
+        if (existsErr) {
+          console.error('Existence check failed:', existsErr);
+          continue;
+        }
+
+        if (!existsData || existsData.length === 0) {
+          const { error: insertErr } = await supabase
+            .from('reviews')
+            .insert({
+              ...review,
+              user_id: userId,
+              business_id: connection.business_id,
+              business_name: connection.business_name,
+            });
+
+          if (insertErr) {
+            console.error('Insert review failed:', insertErr);
+          } else {
+            totalNewReviews++;
+          }
         }
       }
 
