@@ -1361,12 +1361,28 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             console.log(`✅ Found ${reviewsData.data.length} reviews`);
             
             for (const review of reviewsData.data) {
+              // Determine rating from Facebook data
+              let rating = 3; // Default neutral
+              if (review.rating) {
+                rating = review.rating;
+              } else if (review.recommendation_type) {
+                // Map recommendation_type to rating
+                if (review.recommendation_type === 'positive' || review.recommendation_type === 'recommend') {
+                  rating = 5;
+                } else if (review.recommendation_type === 'negative' || review.recommendation_type.includes("doesn't recommend")) {
+                  rating = 1;
+                }
+              }
+
+              // Determine sentiment based on actual rating
+              const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
+
               reviews.push({
                 customer_name: review.reviewer?.name || 'Anonymous',
                 platform: 'facebook',
-                rating: review.rating || 5,
-                content: review.review_text || review.recommendation_type || '',
-                sentiment: review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral',
+                rating: rating,
+                content: review.review_text || '',
+                sentiment: sentiment,
                 review_date: review.created_time,
                 user_id: userId,
               });
@@ -1416,7 +1432,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
           .join('');
 
         const reviewsResponse = await fetch(
-          `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time`
+          `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time,recommendation_type`
         );
 
         if (reviewsResponse.ok) {
@@ -1424,12 +1440,28 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
           console.log(`📊 Page ${page.name} has ${reviewsData.data?.length || 0} reviews`);
           
           for (const review of reviewsData.data || []) {
+            // Determine rating from Facebook data
+            let rating = 3; // Default neutral
+            if (review.rating) {
+              rating = review.rating;
+            } else if (review.recommendation_type) {
+              // Map recommendation_type to rating
+              if (review.recommendation_type === 'positive' || review.recommendation_type === 'recommend') {
+                rating = 5;
+              } else if (review.recommendation_type === 'negative' || review.recommendation_type.includes("doesn't recommend")) {
+                rating = 1;
+              }
+            }
+
+            // Determine sentiment based on actual rating
+            const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
+
             reviews.push({
               customer_name: review.reviewer?.name || 'Anonymous',
               platform: 'facebook',
-              rating: review.rating || 5,
+              rating: rating,
               content: review.review_text || '',
-              sentiment: review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral',
+              sentiment: sentiment,
               review_date: review.created_time,
               user_id: userId,
             });
