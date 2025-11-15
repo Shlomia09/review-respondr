@@ -233,6 +233,8 @@ async function handleSync(platform: string, userId: string, supabase: any) {
     throw new Error('Platform not connected. Please connect first.');
   }
 
+  console.log('🔑 Token found, business_id:', tokenData.business_id);
+
   // Fetch reviews from the platform
   let reviews: ReviewData[] = [];
   
@@ -241,7 +243,7 @@ async function handleSync(platform: string, userId: string, supabase: any) {
       reviews = await fetchGoogleReviews(tokenData.access_token, userId);
       break;
     case 'facebook':
-      reviews = await fetchFacebookReviews(tokenData.access_token, userId);
+      reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id);
       break;
     case 'trustpilot':
       reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
@@ -964,8 +966,11 @@ async function fetchGoogleReviews(accessToken: string, userId: string): Promise<
   }
 }
 
-async function fetchFacebookReviews(accessToken: string, userId: string): Promise<ReviewData[]> {
+async function fetchFacebookReviews(accessToken: string, userId: string, businessId?: string): Promise<ReviewData[]> {
   try {
+    console.log('🔍 Starting Facebook reviews fetch for user:', userId);
+    console.log('📄 Business ID:', businessId || 'Not specified');
+    
     // Get Facebook App Secret from environment
     const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
     if (!appSecret) {
@@ -991,51 +996,132 @@ async function fetchFacebookReviews(accessToken: string, userId: string): Promis
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // Get user's pages
-    const pagesResponse = await fetch(
-      `https://graph.facebook.com/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}`
-    );
+    console.log('🔐 Generated appsecret_proof');
 
-    if (!pagesResponse.ok) {
-      throw new Error('Failed to fetch Facebook pages');
-    }
-
-    const pagesData = await pagesResponse.json();
     const reviews: ReviewData[] = [];
-
-    // For each page, get reviews (using page access token with its own appsecret_proof)
-    for (const page of pagesData.data || []) {
+    
+    // If we have a specific business ID, only get reviews for that page
+    if (businessId) {
+      console.log(`📞 Fetching reviews for specific page: ${businessId}`);
+      
+      // Try to get page access token first
+      const pageTokenUrl = `https://graph.facebook.com/${businessId}?fields=access_token&access_token=${accessToken}&appsecret_proof=${appsecretProof}`;
+      console.log('🔗 Requesting page token...');
+      
+      const pageTokenResponse = await fetch(pageTokenUrl);
+      
+      let pageAccessToken = accessToken;
+      if (pageTokenResponse.ok) {
+        const pageTokenData = await pageTokenResponse.json();
+        if (pageTokenData.access_token) {
+          pageAccessToken = pageTokenData.access_token;
+          console.log('✅ Got page-specific access token');
+        }
+      } else {
+        console.log('⚠️ Could not get page token, using user token');
+      }
+      
       // Generate appsecret_proof for page token
-      const pageMessageData = encoder.encode(page.access_token);
+      const pageMessageData = encoder.encode(pageAccessToken);
       const pageSignature = await crypto.subtle.sign('HMAC', key, pageMessageData);
       const pageAppsecretProof = Array.from(new Uint8Array(pageSignature))
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
+      
+      // Try multiple endpoints to get reviews
+      const endpoints = [
+        `https://graph.facebook.com/${businessId}/ratings?fields=reviewer,rating,review_text,created_time,recommendation_type`,
+        `https://graph.facebook.com/${businessId}/reviews?fields=reviewer,rating,review_text,created_time,recommendation_type`,
+      ];
+      
+      for (const endpoint of endpoints) {
+        console.log(`📞 Trying endpoint: ${endpoint}`);
+        const reviewsResponse = await fetch(
+          `${endpoint}&access_token=${pageAccessToken}&appsecret_proof=${pageAppsecretProof}`
+        );
 
-      const reviewsResponse = await fetch(
-        `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time`
+        console.log(`📊 Response status: ${reviewsResponse.status}`);
+        
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json();
+          console.log(`📊 Reviews data:`, JSON.stringify(reviewsData, null, 2));
+          
+          if (reviewsData.data && reviewsData.data.length > 0) {
+            console.log(`✅ Found ${reviewsData.data.length} reviews`);
+            
+            for (const review of reviewsData.data) {
+              reviews.push({
+                customer_name: review.reviewer?.name || 'Anonymous',
+                platform: 'facebook',
+                rating: review.rating || 5,
+                content: review.review_text || review.recommendation_type || '',
+                sentiment: review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral',
+                review_date: review.created_time,
+                user_id: userId,
+              });
+            }
+            break; // Found reviews, stop trying other endpoints
+          } else {
+            console.log(`⚠️ Endpoint returned no reviews`);
+          }
+        } else {
+          const errorText = await reviewsResponse.text();
+          console.error(`❌ Endpoint failed: ${errorText}`);
+        }
+      }
+    } else {
+      // Legacy: Get all pages if no specific business ID
+      console.log('📞 No business ID specified, fetching all pages...');
+      
+      const pagesResponse = await fetch(
+        `https://graph.facebook.com/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}`
       );
 
-      if (reviewsResponse.ok) {
-        const reviewsData = await reviewsResponse.json();
+      if (!pagesResponse.ok) {
+        throw new Error('Failed to fetch Facebook pages');
+      }
+
+      const pagesData = await pagesResponse.json();
+      console.log(`📊 Found ${pagesData.data?.length || 0} pages`);
+
+      // For each page, get reviews
+      for (const page of pagesData.data || []) {
+        console.log(`📄 Processing page: ${page.name} (${page.id})`);
         
-        for (const review of reviewsData.data || []) {
-          reviews.push({
-            customer_name: review.reviewer?.name || 'Anonymous',
-            platform: 'facebook',
-            rating: review.rating || 5,
-            content: review.review_text || '',
-            sentiment: review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral',
-            review_date: review.created_time,
-            user_id: userId,
-          });
+        // Generate appsecret_proof for page token
+        const pageMessageData = encoder.encode(page.access_token);
+        const pageSignature = await crypto.subtle.sign('HMAC', key, pageMessageData);
+        const pageAppsecretProof = Array.from(new Uint8Array(pageSignature))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        const reviewsResponse = await fetch(
+          `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time`
+        );
+
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json();
+          console.log(`📊 Page ${page.name} has ${reviewsData.data?.length || 0} reviews`);
+          
+          for (const review of reviewsData.data || []) {
+            reviews.push({
+              customer_name: review.reviewer?.name || 'Anonymous',
+              platform: 'facebook',
+              rating: review.rating || 5,
+              content: review.review_text || '',
+              sentiment: review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral',
+              review_date: review.created_time,
+              user_id: userId,
+            });
+          }
         }
       }
     }
 
+    console.log(`✅ Total reviews fetched: ${reviews.length}`);
     return reviews;
   } catch (error) {
-    console.error('Error fetching Facebook reviews:', error);
+    console.error('❌ Error fetching Facebook reviews:', error);
     return [];
   }
 }
