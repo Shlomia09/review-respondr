@@ -85,16 +85,36 @@ serve(async (req) => {
 
     console.log(`🔗 Found connection for business: ${connection.business_name}`);
 
-    // Decrypt the access token directly
-    if (!connection.access_token) {
-      console.error('No access token found in connection');
-      throw new Error('No access token available for this platform');
+    // Resolve an encrypted access token from connections or tokens table
+    let encryptedToken: string | null = connection.access_token;
+
+    if (!encryptedToken) {
+      console.warn('No access token in platform_connections, checking platform_tokens...');
+      const { data: tokenRow, error: tokenError } = await supabaseAdmin
+        .from('platform_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('platform', review.platform)
+        .eq('business_id', review.business_id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (tokenError || !tokenRow?.access_token) {
+        console.error('Token lookup failed in platform_tokens:', tokenError);
+        throw new Error('No access token available for this platform (checked connections and tokens)');
+      }
+
+      console.log('✅ Found token in platform_tokens');
+      encryptedToken = tokenRow.access_token;
+    } else {
+      console.log('✅ Found token in platform_connections');
     }
 
     console.log(`🔓 Decrypting access token...`);
-    
+
     const { data: decryptedToken, error: decryptError } = await supabaseClient
-      .rpc('decrypt_token', { encrypted_token: connection.access_token });
+      .rpc('decrypt_token', { encrypted_token: encryptedToken });
 
     if (decryptError || !decryptedToken) {
       console.error('Token decryption error:', decryptError);
