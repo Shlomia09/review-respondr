@@ -148,14 +148,14 @@ async function getOAuthUrl(platform: string, userId: string) {
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        // Request broader scopes so we can list all pages, including Business Manager pages
-        `scope=${encodeURIComponent('public_profile,pages_show_list,business_management,pages_read_engagement')}&` +
+        // Request necessary scopes for listing pages, including Business Manager pages
+        `scope=${encodeURIComponent('public_profile,pages_show_list,business_management')}&` +
         // Force Facebook to re-prompt so the user can grant access to additional pages if needed
         `auth_type=rerequest&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
         
-      console.log('✅ Facebook OAuth URL generated successfully with extended scopes');
+      console.log('✅ Facebook OAuth URL generated successfully with adjusted scopes (no pages_read_engagement)');
       break;
       
     default:
