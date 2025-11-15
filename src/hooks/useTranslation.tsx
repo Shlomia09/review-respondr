@@ -780,7 +780,13 @@ const translations: Translations = {
       syncSuccess: 'Synced new reviews:',
       syncFailed: 'Failed to sync reviews',
       connectedPage: 'Connected page',
-      selectPageFirst: 'Please select a page before syncing'
+      selectPageFirst: 'Please select a page before syncing',
+      connectedAccounts: 'Connected Accounts',
+      addAccount: 'Add account',
+      syncAll: 'Sync all',
+      syncingAll: 'Syncing all accounts...',
+      lastSync: 'Last sync',
+      total: 'Total'
     },
     errors: {
       connectionCheck: 'Failed to check connections',

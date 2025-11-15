@@ -49,7 +49,7 @@ const ConnectedAccountsList: React.FC<ConnectedAccountsListProps> = ({
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-3">
         <p className={`text-sm font-medium ${align}`}>
-          {t('platformConnection.connectedAccounts') || 'חשבונות מחוברים'} ({platformAccounts.length})
+          {t('platformConnection.connectedAccounts')} {platformAccounts.length}
         </p>
         {platformAccounts.length > 1 && (
           <Button
@@ -64,7 +64,7 @@ const ConnectedAccountsList: React.FC<ConnectedAccountsListProps> = ({
             ) : (
               <RefreshCw className="w-3 h-3 mr-1" />
             )}
-            {t('platformConnection.syncAll') || 'סנכרן הכל'}
+            {t('platformConnection.syncAll')}
           </Button>
         )}
       </div>
