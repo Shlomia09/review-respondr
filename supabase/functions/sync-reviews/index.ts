@@ -1285,7 +1285,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
       // Fallback: search in me/accounts for this page's token
       if (pageAccessToken === accessToken) {
         console.log('⚠️ Could not get page token directly, trying me/accounts fallback');
-        const accountsResp = await fetch(`https://graph.facebook.com/me/accounts?fields=id,access_token&access_token=${accessToken}&appsecret_proof=${appsecret_proof}`);
+        const accountsResp = await fetch(`https://graph.facebook.com/me/accounts?fields=id,access_token&access_token=${accessToken}&appsecret_proof=${appsecretProof}`);
         if (accountsResp.ok) {
           const accountsData = await accountsResp.json();
           const matched = (accountsData.data || []).find((p: any) => p.id === businessId);
