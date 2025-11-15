@@ -21,6 +21,8 @@ interface PlatformStatus {
   platform: string;
   connected: boolean;
   reviewCount?: number;
+  businessId?: string;
+  businessName?: string;
 }
 
 interface Business {
@@ -304,8 +306,17 @@ const PlatformConnection = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    try {
-      toast.loading(t('platformConnection.syncing'));
+try {
+  // Prevent sync without selecting a business for Facebook
+  if (platformName === 'Facebook') {
+    const status = platformStatuses.find(s => s.platform.toLowerCase() === 'facebook');
+    if (!status?.businessId) {
+      toast.error(t('platformConnection.selectPageFirst'));
+      return;
+    }
+  }
+
+  toast.loading(t('platformConnection.syncing'));
       
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
@@ -347,14 +358,16 @@ const PlatformConnection = () => {
     }
   };
 
-  const getPlatformData = (platform: any): Platform => {
-    const status = platformStatuses.find(s => s.platform.toLowerCase() === platform.name.toLowerCase());
-    return {
-      ...platform,
-      connected: status?.connected || false,
-      reviewCount: status?.reviewCount
-    };
-  };
+const getPlatformData = (platform: any): Platform & { businessId?: string; businessName?: string } => {
+  const status = platformStatuses.find(s => s.platform.toLowerCase() === platform.name.toLowerCase());
+  return {
+    ...platform,
+    connected: status?.connected || false,
+    reviewCount: status?.reviewCount,
+    businessId: status?.businessId,
+    businessName: status?.businessName,
+  } as any;
+};
 
   if (loading) {
     return (
@@ -407,18 +420,23 @@ const PlatformConnection = () => {
                 {platform.description}
               </p>
               
-              {platform.connected && platform.reviewCount && (
-                <p className={`text-sm text-blue-600 dark:text-blue-400 mb-4 ${align}`}>
-                  {platform.reviewCount} {t('platformConnection.reviews')}
-                </p>
-              )}
+{platform.connected && platform.reviewCount !== undefined && (
+  <p className={`text-sm text-blue-600 dark:text-blue-400 mb-1 ${align}`}>
+    {platform.reviewCount} {t('platformConnection.reviews')}
+  </p>
+)}
+{platform.connected && platform.name === 'Facebook' && (platform as any).businessName && (
+  <p className={`text-sm text-muted-foreground mb-4 ${align}`}>
+    {t('platformConnection.connectedPage')}: {(platform as any).businessName}
+  </p>
+)}
               
               <div className="flex gap-2">
                 <Button 
                   size="sm" 
                   variant={platform.connected ? "outline" : "default"}
                   className={platform.connected ? "flex-1" : "w-full"}
-                  onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConnect(platform.name)}
+onClick={() => platform.connected ? fetchBusinesses(platform.name) : handleConnect(platform.name)}
                   disabled={connectingPlatform === platform.name}
                 >
                   {connectingPlatform === platform.name ? (

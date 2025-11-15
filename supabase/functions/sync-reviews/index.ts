@@ -143,19 +143,25 @@ async function getOAuthUrl(platform: string, userId: string) {
       
       console.log('🎯 Generating Facebook OAuth URL with App ID:', facebookAppId);
       
-      // Request only pages_show_list which doesn't require App Review
-      // This will show all pages the user manages
+      // Request necessary scopes for listing pages and reading page reviews
+      const fbScopes = [
+        'public_profile',
+        'pages_show_list',
+        'business_management',
+        // Needed to obtain a Page access token and read reviews/ratings
+        'pages_manage_metadata',
+        'pages_read_user_content'
+      ].join(',');
+      
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        // Request necessary scopes for listing pages, including Business Manager pages
-        `scope=${encodeURIComponent('public_profile,pages_show_list,business_management')}&` +
-        // Force Facebook to re-prompt so the user can grant access to additional pages if needed
+        `scope=${encodeURIComponent(fbScopes)}&` +
         `auth_type=rerequest&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
         
-      console.log('✅ Facebook OAuth URL generated successfully with adjusted scopes (no pages_read_engagement)');
+      console.log('✅ Facebook OAuth URL generated with extended scopes:', fbScopes);
       break;
       
     default:
@@ -1143,7 +1149,7 @@ async function checkAllConnections(userId: string, supabase: any) {
   console.log(`Checking all platform connections for user ${userId}`);
   
   const platforms = ['google', 'facebook', 'trustpilot'];
-  const platformStatuses = [];
+  const platformStatuses: any[] = [];
   
   for (const platform of platforms) {
     try {
@@ -1153,26 +1159,56 @@ async function checkAllConnections(userId: string, supabase: any) {
         .select('*')
         .eq('user_id', userId)
         .eq('platform', platform)
-        .single();
+        .maybeSingle();
 
-      const connected = tokenData && tokenData.access_token && new Date(tokenData.expires_at) > new Date();
+      const connected = !!(tokenData && tokenData.access_token && new Date(tokenData.expires_at) > new Date());
       
       // If connected, try to get review count
       let reviewCount = 0;
+      let selectedBusinessId: string | undefined = tokenData?.business_id || undefined;
+      let selectedBusinessName: string | undefined = undefined;
+
       if (connected) {
+        // Return count of stored reviews for this platform
         const { data: reviews } = await supabase
           .from('reviews')
           .select('id', { count: 'exact' })
           .eq('user_id', userId)
           .eq('platform', platform);
-        
         reviewCount = reviews?.length || 0;
+
+        // If Facebook and business is selected, fetch page name for display
+        if (platform === 'facebook' && selectedBusinessId) {
+          try {
+            const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
+            if (appSecret && tokenData?.access_token) {
+              const encoder = new TextEncoder();
+              const keyData = encoder.encode(appSecret);
+              const messageData = encoder.encode(tokenData.access_token);
+              const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+              const signature = await crypto.subtle.sign('HMAC', key, messageData);
+              const appsecretProof = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+              const pageInfoRes = await fetch(`https://graph.facebook.com/${selectedBusinessId}?fields=name&access_token=${tokenData.access_token}&appsecret_proof=${appsecretProof}`);
+              if (pageInfoRes.ok) {
+                const info = await pageInfoRes.json();
+                selectedBusinessName = info?.name || undefined;
+              } else {
+                console.log('⚠️ Could not fetch page name, status:', pageInfoRes.status);
+              }
+            }
+          } catch (e) {
+            console.error('❌ Error fetching selected Facebook page name:', e);
+          }
+        }
       }
       
       platformStatuses.push({
         platform,
         connected,
-        reviewCount: connected ? reviewCount : undefined
+        reviewCount: connected ? reviewCount : undefined,
+        businessId: selectedBusinessId,
+        businessName: selectedBusinessName,
       });
     } catch (error) {
       console.error(`Error checking ${platform} connection:`, error);
