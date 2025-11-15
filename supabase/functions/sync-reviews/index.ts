@@ -156,7 +156,8 @@ async function getOAuthUrl(platform: string, userId: string) {
         'business_management',
         // Needed to obtain a Page access token and read reviews/ratings
         'pages_manage_metadata',
-        'pages_read_user_content'
+        'pages_read_user_content',
+        'pages_read_engagement'
       ].join(',');
       
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
@@ -1270,9 +1271,8 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
       // Try to get page access token first
       const pageTokenUrl = `https://graph.facebook.com/${businessId}?fields=access_token&access_token=${accessToken}&appsecret_proof=${appsecretProof}`;
       console.log('🔗 Requesting page token...');
-      
       const pageTokenResponse = await fetch(pageTokenUrl);
-      
+
       let pageAccessToken = accessToken;
       if (pageTokenResponse.ok) {
         const pageTokenData = await pageTokenResponse.json();
@@ -1280,8 +1280,25 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
           pageAccessToken = pageTokenData.access_token;
           console.log('✅ Got page-specific access token');
         }
-      } else {
-        console.log('⚠️ Could not get page token, using user token');
+      }
+
+      // Fallback: search in me/accounts for this page's token
+      if (pageAccessToken === accessToken) {
+        console.log('⚠️ Could not get page token directly, trying me/accounts fallback');
+        const accountsResp = await fetch(`https://graph.facebook.com/me/accounts?fields=id,access_token&access_token=${accessToken}&appsecret_proof=${appsecret_proof}`);
+        if (accountsResp.ok) {
+          const accountsData = await accountsResp.json();
+          const matched = (accountsData.data || []).find((p: any) => p.id === businessId);
+          if (matched?.access_token) {
+            pageAccessToken = matched.access_token;
+            console.log('✅ Found page token via me/accounts');
+          } else {
+            console.log('⚠️ No page token found in me/accounts for this page');
+          }
+        } else {
+          const errText = await accountsResp.text();
+          console.log('⚠️ me/accounts fallback failed:', errText);
+        }
       }
       
       // Generate appsecret_proof for page token
