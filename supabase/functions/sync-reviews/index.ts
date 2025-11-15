@@ -98,8 +98,8 @@ async function getOAuthUrl(platform: string, userId: string) {
   
   switch (platform) {
     case 'google':
-      const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
-      if (!googleClientId) {
+      const googleClientId = (Deno.env.get('GOOGLE_CLIENT_ID') || '').trim();
+      if (!googleClientId || googleClientId.length === 0) {
         console.error('❌ Google Client ID not found in environment');
         throw new Error('Google Client ID not configured');
       }
@@ -131,12 +131,13 @@ async function getOAuthUrl(platform: string, userId: string) {
       break;
       
     case 'facebook':
-      const facebookAppId = Deno.env.get('FACEBOOK_APP_ID') || Deno.env.get('FB_APP_ID') || Deno.env.get('FACEBOOK_APPID');
+      // Trim whitespace from environment variables
+      const facebookAppId = (Deno.env.get('FACEBOOK_APP_ID') || Deno.env.get('FB_APP_ID') || Deno.env.get('FACEBOOK_APPID') || '').trim();
       console.log('🔍 Facebook App ID check:', facebookAppId ? `Found: ${facebookAppId.substring(0, 5)}...` : 'NOT FOUND');
       console.log('🔍 Available env vars:', Object.keys(Deno.env.toObject()).filter(k => k.toLowerCase().includes('facebook')));
       
-      if (!facebookAppId) {
-        console.error('❌ FACEBOOK_APP_ID missing in Edge Function env. Flags → SUPABASE_URL:', !!Deno.env.get('SUPABASE_URL'), 'SERVICE_ROLE:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), 'FACEBOOK_APP_SECRET:', !!Deno.env.get('FACEBOOK_APP_SECRET'));
+      if (!facebookAppId || facebookAppId.length === 0) {
+        console.error('❌ FACEBOOK_APP_ID missing or empty in Edge Function env.');
         throw new Error('Facebook App ID not configured (set FACEBOOK_APP_ID in Supabase Edge Function secrets)');
       }
       
