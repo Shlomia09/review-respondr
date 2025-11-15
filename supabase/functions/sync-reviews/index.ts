@@ -148,11 +148,14 @@ async function getOAuthUrl(platform: string, userId: string) {
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `scope=${encodeURIComponent('pages_show_list,public_profile')}&` +
+        // Request broader scopes so we can list all pages, including Business Manager pages
+        `scope=${encodeURIComponent('public_profile,pages_show_list,business_management,pages_read_engagement')}&` +
+        // Force Facebook to re-prompt so the user can grant access to additional pages if needed
+        `auth_type=rerequest&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
         
-      console.log('✅ Facebook OAuth URL generated successfully');
+      console.log('✅ Facebook OAuth URL generated successfully with extended scopes');
       break;
       
     default:
@@ -806,36 +809,75 @@ async function fetchFacebookBusinesses(accessToken: string) {
 
     console.log('🔐 Generated appsecret_proof for Facebook API');
 
-    let allPages: any[] = [];
-    let nextUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&appsecret_proof=${appsecretProof}&limit=100`;
+    // 1) Pages the person manages directly
+    let personPages: any[] = [];
+    let nextUrl = `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,category&access_token=${accessToken}&appsecret_proof=${appsecretProof}&limit=100`;
 
-    // Fetch all pages with pagination support
     while (nextUrl) {
       const response = await fetch(nextUrl);
-      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Facebook businesses API error:', errorText);
+        console.error('❌ Facebook me/accounts error:', errorText);
         break;
       }
-
       const data = await response.json();
-      console.log(`✅ Facebook API response (batch): Found ${data.data?.length || 0} pages`);
-      
+      console.log(`✅ Facebook API response (me/accounts): ${data.data?.length || 0} pages`);
       if (data.data && data.data.length > 0) {
-        allPages = allPages.concat(data.data);
+        personPages = personPages.concat(data.data);
       }
-
-      // Check if there are more pages
       nextUrl = data.paging?.next || null;
-      if (nextUrl) {
-        console.log('📄 Fetching next page of results...');
-      }
+      if (nextUrl) console.log('📄 Fetching next page (me/accounts)...');
     }
 
-    console.log(`✅ Total Facebook pages found: ${allPages.length}`);
+    // 2) Pages available via Business Manager (owned or client pages)
+    let bmPages: any[] = [];
+    try {
+      let bizNext = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}&appsecret_proof=${appsecretProof}&limit=100`;
+      const businessIds: string[] = [];
+      while (bizNext) {
+        const bizRes = await fetch(bizNext);
+        if (!bizRes.ok) {
+          const txt = await bizRes.text();
+          console.warn('⚠️ me/businesses error (likely missing business_management):', txt);
+          break;
+        }
+        const bizData = await bizRes.json();
+        for (const b of bizData.data || []) businessIds.push(b.id);
+        bizNext = bizData.paging?.next || null;
+      }
+
+      for (const bizId of businessIds) {
+        for (const edge of ['owned_pages','client_pages']) {
+          const pagesUrl = `https://graph.facebook.com/v18.0/${bizId}/${edge}?fields=id,name,category&access_token=${accessToken}&appsecret_proof=${appsecretProof}&limit=100`;
+          let edgeNext: string | null = pagesUrl;
+          while (edgeNext) {
+            const pRes = await fetch(edgeNext);
+            if (!pRes.ok) {
+              const txt = await pRes.text();
+              console.warn(`⚠️ ${edge} fetch error for business ${bizId}:`, txt);
+              break;
+            }
+            const pData = await pRes.json();
+            bmPages = bmPages.concat(pData.data || []);
+            edgeNext = pData.paging?.next || null;
+          }
+        }
+      }
+      console.log(`✅ Business Manager pages loaded: ${bmPages.length}`);
+    } catch (bmErr) {
+      console.warn('⚠️ Business Manager fallback failed:', bmErr);
+    }
+
+    // Deduplicate by id
+    const map = new Map<string, any>();
+    for (const p of [...personPages, ...bmPages]) {
+      if (p && p.id && !map.has(p.id)) map.set(p.id, p);
+    }
+    const allPages = Array.from(map.values());
+
+    console.log(`✅ Total Facebook pages found (merged): ${allPages.length}`);
     console.log('📋 Page details:', JSON.stringify(allPages.map(p => ({ id: p.id, name: p.name, category: p.category })), null, 2));
-    
+
     return allPages.map((page: any) => ({
       id: page.id,
       name: page.name,
