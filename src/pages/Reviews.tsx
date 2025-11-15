@@ -2,6 +2,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { ReviewsTable } from "@/components/ReviewsTable";
+import { ViewReviewModal } from "@/components/ViewReviewModal";
+import { ManualResponseModal } from "@/components/ManualResponseModal";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +27,14 @@ export function Reviews() {
   const { t } = useTranslation();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewReviewModal, setViewReviewModal] = useState<{ open: boolean; review: Review | null }>({
+    open: false,
+    review: null
+  });
+  const [editResponseModal, setEditResponseModal] = useState<{ open: boolean; review: Review | null }>({
+    open: false,
+    review: null
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -102,13 +112,11 @@ export function Reviews() {
   };
 
   const handleViewReview = (review: Review) => {
-    // TODO: Implement review detail modal
-    console.log('View review:', review);
+    setViewReviewModal({ open: true, review });
   };
 
   const handleEditResponse = (review: Review) => {
-    // TODO: Implement edit response modal
-    console.log('Edit response:', review);
+    setEditResponseModal({ open: true, review });
   };
 
   const handleDeleteReview = async (reviewId: string) => {
@@ -162,6 +170,19 @@ export function Reviews() {
         onViewReview={handleViewReview}
         onEditResponse={handleEditResponse}
         onDeleteReview={handleDeleteReview}
+      />
+
+      <ViewReviewModal
+        review={viewReviewModal.review}
+        open={viewReviewModal.open}
+        onOpenChange={(open) => setViewReviewModal({ open, review: null })}
+      />
+
+      <ManualResponseModal
+        review={editResponseModal.review}
+        isOpen={editResponseModal.open}
+        onClose={() => setEditResponseModal({ open: false, review: null })}
+        onSuccess={fetchReviews}
       />
     </div>
   );
