@@ -35,11 +35,13 @@ serve(async (req) => {
       }
     );
 
-    // Get the authenticated user
+    // Get the authenticated user from Bearer token (edge runtime has no session)
+    const authHeader = req.headers.get('Authorization');
+    const jwt = authHeader?.replace('Bearer ', '');
     const {
       data: { user },
       error: userError,
-    } = await supabaseClient.auth.getUser();
+    } = await supabaseClient.auth.getUser(jwt);
 
     if (userError || !user) {
       console.error('Authentication error:', userError);
