@@ -83,15 +83,23 @@ serve(async (req) => {
 
     console.log(`🔗 Found connection for business: ${connection.business_name}`);
 
-    // Get the decrypted access token using admin client
-    const { data: tokenData, error: tokenError } = await supabaseAdmin
-      .rpc('get_user_connections')
-      .eq('id', connection.id)
-      .single();
-
-    if (tokenError || !tokenData || !tokenData.access_token) {
-      throw new Error('Failed to get access token');
+    // Decrypt the access token directly
+    if (!connection.access_token) {
+      console.error('No access token found in connection');
+      throw new Error('No access token available for this platform');
     }
+
+    console.log(`🔓 Decrypting access token...`);
+    
+    const { data: decryptedToken, error: decryptError } = await supabaseClient
+      .rpc('decrypt_token', { encrypted_token: connection.access_token });
+
+    if (decryptError || !decryptedToken) {
+      console.error('Token decryption error:', decryptError);
+      throw new Error('Failed to decrypt access token');
+    }
+
+    console.log(`✅ Token decrypted successfully`);
 
     // Determine which response to send (manual takes priority)
     const responseText = review.manual_response || review.ai_response;
@@ -106,7 +114,7 @@ serve(async (req) => {
     if (review.platform === 'facebook') {
       await sendFacebookResponse(
         review.business_id,
-        tokenData.access_token,
+        decryptedToken,
         responseText
       );
     } else if (review.platform === 'google') {
