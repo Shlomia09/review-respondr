@@ -90,6 +90,7 @@ serve(async (req) => {
 
     if (!encryptedToken) {
       console.warn('No access token in platform_connections, checking platform_tokens...');
+      // 1) Try token for this specific business
       const { data: tokenRow, error: tokenError } = await supabaseAdmin
         .from('platform_tokens')
         .select('*')
@@ -101,27 +102,51 @@ serve(async (req) => {
         .single();
 
       if (tokenError || !tokenRow?.access_token) {
-        console.error('Token lookup failed in platform_tokens:', tokenError);
-        throw new Error('No access token available for this platform (checked connections and tokens)');
-      }
+        console.warn('No token for specific business_id. Falling back to latest user+platform token...');
+        // 2) Fall back to the latest token for the user+platform (no business_id filter)
+        const { data: anyTokenRow, error: tokenAnyError } = await supabaseAdmin
+          .from('platform_tokens')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('platform', review.platform)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      console.log('✅ Found token in platform_tokens');
-      encryptedToken = tokenRow.access_token;
+        if (tokenAnyError || !anyTokenRow?.access_token) {
+          console.error('Token lookup failed in platform_tokens (any):', tokenAnyError);
+          throw new Error('No access token available for this platform (checked connections and tokens)');
+        }
+
+        console.log('✅ Found fallback token in platform_tokens (latest for user+platform)');
+        encryptedToken = anyTokenRow.access_token;
+      } else {
+        console.log('✅ Found token in platform_tokens (by business_id)');
+        encryptedToken = tokenRow.access_token;
+      }
     } else {
       console.log('✅ Found token in platform_connections');
     }
 
-    console.log(`🔓 Decrypting access token...`);
+    console.log(`🔓 Decrypting access token (with graceful fallback)...`);
 
-    const { data: decryptedToken, error: decryptError } = await supabaseClient
-      .rpc('decrypt_token', { encrypted_token: encryptedToken });
+    // Try to decrypt. If decrypt fails (e.g., token stored in plaintext), fall back to the raw value
+    let accessToken: string;
+    try {
+      const { data: decryptedToken, error: decryptError } = await supabaseClient
+        .rpc('decrypt_token', { encrypted_token: encryptedToken! });
 
-    if (decryptError || !decryptedToken) {
-      console.error('Token decryption error:', decryptError);
-      throw new Error('Failed to decrypt access token');
+      if (decryptError || !decryptedToken) {
+        console.warn('Token decryption failed or returned empty. Falling back to raw token.', decryptError);
+        accessToken = encryptedToken!;
+      } else {
+        accessToken = decryptedToken;
+        console.log(`✅ Token decrypted successfully`);
+      }
+    } catch (e) {
+      console.warn('Token decryption threw exception. Falling back to raw token.', e);
+      accessToken = encryptedToken!;
     }
-
-    console.log(`✅ Token decrypted successfully`);
 
     // Determine which response to send (manual takes priority)
     const responseText = review.manual_response || review.ai_response;
@@ -136,7 +161,7 @@ serve(async (req) => {
     if (review.platform === 'facebook') {
       await sendFacebookResponse(
         review.business_id,
-        decryptedToken,
+        accessToken,
         responseText
       );
     } else if (review.platform === 'google') {
