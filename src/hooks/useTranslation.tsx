@@ -300,7 +300,11 @@ const translations: Translations = {
       reviews: 'ביקורות',
       manage: 'ניהול',
       connect: 'חיבור',
-      disconnect: 'ניתוק'
+      disconnect: 'ניתוק',
+      sync: 'סנכרן',
+      syncing: 'מסנכרן ביקורות...',
+      syncSuccess: 'סונכרנו ביקורות חדשות:',
+      syncFailed: 'נכשל בסנכרון ביקורות'
     },
     errors: {
       connectionCheck: 'נכשלה בדיקת החיבורים',
@@ -758,7 +762,11 @@ const translations: Translations = {
       reviews: 'reviews',
       manage: 'Manage',
       connect: 'Connect',
-      disconnect: 'Disconnect'
+      disconnect: 'Disconnect',
+      sync: 'Sync',
+      syncing: 'Syncing reviews...',
+      syncSuccess: 'Synced new reviews:',
+      syncFailed: 'Failed to sync reviews'
     },
     errors: {
       connectionCheck: 'Failed to check connections',

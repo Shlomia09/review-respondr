@@ -300,6 +300,31 @@ const PlatformConnection = () => {
     }
   };
 
+  const handleSyncReviews = async (platformName: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      toast.loading(t('platformConnection.syncing'));
+      
+      const { data, error } = await supabase.functions.invoke('sync-reviews', {
+        body: { 
+          action: 'sync', 
+          platform: platformName.toLowerCase()
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`${t('platformConnection.syncSuccess')} ${data?.newReviews || 0}/${data?.reviewCount || 0}`);
+      
+      await checkPlatformConnections();
+    } catch (error) {
+      console.error('Error syncing reviews:', error);
+      toast.error(t('platformConnection.syncFailed'));
+    }
+  };
+
   const handleDisconnect = async (platformName: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -307,7 +332,7 @@ const PlatformConnection = () => {
     try {
       const { error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
-          action: 'disconnect', 
+          action: 'disconnect',
           platform: platformName.toLowerCase() 
         }
       });
@@ -405,14 +430,24 @@ const PlatformConnection = () => {
                 </Button>
                 
                 {platform.connected && (
-                  <Button 
-                    size="sm" 
-                    variant="destructive"
-                    className="flex-shrink-0"
-                    onClick={() => handleDisconnect(platform.name)}
-                  >
-                    {t('platformConnection.disconnect') || 'ניתוק'}
-                  </Button>
+                  <>
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      className="flex-shrink-0"
+                      onClick={() => handleSyncReviews(platform.name)}
+                    >
+                      {t('platformConnection.sync')}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      className="flex-shrink-0"
+                      onClick={() => handleDisconnect(platform.name)}
+                    >
+                      {t('platformConnection.disconnect') || 'ניתוק'}
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
