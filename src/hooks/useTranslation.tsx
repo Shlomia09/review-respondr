@@ -267,7 +267,18 @@ const translations: Translations = {
       responseSaved: 'התגובה נשמרה בהצלחה',
       failedSaveResponse: 'שמירת התגובה נכשלה',
       deleteSuccess: 'הביקורת נמחקה בהצלחה',
-      deleteError: 'מחיקת הביקורת נכשלה'
+      deleteError: 'מחיקת הביקורת נכשלה',
+      generateAIResponse: 'יצירת תגובת AI',
+      sendResponse: 'שליחת תגובה',
+      viewReview: 'צפייה בביקורת',
+      editResponse: 'עריכת תגובה',
+      delete: 'מחיקה',
+      aiResponseGenerated: 'תגובת AI נוצרה בהצלחה',
+      aiResponseFailed: 'יצירת תגובת AI נכשלה',
+      responseSentSuccess: 'התגובה נשלחה בהצלחה',
+      responseSentFailed: 'שליחת התגובה נכשלה',
+      bulkGenerateAI: 'יצירת תגובות AI',
+      bulkAIGenerated: 'תגובות AI נוצרו בהצלחה'
     },
     manualResponse: {
       title: 'כתיבת תגובה ידנית',
@@ -773,7 +784,18 @@ const translations: Translations = {
       responseSaved: 'Response saved successfully',
       failedSaveResponse: 'Failed to save response',
       deleteSuccess: 'Review deleted successfully',
-      deleteError: 'Failed to delete review'
+      deleteError: 'Failed to delete review',
+      generateAIResponse: 'Generate AI Response',
+      sendResponse: 'Send Response',
+      viewReview: 'View Review',
+      editResponse: 'Edit Response',
+      delete: 'Delete',
+      aiResponseGenerated: 'AI response generated successfully',
+      aiResponseFailed: 'Failed to generate AI response',
+      responseSentSuccess: 'Response sent successfully',
+      responseSentFailed: 'Failed to send response',
+      bulkGenerateAI: 'Generate AI Responses',
+      bulkAIGenerated: 'AI responses generated successfully'
     },
     manualResponse: {
       title: 'Write Manual Response',

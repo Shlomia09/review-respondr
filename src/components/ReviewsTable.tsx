@@ -26,7 +26,8 @@ import {
   MessageSquare,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Sparkles
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -51,6 +52,8 @@ interface ReviewsTableProps {
   onViewReview: (review: Review) => void;
   onEditResponse: (review: Review) => void;
   onDeleteReview: (reviewId: string) => void;
+  onGenerateAIResponse: (reviewId: string) => void;
+  onSendResponse: (reviewId: string) => void;
 }
 
 export function ReviewsTable({ 
@@ -58,7 +61,9 @@ export function ReviewsTable({
   onBulkAction, 
   onViewReview, 
   onEditResponse, 
-  onDeleteReview 
+  onDeleteReview,
+  onGenerateAIResponse,
+  onSendResponse
 }: ReviewsTableProps) {
   const { t } = useTranslation();
   const [selectedReviews, setSelectedReviews] = useState<Set<string>>(new Set());
@@ -194,6 +199,14 @@ export function ReviewsTable({
           {selectedReviews.size > 0 && (
             <div className="flex gap-2">
               <Button 
+                size="sm"
+                variant="default"
+                onClick={() => onBulkAction('generateAI', Array.from(selectedReviews))}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {t('reviews.bulkGenerateAI')} ({selectedReviews.size})
+              </Button>
+              <Button 
                 size="sm" 
                 onClick={() => onBulkAction('approve', Array.from(selectedReviews))}
               >
@@ -204,6 +217,7 @@ export function ReviewsTable({
                 variant="outline" 
                 onClick={() => onBulkAction('send', Array.from(selectedReviews))}
               >
+                <Send className="h-4 w-4 mr-2" />
                 {t('reviews.bulkSend')} ({selectedReviews.size})
               </Button>
             </div>
@@ -373,10 +387,35 @@ export function ReviewsTable({
                   <TableCell>{getStatusBadge(review.response_status)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      {/* Generate AI Response Button - show if no AI response yet */}
+                      {!review.ai_response && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => onGenerateAIResponse(review.id)}
+                          title={t('reviews.generateAIResponse')}
+                        >
+                          <Sparkles className="h-4 w-4 text-primary" />
+                        </Button>
+                      )}
+                      
+                      {/* Send Response Button - show if response is generated or approved */}
+                      {(review.response_status === 'generated' || review.response_status === 'approved') && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => onSendResponse(review.id)}
+                          title={t('reviews.sendResponse')}
+                        >
+                          <Send className="h-4 w-4 text-green-600" />
+                        </Button>
+                      )}
+                      
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         onClick={() => onViewReview(review)}
+                        title={t('reviews.viewReview')}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -384,6 +423,7 @@ export function ReviewsTable({
                         variant="ghost" 
                         size="sm" 
                         onClick={() => onEditResponse(review)}
+                        title={t('reviews.editResponse')}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -391,6 +431,7 @@ export function ReviewsTable({
                         variant="ghost" 
                         size="sm" 
                         onClick={() => onDeleteReview(review.id)}
+                        title={t('reviews.delete')}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
