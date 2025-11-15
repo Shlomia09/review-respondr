@@ -51,7 +51,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Request body:', JSON.stringify(requestBody));
     
-    const { action, platform, credentials, businessId, businessName } = requestBody;
+    const { action, platform, credentials, businessId, businessName, connectionId } = requestBody;
     console.log('Action received:', action);
 
     switch (action) {
@@ -70,8 +70,14 @@ serve(async (req) => {
         return await selectBusiness(platform, businessId, businessName, user.id, supabaseClient);
       case 'sync':
         return await handleSync(platform, user.id, supabaseClient);
+      case 'sync_by_connection':
+        return await handleSyncByConnection(connectionId, platform, user.id, supabaseClient);
+      case 'sync_all_platform':
+        return await handleSyncAllPlatform(platform, user.id, supabaseClient);
       case 'disconnect':
         return await handleDisconnect(platform, user.id, supabaseClient);
+      case 'disconnect_account':
+        return await handleDisconnectAccount(connectionId, user.id, supabaseClient);
       default:
         console.error('Invalid action received:', action);
         throw new Error(`Invalid action: ${action}`);
@@ -258,7 +264,7 @@ async function handleSync(platform: string, userId: string, supabase: any) {
       throw new Error('Unsupported platform');
   }
 
-  // Insert new reviews into database
+  // Insert new reviews into database with business info
   const newReviews = [];
   for (const review of reviews) {
     const { data, error } = await supabase
@@ -266,6 +272,7 @@ async function handleSync(platform: string, userId: string, supabase: any) {
       .upsert({
         ...review,
         user_id: userId,
+        business_id: tokenData.business_id,
       }, {
         onConflict: 'customer_name,platform,review_date',
         ignoreDuplicates: true
@@ -291,9 +298,15 @@ async function handleSync(platform: string, userId: string, supabase: any) {
 async function handleDisconnect(platform: string, userId: string, supabase: any) {
   console.log(`Disconnecting from ${platform} for user ${userId}`);
   
-  // Remove stored tokens
+  // Remove ALL stored tokens and connections for this platform
   await supabase
     .from('platform_tokens')
+    .delete()
+    .eq('user_id', userId)
+    .eq('platform', platform);
+  
+  await supabase
+    .from('platform_connections')
     .delete()
     .eq('user_id', userId)
     .eq('platform', platform);
@@ -303,6 +316,218 @@ async function handleDisconnect(platform: string, userId: string, supabase: any)
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }
+
+async function handleDisconnectAccount(connectionId: string, userId: string, supabase: any) {
+  console.log(`Disconnecting account ${connectionId} for user ${userId}`);
+  
+  // Get connection details
+  const { data: connection } = await supabase
+    .from('platform_connections')
+    .select('*')
+    .eq('id', connectionId)
+    .eq('user_id', userId)
+    .single();
+
+  if (!connection) {
+    throw new Error('Connection not found');
+  }
+
+  // Delete the specific connection
+  await supabase
+    .from('platform_connections')
+    .delete()
+    .eq('id', connectionId)
+    .eq('user_id', userId);
+
+  // Also delete matching platform_token
+  await supabase
+    .from('platform_tokens')
+    .delete()
+    .eq('user_id', userId)
+    .eq('platform', connection.platform)
+    .eq('business_id', connection.business_id);
+  
+  return new Response(
+    JSON.stringify({ success: true }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function handleSyncByConnection(connectionId: string, platform: string, userId: string, supabase: any) {
+  console.log(`Syncing reviews for connection ${connectionId}, platform ${platform}, user ${userId}`);
+  
+  // Get connection details including business_id
+  const { data: connection } = await supabase
+    .from('platform_connections')
+    .select('*')
+    .eq('id', connectionId)
+    .eq('user_id', userId)
+    .single();
+
+  if (!connection) {
+    throw new Error('Connection not found');
+  }
+
+  // Get matching platform_token
+  const { data: tokenData } = await supabase
+    .from('platform_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('platform', platform)
+    .eq('business_id', connection.business_id)
+    .single();
+
+  if (!tokenData || !tokenData.access_token) {
+    throw new Error('Token not found for this connection');
+  }
+
+  console.log(`🔑 Token found for business ${connection.business_name} (${connection.business_id})`);
+
+  // Fetch reviews
+  let reviews: ReviewData[] = [];
+  
+  switch (platform) {
+    case 'google':
+      reviews = await fetchGoogleReviews(tokenData.access_token, userId);
+      break;
+    case 'facebook':
+      reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id);
+      break;
+    case 'trustpilot':
+      reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
+      break;
+    default:
+      throw new Error('Unsupported platform');
+  }
+
+  // Insert new reviews with business info
+  const newReviews = [];
+  for (const review of reviews) {
+    const { data, error } = await supabase
+      .from('reviews')
+      .upsert({
+        ...review,
+        user_id: userId,
+        business_id: connection.business_id,
+        business_name: connection.business_name,
+      }, {
+        onConflict: 'customer_name,platform,review_date',
+        ignoreDuplicates: true
+      });
+
+    if (!error) {
+      newReviews.push(review);
+    }
+  }
+
+  // Update last_sync timestamp
+  await supabase
+    .from('platform_connections')
+    .update({ last_sync: new Date().toISOString() })
+    .eq('id', connectionId);
+
+  console.log(`Imported ${newReviews.length} new reviews for ${connection.business_name}`);
+
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      newReviews: newReviews.length,
+      reviewCount: reviews.length
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function handleSyncAllPlatform(platform: string, userId: string, supabase: any) {
+  console.log(`Syncing all ${platform} accounts for user ${userId}`);
+  
+  // Get all connections for this platform
+  const { data: connections } = await supabase
+    .from('platform_connections')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('platform', platform)
+    .eq('is_active', true);
+
+  if (!connections || connections.length === 0) {
+    throw new Error('No active connections found for this platform');
+  }
+
+  let totalNewReviews = 0;
+  let totalReviews = 0;
+
+  // Sync each connection
+  for (const connection of connections) {
+    try {
+      const { data: tokenData } = await supabase
+        .from('platform_tokens')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', platform)
+        .eq('business_id', connection.business_id)
+        .single();
+
+      if (!tokenData) continue;
+
+      // Fetch reviews
+      let reviews: ReviewData[] = [];
+      
+      switch (platform) {
+        case 'google':
+          reviews = await fetchGoogleReviews(tokenData.access_token, userId);
+          break;
+        case 'facebook':
+          reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id);
+          break;
+        case 'trustpilot':
+          reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
+          break;
+      }
+
+      // Insert reviews
+      for (const review of reviews) {
+        const { error } = await supabase
+          .from('reviews')
+          .upsert({
+            ...review,
+            user_id: userId,
+            business_id: connection.business_id,
+            business_name: connection.business_name,
+          }, {
+            onConflict: 'customer_name,platform,review_date',
+            ignoreDuplicates: true
+          });
+
+        if (!error) {
+          totalNewReviews++;
+        }
+      }
+
+      totalReviews += reviews.length;
+
+      // Update last_sync
+      await supabase
+        .from('platform_connections')
+        .update({ last_sync: new Date().toISOString() })
+        .eq('id', connection.id);
+
+    } catch (error) {
+      console.error(`Error syncing ${connection.business_name}:`, error);
+    }
+  }
+
+  console.log(`Synced all ${platform} accounts: ${totalNewReviews}/${totalReviews} reviews`);
+
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      newReviews: totalNewReviews,
+      reviewCount: totalReviews
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
 
 async function getBusinesses(platform: string, userId: string, supabase: any) {
   console.log(`📝 Getting businesses for ${platform} for user ${userId}`);
@@ -1173,78 +1398,55 @@ async function checkAllConnections(userId: string, supabase: any) {
   console.log(`Checking all platform connections for user ${userId}`);
   
   const platforms = ['google', 'facebook', 'trustpilot'];
-  const platformStatuses: any[] = [];
+  const allConnections = [];
   
   for (const platform of platforms) {
     try {
-      // Check if user has valid tokens stored for this platform
-      const { data: tokenData } = await supabase
-        .from('platform_tokens')
+      // Get ALL connections for this platform (not just one)
+      const { data: connections, error } = await supabase
+        .from('platform_connections')
         .select('*')
         .eq('user_id', userId)
         .eq('platform', platform)
-        .maybeSingle();
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
 
-      const connected = !!(tokenData && tokenData.access_token && new Date(tokenData.expires_at) > new Date());
-      
-      // If connected, try to get review count
-      let reviewCount = 0;
-      let selectedBusinessId: string | undefined = tokenData?.business_id || undefined;
-      let selectedBusinessName: string | undefined = undefined;
-
-      if (connected) {
-        // Return count of stored reviews for this platform
-        const { data: reviews } = await supabase
-          .from('reviews')
-          .select('id', { count: 'exact' })
-          .eq('user_id', userId)
-          .eq('platform', platform);
-        reviewCount = reviews?.length || 0;
-
-        if (platform === 'facebook' && selectedBusinessId) {
-          try {
-            // Prefer stored name from platform_connections if available
-            const { data: connection } = await supabase
-              .from('platform_connections')
-              .select('business_name')
-              .eq('user_id', userId)
-              .eq('platform', platform)
-              .maybeSingle();
-            if (connection?.business_name) {
-              selectedBusinessName = connection.business_name;
-            } else {
-              // Fallback: fetch from Graph API
-              const appSecret = Deno.env.get('FACEBOOK_APP_SECRET')?.trim();
-              if (appSecret && tokenData?.access_token) {
-                const encoder = new TextEncoder();
-                const keyData = encoder.encode(appSecret);
-                const messageData = encoder.encode(tokenData.access_token);
-                const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-                const signature = await crypto.subtle.sign('HMAC', key, messageData);
-                const appsecretProof = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
-                const pageInfoRes = await fetch(`https://graph.facebook.com/${selectedBusinessId}?fields=name&access_token=${tokenData.access_token}&appsecret_proof=${appsecretProof}`);
-                if (pageInfoRes.ok) {
-                  const info = await pageInfoRes.json();
-                  selectedBusinessName = info?.name || undefined;
-                }
-              }
-            }
-          } catch (e) {
-            console.error('❌ Error fetching selected Facebook page name:', e);
-          }
-        }
+      if (error) {
+        console.error(`Error fetching ${platform} connections:`, error);
+        continue;
       }
-      
-      platformStatuses.push({
-        platform,
-        connected,
-        reviewCount: connected ? reviewCount : undefined,
-        businessId: selectedBusinessId,
-        businessName: selectedBusinessName,
-      });
+
+      if (connections && connections.length > 0) {
+        for (const conn of connections) {
+          // Get review count for this specific business
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('id', { count: 'exact' })
+            .eq('user_id', userId)
+            .eq('platform', platform)
+            .eq('business_id', conn.business_id);
+
+          allConnections.push({
+            id: conn.id,
+            platform,
+            connected: true,
+            reviewCount: reviews?.length || 0,
+            businessId: conn.business_id,
+            businessName: conn.business_name,
+            lastSync: conn.last_sync,
+          });
+        }
+      } else {
+        // Platform not connected at all - show as disconnected
+        allConnections.push({
+          platform,
+          connected: false,
+          reviewCount: 0
+        });
+      }
     } catch (error) {
-      console.error(`Error checking ${platform} connection:`, error);
-      platformStatuses.push({
+      console.error(`Error checking ${platform} connections:`, error);
+      allConnections.push({
         platform,
         connected: false
       });
@@ -1252,7 +1454,7 @@ async function checkAllConnections(userId: string, supabase: any) {
   }
 
   return new Response(
-    JSON.stringify({ platforms: platformStatuses }),
+    JSON.stringify({ connections: allConnections }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }
