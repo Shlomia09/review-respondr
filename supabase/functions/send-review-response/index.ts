@@ -18,6 +18,13 @@ serve(async (req) => {
   }
 
   try {
+    // Create admin client for database operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Create client with user's JWT to verify authentication
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -35,28 +42,33 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.error('Authentication error:', userError);
       throw new Error('Unauthorized');
     }
+
+    console.log(`✅ Authenticated user: ${user.id}`);
 
     const { reviewId }: SendResponseRequest = await req.json();
 
     console.log(`📤 Sending response for review: ${reviewId}`);
 
-    // Get the review with all its details
-    const { data: review, error: reviewError } = await supabaseClient
+    // Get the review with all its details using admin client
+    const { data: review, error: reviewError } = await supabaseAdmin
       .from('reviews')
       .select('*')
       .eq('id', reviewId)
+      .eq('user_id', user.id) // Ensure user owns this review
       .single();
 
     if (reviewError || !review) {
+      console.error('Review fetch error:', reviewError);
       throw new Error('Review not found');
     }
 
     console.log(`📝 Review platform: ${review.platform}, business_id: ${review.business_id}`);
 
     // Get the platform connection to fetch access token
-    const { data: connection, error: connectionError } = await supabaseClient
+    const { data: connection, error: connectionError } = await supabaseAdmin
       .from('platform_connections')
       .select('*')
       .eq('user_id', user.id)
@@ -65,13 +77,14 @@ serve(async (req) => {
       .single();
 
     if (connectionError || !connection) {
+      console.error('Connection fetch error:', connectionError);
       throw new Error(`No active connection found for ${review.platform}`);
     }
 
     console.log(`🔗 Found connection for business: ${connection.business_name}`);
 
-    // Get the decrypted access token
-    const { data: tokenData, error: tokenError } = await supabaseClient
+    // Get the decrypted access token using admin client
+    const { data: tokenData, error: tokenError } = await supabaseAdmin
       .rpc('get_user_connections')
       .eq('id', connection.id)
       .single();
@@ -102,14 +115,15 @@ serve(async (req) => {
       throw new Error(`Platform ${review.platform} not supported`);
     }
 
-    // Update review status to 'sent'
-    const { error: updateError } = await supabaseClient
+    // Update review status to 'sent' using admin client
+    const { error: updateError } = await supabaseAdmin
       .from('reviews')
       .update({ 
         response_status: 'sent',
         updated_at: new Date().toISOString()
       })
-      .eq('id', reviewId);
+      .eq('id', reviewId)
+      .eq('user_id', user.id); // Ensure user owns this review
 
     if (updateError) {
       console.error('Error updating review status:', updateError);
