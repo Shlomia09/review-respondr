@@ -67,7 +67,9 @@ Guidelines:
 - For positive reviews: Express gratitude and encourage future visits
 - For negative reviews: Apologize, show understanding, and offer to resolve the issue
 - Maintain a ${businessProfile?.business_tone || 'professional'} tone
-- Write in the same language as the review`;
+- Write in the same language as the review
+- IMPORTANT: Sign the response with the business name "${businessProfile?.business_name || 'the team'}" at the end (e.g., "Sincerely, [business name]" or "Best regards, [business name] Team")
+- Never use placeholders like [Your Name] or [Company Name] - always use the actual business name provided above`;
 
     if (review.ai_instructions) {
       systemPrompt += `\n\nAdditional Instructions: ${review.ai_instructions}`;
