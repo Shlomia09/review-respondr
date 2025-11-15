@@ -143,12 +143,12 @@ async function getOAuthUrl(platform: string, userId: string) {
       
       console.log('🎯 Generating Facebook OAuth URL with App ID:', facebookAppId);
       
-      // Request pages_show_list and pages_manage_metadata to get all pages the user manages
-      // (not just pages they own)
+      // Request only pages_show_list which doesn't require App Review
+      // This will show all pages the user manages
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `scope=${encodeURIComponent('pages_show_list,pages_manage_metadata,public_profile')}&` +
+        `scope=${encodeURIComponent('pages_show_list,public_profile')}&` +
         `state=${platform}_${userId}&` +
         `response_type=code`;
         
