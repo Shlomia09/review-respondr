@@ -38,25 +38,56 @@ serve(async (req) => {
     if (reviewError) throw reviewError;
     if (!review) throw new Error('Review not found');
 
-    // Get user's business profile for context
-    const { data: businessProfile } = await supabase
-      .from('business_profiles')
-      .select('*')
-      .eq('user_id', review.user_id)
-      .single();
+    // Get business-specific details from platform connection
+    let businessContext = '';
+    let businessName = 'the team';
 
-    // Build the prompt for AI
-    const businessContext = businessProfile ? `
+    if (review.business_id) {
+      const { data: platformConnection } = await supabase
+        .from('platform_connections')
+        .select('*')
+        .eq('business_id', review.business_id)
+        .eq('user_id', review.user_id)
+        .single();
+
+      if (platformConnection) {
+        businessName = platformConnection.business_name || businessName;
+        businessContext = `
+Business Name: ${platformConnection.business_name}
+${platformConnection.business_category ? `Category: ${platformConnection.business_category}` : ''}
+${platformConnection.business_description ? `Description: ${platformConnection.business_description}` : ''}
+${platformConnection.business_about ? `About: ${platformConnection.business_about}` : ''}
+${platformConnection.business_phone ? `Phone: ${platformConnection.business_phone}` : ''}
+${platformConnection.business_email ? `Email: ${platformConnection.business_email}` : ''}
+${platformConnection.business_website ? `Website: ${platformConnection.business_website}` : ''}
+${platformConnection.business_address ? `Address: ${platformConnection.business_address}` : ''}
+`;
+      }
+    }
+
+    // Fallback to user's general business profile if no specific business data
+    if (!businessContext) {
+      const { data: businessProfile } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', review.user_id)
+        .single();
+
+      if (businessProfile) {
+        businessName = businessProfile.business_name;
+        businessContext = `
 Business: ${businessProfile.business_name}
 Type: ${businessProfile.business_type}
 Tone: ${businessProfile.business_tone || 'professional'}
 ${businessProfile.business_description ? `Description: ${businessProfile.business_description}` : ''}
 ${businessProfile.special_instructions ? `Special Instructions: ${businessProfile.special_instructions}` : ''}
-` : '';
+`;
+      }
+    }
 
     const sentiment = review.sentiment === 'positive' ? 'positive' : review.sentiment === 'negative' ? 'negative' : 'neutral';
     
-    let systemPrompt = `You are a professional customer service representative responding to customer reviews.
+    let systemPrompt = `You are a professional customer service representative responding to customer reviews for ${businessName}.
 
 ${businessContext}
 
@@ -66,10 +97,11 @@ Guidelines:
 - Thank customers for their feedback
 - For positive reviews: Express gratitude and encourage future visits
 - For negative reviews: Apologize, show understanding, and offer to resolve the issue
-- Maintain a ${businessProfile?.business_tone || 'professional'} tone
+- Maintain a professional and warm tone
 - Write in the same language as the review
-- IMPORTANT: Sign the response with the business name "${businessProfile?.business_name || 'the team'}" at the end (e.g., "Sincerely, [business name]" or "Best regards, [business name] Team")
-- Never use placeholders like [Your Name] or [Company Name] - always use the actual business name provided above`;
+- CRITICAL: Always sign your response with "${businessName}" at the end (e.g., "Sincerely, ${businessName}" or "Best regards, ${businessName} Team")
+- Never use generic placeholders - you are representing ${businessName} specifically
+- Use the business details provided above to make your response more personal and relevant`;
 
     if (review.ai_instructions) {
       systemPrompt += `\n\nAdditional Instructions: ${review.ai_instructions}`;

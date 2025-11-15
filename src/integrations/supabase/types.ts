@@ -330,8 +330,15 @@ export type Database = {
       platform_connections: {
         Row: {
           access_token: string | null
+          business_about: string | null
+          business_address: string | null
+          business_category: string | null
+          business_description: string | null
+          business_email: string | null
           business_id: string | null
           business_name: string | null
+          business_phone: string | null
+          business_website: string | null
           connected_at: string
           created_at: string
           display_order: number | null
@@ -346,8 +353,15 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
+          business_about?: string | null
+          business_address?: string | null
+          business_category?: string | null
+          business_description?: string | null
+          business_email?: string | null
           business_id?: string | null
           business_name?: string | null
+          business_phone?: string | null
+          business_website?: string | null
           connected_at?: string
           created_at?: string
           display_order?: number | null
@@ -362,8 +376,15 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
+          business_about?: string | null
+          business_address?: string | null
+          business_category?: string | null
+          business_description?: string | null
+          business_email?: string | null
           business_id?: string | null
           business_name?: string | null
+          business_phone?: string | null
+          business_website?: string | null
           connected_at?: string
           created_at?: string
           display_order?: number | null
