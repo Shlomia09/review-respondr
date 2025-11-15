@@ -95,9 +95,15 @@ serve(async (req) => {
     console.log('✅ Token exchange successful');
 
     // Store tokens in database
-    const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString();
+    // Facebook tokens typically expire in 60 days if not specified
+    const expiresInSeconds = tokenData.expires_in || 5184000; // 60 days default
+    const expiresAt = new Date(Date.now() + (expiresInSeconds * 1000)).toISOString();
     
-    console.log('💾 Storing tokens in database...');
+    console.log('💾 Storing tokens in database...', { 
+      expiresInSeconds, 
+      expiresAt,
+      hasRefreshToken: !!tokenData.refresh_token 
+    });
     const { error: dbError } = await supabaseClient
       .from('platform_tokens')
       .upsert({
@@ -306,6 +312,10 @@ async function exchangeFacebookCode(code: string) {
   }
 
   const tokenData = await response.json();
-  console.log('✅ Facebook token exchange successful');
+  console.log('✅ Facebook token exchange successful', { 
+    hasAccessToken: !!tokenData.access_token,
+    expiresIn: tokenData.expires_in,
+    tokenType: tokenData.token_type 
+  });
   return tokenData;
 }
