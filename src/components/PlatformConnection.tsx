@@ -110,11 +110,13 @@ const PlatformConnection = () => {
 
   const selectBusiness = async (businessId: string) => {
     try {
+      const selected = businesses.find(b => b.id === businessId);
       const { error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
           action: 'select_business', 
           platform: currentPlatform.toLowerCase(),
-          businessId 
+          businessId,
+          businessName: selected?.name
         }
       });
 

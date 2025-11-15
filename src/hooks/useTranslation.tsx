@@ -768,7 +768,9 @@ const translations: Translations = {
       sync: 'Sync',
       syncing: 'Syncing reviews...',
       syncSuccess: 'Synced new reviews:',
-      syncFailed: 'Failed to sync reviews'
+      syncFailed: 'Failed to sync reviews',
+      connectedPage: 'Connected page',
+      selectPageFirst: 'Please select a page before syncing'
     },
     errors: {
       connectionCheck: 'Failed to check connections',
