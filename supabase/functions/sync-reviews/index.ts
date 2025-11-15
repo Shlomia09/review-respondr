@@ -369,13 +369,19 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
   }
 
   // Get matching platform_token
-  const { data: tokenData } = await supabase
+  // For Facebook, the same token can access all pages, so don't filter by business_id
+  const tokenQuery = supabase
     .from('platform_tokens')
     .select('*')
     .eq('user_id', userId)
-    .eq('platform', platform)
-    .eq('business_id', connection.business_id)
-    .single();
+    .eq('platform', platform);
+  
+  // Only Google requires business_id filtering
+  if (platform === 'google') {
+    tokenQuery.eq('business_id', connection.business_id);
+  }
+  
+  const { data: tokenData } = await tokenQuery.single();
 
   if (!tokenData || !tokenData.access_token) {
     throw new Error('Token not found for this connection');
@@ -391,7 +397,8 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
       reviews = await fetchGoogleReviews(tokenData.access_token, userId);
       break;
     case 'facebook':
-      reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id);
+      // Use the connection's business_id, not the token's, since we want reviews for this specific page
+      reviews = await fetchFacebookReviews(tokenData.access_token, userId, connection.business_id);
       break;
     case 'trustpilot':
       reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
