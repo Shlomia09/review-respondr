@@ -85,10 +85,10 @@ export function ReviewsTable({
 
   const filteredReviews = reviews.filter(review => {
     const matchesSearch = 
-      review.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.content.toLowerCase().includes(searchTerm.toLowerCase());
+      (review.customer_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (review.content || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSentiment = sentimentFilter === "all" || review.sentiment === sentimentFilter;
-    const matchesPlatform = platformFilter === "all" || review.platform.toLowerCase() === platformFilter;
+    const matchesPlatform = platformFilter === "all" || (review.platform || "").toLowerCase() === platformFilter;
     const matchesStatus = statusFilter === "all" || review.response_status === statusFilter;
     const matchesBusiness = businessFilter === "all" || review.business_name === businessFilter;
     
@@ -117,9 +117,9 @@ export function ReviewsTable({
     }
     
     // Handle strings
-    if (typeof aValue === 'string') {
+    if (typeof aValue === 'string' && aValue) {
       aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
+      bValue = bValue?.toLowerCase() || '';
     }
     
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
