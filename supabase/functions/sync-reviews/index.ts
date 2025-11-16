@@ -662,13 +662,13 @@ async function selectBusiness(platform: string, businessId: string, businessName
   console.log(`Selecting business ${businessId} (${businessName || 'no-name'}) for ${platform} for user ${userId}`);
   
   try {
-    // Try to find an existing connection by either business_id or external_business_id
+    // Try to find an existing connection by external_business_id
     const { data: existing } = await supabase
       .from('platform_connections')
-      .select('id, business_id, external_business_id')
+      .select('id')
       .eq('user_id', userId)
       .eq('platform', platform)
-      .or(`business_id.eq.${businessId},external_business_id.eq.${businessId}`)
+      .eq('external_business_id', businessId)
       .maybeSingle();
 
     let connectionId: string | null = null;
@@ -692,7 +692,6 @@ async function selectBusiness(platform: string, businessId: string, businessName
         .insert({ 
           user_id: userId, 
           platform, 
-          business_id: businessId, 
           external_business_id: businessId,
           business_name: businessName || null, 
           is_active: true,

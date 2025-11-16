@@ -129,9 +129,6 @@ const PlatformConnection = () => {
       toast.success(t('platforms.businessSelected'));
       setShowBusinessSelection(false);
       
-      // Refresh connection status and immediately sync reviews
-      await checkPlatformConnections();
-      
       // Find the connection record that was just created/updated
       const { data: connectionData, error: connError } = await supabase
         .from('platform_connections')
@@ -143,31 +140,31 @@ const PlatformConnection = () => {
 
       if (connError || !connectionData) {
         console.error('Could not find connection record:', connError);
-        toast.error('Connection record not found - please try syncing manually');
+        await checkPlatformConnections(); // Refresh anyway
         return;
       }
 
-      // Auto-sync reviews after business selection using the correct connection UUID
+      // Auto-sync reviews immediately
       toast.info(t('platformConnection.autoSyncStarting') || 'Starting automatic sync...');
-      setTimeout(async () => {
-        try {
-          const { data, error: syncError } = await supabase.functions.invoke('sync-reviews', {
-            body: { 
-              action: 'sync_by_connection',
-              connectionId: connectionData.id, // Use the UUID from platform_connections
-              platform: currentPlatform.toLowerCase()
-            }
-          });
+      try {
+        const { data, error: syncError } = await supabase.functions.invoke('sync-reviews', {
+          body: { 
+            action: 'sync_by_connection',
+            connectionId: connectionData.id,
+            platform: currentPlatform.toLowerCase()
+          }
+        });
 
-          if (syncError) throw syncError;
+        if (syncError) throw syncError;
 
-          toast.success(`${t('platformConnection.syncSuccess')} ${data?.newReviews || 0}/${data?.reviewCount || 0}`);
-          await checkPlatformConnections();
-        } catch (syncErr) {
-          console.error('Auto-sync error:', syncErr);
-          toast.error(t('platformConnection.syncFailed'));
-        }
-      }, 1000);
+        toast.success(`${t('platformConnection.syncSuccess')} ${data?.newReviews || 0}/${data?.reviewCount || 0}`);
+      } catch (syncError) {
+        console.error('Sync error:', syncError);
+        toast.error(t('platformConnection.syncError') || 'Sync failed');
+      }
+      
+      // Refresh connection status
+      await checkPlatformConnections();
     } catch (error) {
       console.error('Error selecting business:', error);
       toast.error(t('errors.businessSelectionFailed'));
