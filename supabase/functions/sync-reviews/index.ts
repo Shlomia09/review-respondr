@@ -1634,22 +1634,22 @@ async function checkAllConnections(userId: string, supabase: any) {
 
       if (connections && connections.length > 0) {
         for (const conn of connections) {
-          // Get review count for this specific business
+          // Get review count for this specific connection
           const { data: reviews } = await supabase
             .from('reviews')
             .select('id', { count: 'exact' })
             .eq('user_id', userId)
             .eq('platform', platform)
-            .eq('business_id', conn.business_id);
+            .eq('connection_id', conn.id);
 
           allConnections.push({
             id: conn.id,
             platform,
             connected: true,
             reviewCount: reviews?.length || 0,
-            businessId: conn.business_id,
+            businessId: conn.external_business_id,
             businessName: conn.business_name,
-            lastSync: conn.last_sync,
+            lastSync: conn.last_sync_at,
           });
         }
       } else {
