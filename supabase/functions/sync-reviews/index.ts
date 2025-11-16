@@ -661,47 +661,62 @@ async function getBusinesses(platform: string, userId: string, supabase: any) {
 async function selectBusiness(platform: string, businessId: string, businessName: string | undefined, userId: string, supabase: any) {
   console.log(`Selecting business ${businessId} (${businessName || 'no-name'}) for ${platform} for user ${userId}`);
   
-  // For Facebook, the same token can access multiple pages, so we don't update the token's business_id
-  // Instead, we just create/update the platform_connections record
-  
-  // Persist a human-readable name in platform_connections for UI display
   try {
+    // Try to find an existing connection by either business_id or external_business_id
     const { data: existing } = await supabase
       .from('platform_connections')
-      .select('id')
+      .select('id, business_id, external_business_id')
       .eq('user_id', userId)
       .eq('platform', platform)
-      .eq('business_id', businessId)
+      .or(`business_id.eq.${businessId},external_business_id.eq.${businessId}`)
       .maybeSingle();
 
+    let connectionId: string | null = null;
+
     if (existing) {
-      await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('platform_connections')
-        .update({ business_name: businessName || null, updated_at: new Date().toISOString() })
-        .eq('id', existing.id);
+        .update({ 
+          business_name: businessName || null, 
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existing.id)
+        .select('id')
+        .single();
+      if (updateError) throw updateError;
+      connectionId = updated?.id || existing.id;
     } else {
-      await supabase
+      const { data: inserted, error: insertError } = await supabase
         .from('platform_connections')
         .insert({ 
           user_id: userId, 
           platform, 
           business_id: businessId, 
+          external_business_id: businessId,
           business_name: businessName || null, 
           is_active: true,
           connected_at: new Date().toISOString(), 
           created_at: new Date().toISOString(), 
           updated_at: new Date().toISOString() 
-        });
+        })
+        .select('id')
+        .single();
+      if (insertError) throw insertError;
+      connectionId = inserted?.id || null;
     }
+
+    return new Response(
+      JSON.stringify({ success: true, connectionId }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (e) {
     console.error('⚠️ Could not upsert platform_connections with name:', e);
-    throw new Error('Failed to create/update connection');
+    return new Response(
+      JSON.stringify({ error: 'Failed to create/update connection' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-
-  return new Response(
-    JSON.stringify({ success: true }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
 }
 
 async function fetchGoogleBusinesses(accessToken: string) {
