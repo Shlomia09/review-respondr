@@ -671,7 +671,7 @@ export type Database = {
           content: string
           created_at: string
           customer_email: string | null
-          external_review_id: string | null
+          external_review_id: string
           id: string
           last_send_at: string | null
           last_send_error: string | null
@@ -709,7 +709,7 @@ export type Database = {
           content: string
           created_at?: string
           customer_email?: string | null
-          external_review_id?: string | null
+          external_review_id: string
           id?: string
           last_send_at?: string | null
           last_send_error?: string | null
@@ -747,7 +747,7 @@ export type Database = {
           content?: string
           created_at?: string
           customer_email?: string | null
-          external_review_id?: string | null
+          external_review_id?: string
           id?: string
           last_send_at?: string | null
           last_send_error?: string | null
