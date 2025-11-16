@@ -16,6 +16,9 @@ interface ReviewData {
   sentiment: 'positive' | 'negative' | 'neutral';
   review_date: string;
   user_id: string;
+  external_review_id: string;  // Required: platform's unique review ID
+  business_id?: string;
+  business_name?: string;
 }
 
 serve(async (req) => {
@@ -268,19 +271,33 @@ async function handleSync(platform: string, userId: string, supabase: any) {
   // Insert new reviews into database with business info
   const newReviews = [];
   for (const review of reviews) {
-    const { data, error } = await supabase
+    // Check if review already exists using external_review_id
+    const { data: existsData, error: existsErr } = await supabase
       .from('reviews')
-      .upsert({
-        ...review,
-        user_id: userId,
-        business_id: tokenData.business_id,
-      }, {
-        onConflict: 'customer_name,platform,review_date',
-        ignoreDuplicates: true
-      });
+      .select('id')
+      .eq('user_id', userId)
+      .eq('platform', review.platform)
+      .eq('external_review_id', review.external_review_id)
+      .limit(1);
 
-    if (!error) {
-      newReviews.push(review);
+    if (existsErr) {
+      console.error('Existence check failed:', existsErr);
+    }
+
+    if (!existsData || existsData.length === 0) {
+      const { error: insertErr } = await supabase
+        .from('reviews')
+        .insert({
+          ...review,
+          user_id: userId,
+          business_id: tokenData.business_id,
+        });
+
+      if (insertErr) {
+        console.error('Insert review failed:', insertErr);
+      } else {
+        newReviews.push(review);
+      }
     }
   }
 
@@ -408,18 +425,16 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
       throw new Error('Unsupported platform');
   }
 
-  // Insert new reviews with business info (manual dedup to avoid onConflict requirement)
+  // Insert new reviews with business info - use unique index to handle duplicates
   const newReviews = [];
   for (const review of reviews) {
-    // Check if review already exists for this user/business/platform/date/content
+    // Check if review already exists using external_review_id (much more reliable)
     const { data: existsData, error: existsErr } = await supabase
       .from('reviews')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', review.platform)
-      .eq('business_id', connection.business_id)
-      .eq('review_date', review.review_date)
-      .eq('content', review.content)
+      .eq('external_review_id', review.external_review_id)
       .limit(1);
 
     if (existsErr) {
@@ -508,16 +523,14 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
           break;
       }
 
-      // Insert reviews with manual dedup (avoid onConflict requirement)
+      // Insert reviews using external_review_id for dedup
       for (const review of reviews) {
         const { data: existsData, error: existsErr } = await supabase
           .from('reviews')
           .select('id')
           .eq('user_id', userId)
           .eq('platform', review.platform)
-          .eq('business_id', connection.business_id)
-          .eq('review_date', review.review_date)
-          .eq('content', review.content)
+          .eq('external_review_id', review.external_review_id)
           .limit(1);
 
         if (existsErr) {
@@ -1248,6 +1261,7 @@ async function fetchGoogleReviews(accessToken: string, userId: string): Promise<
                 sentiment: review.starRating >= 4 ? 'positive' : review.starRating <= 2 ? 'negative' : 'neutral',
                 review_date: review.createTime,
                 user_id: userId,
+                external_review_id: review.reviewId || review.name || `google_${Date.now()}_${Math.random()}`,
               });
             }
           }
@@ -1422,7 +1436,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 user_id: userId,
                 business_id: businessId,
                 business_name: pageInfo?.name || null,
-                platform_review_id: review.open_graph_story?.id || review.id || null,
+                external_review_id: review.open_graph_story?.id || review.id,
               });
             }
             break; // Found reviews, stop trying other endpoints
@@ -1542,6 +1556,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               user_id: userId,
               business_id: page.id,
               business_name: pageInfo?.name || page.name || null,
+              external_review_id: review.open_graph_story?.id || review.id,
             });
           }
         } else {
