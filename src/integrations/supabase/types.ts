@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          entity: string | null
+          entity_id: string | null
+          id: string
+          meta: Json | null
+          organization_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          meta?: Json | null
+          organization_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          meta?: Json | null
+          organization_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profiles: {
         Row: {
           business_description: string | null
@@ -182,6 +223,63 @@ export type Database = {
         }
         Relationships: []
       }
+      jobs_outbox: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          id: string
+          idempotency_key: string | null
+          job_type: string
+          last_error: string | null
+          organization_id: string | null
+          payload: Json
+          review_id: string | null
+          state: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          job_type: string
+          last_error?: string | null
+          organization_id?: string | null
+          payload: Json
+          review_id?: string | null
+          state?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          job_type?: string
+          last_error?: string | null
+          organization_id?: string | null
+          payload?: Json
+          review_id?: string | null
+          state?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_outbox_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_outbox_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string | null
@@ -273,6 +371,59 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       phone_calls: {
         Row: {
           call_type: string
@@ -335,19 +486,24 @@ export type Database = {
           business_category: string | null
           business_description: string | null
           business_email: string | null
-          business_id: string | null
           business_name: string | null
           business_phone: string | null
           business_website: string | null
           connected_at: string
           created_at: string
+          display_name: string | null
           display_order: number | null
-          expires_at: string | null
+          external_business_id: string | null
           id: string
           is_active: boolean | null
-          last_sync: string | null
+          last_sync_at: string | null
+          organization_id: string | null
           platform: string
           refresh_token: string | null
+          scopes: string[] | null
+          settings: Json | null
+          status: string | null
+          token_expires_at: string | null
           updated_at: string
           user_id: string
         }
@@ -358,19 +514,24 @@ export type Database = {
           business_category?: string | null
           business_description?: string | null
           business_email?: string | null
-          business_id?: string | null
           business_name?: string | null
           business_phone?: string | null
           business_website?: string | null
           connected_at?: string
           created_at?: string
+          display_name?: string | null
           display_order?: number | null
-          expires_at?: string | null
+          external_business_id?: string | null
           id?: string
           is_active?: boolean | null
-          last_sync?: string | null
+          last_sync_at?: string | null
+          organization_id?: string | null
           platform: string
           refresh_token?: string | null
+          scopes?: string[] | null
+          settings?: Json | null
+          status?: string | null
+          token_expires_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -381,23 +542,36 @@ export type Database = {
           business_category?: string | null
           business_description?: string | null
           business_email?: string | null
-          business_id?: string | null
           business_name?: string | null
           business_phone?: string | null
           business_website?: string | null
           connected_at?: string
           created_at?: string
+          display_name?: string | null
           display_order?: number | null
-          expires_at?: string | null
+          external_business_id?: string | null
           id?: string
           is_active?: boolean | null
-          last_sync?: string | null
+          last_sync_at?: string | null
+          organization_id?: string | null
           platform?: string
           refresh_token?: string | null
+          scopes?: string[] | null
+          settings?: Json | null
+          status?: string | null
+          token_expires_at?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "platform_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_tokens: {
         Row: {
@@ -479,75 +653,135 @@ export type Database = {
       }
       reviews: {
         Row: {
+          ai_generated_at: string | null
           ai_instructions: string | null
+          ai_model: string | null
           ai_response: string | null
+          ai_suggested_reply: string | null
+          approved_at: string | null
+          approved_by: string | null
+          approved_reply: string | null
           attention_priority: string | null
           attention_reason: string | null
+          author_id: string | null
+          author_name: string
           business_id: string | null
           business_name: string | null
+          connection_id: string | null
           content: string
           created_at: string
           customer_email: string | null
-          customer_name: string
+          external_review_id: string | null
           id: string
+          last_send_at: string | null
+          last_send_error: string | null
+          last_send_status: string | null
           manual_response: string | null
+          organization_id: string | null
           platform: string
-          platform_review_id: string | null
           rating: number
           requires_manual_attention: boolean | null
           response_status: string
           review_date: string
+          review_url: string | null
+          send_attempts: number | null
           sentiment: string
+          title: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_generated_at?: string | null
           ai_instructions?: string | null
+          ai_model?: string | null
           ai_response?: string | null
+          ai_suggested_reply?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_reply?: string | null
           attention_priority?: string | null
           attention_reason?: string | null
+          author_id?: string | null
+          author_name: string
           business_id?: string | null
           business_name?: string | null
+          connection_id?: string | null
           content: string
           created_at?: string
           customer_email?: string | null
-          customer_name: string
+          external_review_id?: string | null
           id?: string
+          last_send_at?: string | null
+          last_send_error?: string | null
+          last_send_status?: string | null
           manual_response?: string | null
+          organization_id?: string | null
           platform: string
-          platform_review_id?: string | null
           rating: number
           requires_manual_attention?: boolean | null
           response_status?: string
           review_date?: string
+          review_url?: string | null
+          send_attempts?: number | null
           sentiment: string
+          title?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_generated_at?: string | null
           ai_instructions?: string | null
+          ai_model?: string | null
           ai_response?: string | null
+          ai_suggested_reply?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_reply?: string | null
           attention_priority?: string | null
           attention_reason?: string | null
+          author_id?: string | null
+          author_name?: string
           business_id?: string | null
           business_name?: string | null
+          connection_id?: string | null
           content?: string
           created_at?: string
           customer_email?: string | null
-          customer_name?: string
+          external_review_id?: string | null
           id?: string
+          last_send_at?: string | null
+          last_send_error?: string | null
+          last_send_status?: string | null
           manual_response?: string | null
+          organization_id?: string | null
           platform?: string
-          platform_review_id?: string | null
           rating?: number
           requires_manual_attention?: boolean | null
           response_status?: string
           review_date?: string
+          review_url?: string | null
+          send_attempts?: number | null
           sentiment?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reviews_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "platform_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_conversation_examples: {
         Row: {
@@ -857,6 +1091,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_organization_id: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
