@@ -132,14 +132,29 @@ const PlatformConnection = () => {
       // Refresh connection status and immediately sync reviews
       await checkPlatformConnections();
       
-      // Auto-sync reviews after business selection
+      // Find the connection record that was just created/updated
+      const { data: connectionData, error: connError } = await supabase
+        .from('platform_connections')
+        .select('id')
+        .eq('external_business_id', businessId)
+        .eq('platform', currentPlatform.toLowerCase())
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (connError || !connectionData) {
+        console.error('Could not find connection record:', connError);
+        toast.error('Connection record not found - please try syncing manually');
+        return;
+      }
+
+      // Auto-sync reviews after business selection using the correct connection UUID
       toast.info(t('platformConnection.autoSyncStarting') || 'Starting automatic sync...');
       setTimeout(async () => {
         try {
           const { data, error: syncError } = await supabase.functions.invoke('sync-reviews', {
             body: { 
               action: 'sync_by_connection',
-              connectionId: businessId,
+              connectionId: connectionData.id, // Use the UUID from platform_connections
               platform: currentPlatform.toLowerCase()
             }
           });
