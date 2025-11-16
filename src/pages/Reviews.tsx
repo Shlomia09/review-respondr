@@ -24,6 +24,8 @@ interface Review {
   requires_manual_attention?: boolean;
   attention_reason?: string;
   attention_priority?: 'low' | 'medium' | 'high' | 'urgent';
+  external_review_id?: string;
+  review_url?: string;
 }
 
 export function Reviews() {
@@ -69,6 +71,8 @@ export function Reviews() {
         requires_manual_attention: dbReview.requires_manual_attention || false,
         attention_reason: dbReview.attention_reason,
         attention_priority: dbReview.attention_priority,
+        external_review_id: dbReview.external_review_id,
+        review_url: dbReview.review_url,
       }));
       
       setReviews(transformedReviews);
@@ -171,6 +175,15 @@ export function Reviews() {
 
   const handleSendResponse = async (reviewId: string) => {
     try {
+      const target = reviews.find(r => r.id === reviewId);
+      if (!target?.external_review_id) {
+        toast({
+          title: t('dashboard.error'),
+          description: 'Missing external review ID. Please sync your connections to enable sending responses.',
+          variant: 'destructive',
+        });
+        return;
+      }
       const { data, error } = await supabase.functions.invoke('send-review-response', {
         body: { reviewId }
       });
