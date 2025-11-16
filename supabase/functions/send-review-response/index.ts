@@ -67,10 +67,10 @@ serve(async (req) => {
       throw new Error('Review not found');
     }
 
-    console.log(`📝 Review platform: ${review.platform}, business_id: ${review.business_id}, platform_review_id: ${review.platform_review_id}`);
+    console.log(`📝 Review platform: ${review.platform}, business_id: ${review.business_id}, external_review_id: ${review.external_review_id}`);
 
-    if (!review.platform_review_id) {
-      throw new Error('Review does not have a platform_review_id - cannot send response back to platform');
+    if (!review.external_review_id) {
+      throw new Error('Review does not have an external_review_id - cannot send response back to platform');
     }
 
     // Get the platform connection to fetch access token
@@ -164,7 +164,7 @@ serve(async (req) => {
     // Send response based on platform
     if (review.platform === 'facebook') {
       await sendFacebookResponse(
-        review.platform_review_id,
+        review.external_review_id,
         accessToken,
         responseText
       );
