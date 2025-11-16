@@ -1422,6 +1422,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 user_id: userId,
                 business_id: businessId,
                 business_name: pageInfo?.name || null,
+                platform_review_id: review.open_graph_story?.id || review.id || null,
               });
             }
             break; // Found reviews, stop trying other endpoints

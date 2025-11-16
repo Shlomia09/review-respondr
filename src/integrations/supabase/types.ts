@@ -492,6 +492,7 @@ export type Database = {
           id: string
           manual_response: string | null
           platform: string
+          platform_review_id: string | null
           rating: number
           requires_manual_attention: boolean | null
           response_status: string
@@ -514,6 +515,7 @@ export type Database = {
           id?: string
           manual_response?: string | null
           platform: string
+          platform_review_id?: string | null
           rating: number
           requires_manual_attention?: boolean | null
           response_status?: string
@@ -536,6 +538,7 @@ export type Database = {
           id?: string
           manual_response?: string | null
           platform?: string
+          platform_review_id?: string | null
           rating?: number
           requires_manual_attention?: boolean | null
           response_status?: string
