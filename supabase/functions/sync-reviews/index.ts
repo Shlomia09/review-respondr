@@ -259,7 +259,7 @@ async function handleSync(platform: string, userId: string, supabase: any) {
       reviews = await fetchGoogleReviews(tokenData.access_token, userId);
       break;
     case 'facebook':
-      reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id);
+      reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id, supabase);
       break;
     case 'trustpilot':
       reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
@@ -414,10 +414,10 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
     case 'google':
       reviews = await fetchGoogleReviews(tokenData.access_token, userId);
       break;
-    case 'facebook':
-      // Use the connection's business_id, not the token's, since we want reviews for this specific page
-      reviews = await fetchFacebookReviews(tokenData.access_token, userId, connection.business_id);
-      break;
+  case 'facebook':
+    // Use the connection's external_business_id (page id)
+    reviews = await fetchFacebookReviews(tokenData.access_token, userId, connection.external_business_id, supabase);
+    break;
     case 'trustpilot':
       reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
       break;
@@ -516,7 +516,7 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
           reviews = await fetchGoogleReviews(tokenData.access_token, userId);
           break;
         case 'facebook':
-          reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id);
+          reviews = await fetchFacebookReviews(tokenData.access_token, userId, tokenData.business_id, supabase);
           break;
         case 'trustpilot':
           reviews = await fetchTrustpilotReviews(tokenData.access_token, userId);
@@ -1290,7 +1290,7 @@ async function fetchGoogleReviews(accessToken: string, userId: string): Promise<
   }
 }
 
-async function fetchFacebookReviews(accessToken: string, userId: string, businessId?: string): Promise<ReviewData[]> {
+async function fetchFacebookReviews(accessToken: string, userId: string, businessId: string | undefined, supabase: any): Promise<ReviewData[]> {
   try {
     console.log('🔍 Starting Facebook reviews fetch for user:', userId);
     console.log('📄 Business ID:', businessId || 'Not specified');
@@ -1393,7 +1393,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             business_about: pageInfo.about || null,
           })
           .eq('platform', 'facebook')
-          .eq('business_id', businessId)
+          .eq('external_business_id', businessId)
           .eq('user_id', userId);
 
         if (updateError) {
@@ -1524,7 +1524,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               business_about: pageInfo.about || null,
             })
             .eq('platform', 'facebook')
-            .eq('business_id', page.id)
+            .eq('external_business_id', page.id)
             .eq('user_id', userId);
 
           if (updateError) {
