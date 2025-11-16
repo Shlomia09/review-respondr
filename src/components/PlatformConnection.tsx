@@ -128,7 +128,31 @@ const PlatformConnection = () => {
       
       toast.success(t('platforms.businessSelected'));
       setShowBusinessSelection(false);
-      checkPlatformConnections(); // Refresh connection status
+      
+      // Refresh connection status and immediately sync reviews
+      await checkPlatformConnections();
+      
+      // Auto-sync reviews after business selection
+      toast.info(t('platformConnection.autoSyncStarting') || 'Starting automatic sync...');
+      setTimeout(async () => {
+        try {
+          const { data, error: syncError } = await supabase.functions.invoke('sync-reviews', {
+            body: { 
+              action: 'sync_by_connection',
+              connectionId: businessId,
+              platform: currentPlatform.toLowerCase()
+            }
+          });
+
+          if (syncError) throw syncError;
+
+          toast.success(`${t('platformConnection.syncSuccess')} ${data?.newReviews || 0}/${data?.reviewCount || 0}`);
+          await checkPlatformConnections();
+        } catch (syncErr) {
+          console.error('Auto-sync error:', syncErr);
+          toast.error(t('platformConnection.syncFailed'));
+        }
+      }, 1000);
     } catch (error) {
       console.error('Error selecting business:', error);
       toast.error(t('errors.businessSelectionFailed'));
