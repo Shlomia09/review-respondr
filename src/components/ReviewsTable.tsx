@@ -47,6 +47,8 @@ interface Review {
   requires_manual_attention?: boolean;
   attention_reason?: string;
   attention_priority?: 'low' | 'medium' | 'high' | 'urgent';
+  external_review_id?: string;
+  review_url?: string;
 }
 
 interface ReviewsTableProps {
@@ -420,8 +422,8 @@ export function ReviewsTable({
                         </Button>
                       )}
                       
-                      {/* Send Response Button - show if response is generated or approved */}
-                      {(review.response_status === 'generated' || review.response_status === 'approved') && (
+                      {/* Send Response Button - show if response is generated or approved and we have external id */}
+                      {(review.external_review_id && (review.response_status === 'generated' || review.response_status === 'approved')) && (
                         <Button 
                           variant="ghost" 
                           size="sm"
