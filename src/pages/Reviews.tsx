@@ -184,6 +184,19 @@ export function Reviews() {
         });
         return;
       }
+
+      // Guard against old reviews that were imported with a fake external_review_id pattern
+      // Facebook object IDs are numeric (optionally with a single underscore). If it contains
+      // letters, spaces, or timestamp-like parts, we block sending and ask the user to re-sync.
+      if (!/^[0-9_]+$/.test(target.external_review_id)) {
+        toast({
+          title: t('dashboard.error'),
+          description: 'This review was imported with an invalid ID. Please re-sync your connections and try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('send-review-response', {
         body: { reviewId }
       });
