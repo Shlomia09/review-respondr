@@ -1451,8 +1451,8 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               // Determine sentiment based on actual rating
               const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
-              // Use the actual review ID from Facebook
-              const externalReviewId = review.id || (review.open_graph_story && review.open_graph_story.id);
+              // Use the open_graph_story.id (this is the commentable object)
+              const externalReviewId = (review.open_graph_story && review.open_graph_story.id) || review.id;
               
               if (!externalReviewId) {
                 console.warn(`⚠️ Review missing ID, skipping:`, review);
@@ -1579,8 +1579,8 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             // Determine sentiment based on actual rating
             const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
-            // Use the actual review ID from Facebook
-            const externalReviewId = review.id || (review.open_graph_story && review.open_graph_story.id);
+            // Use the open_graph_story.id (this is the commentable object)
+            const externalReviewId = (review.open_graph_story && review.open_graph_story.id) || review.id;
             
             if (!externalReviewId) {
               console.warn(`⚠️ Review missing ID, skipping:`, review);
