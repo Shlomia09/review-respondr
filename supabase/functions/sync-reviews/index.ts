@@ -1416,7 +1416,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
       
       // Try endpoint to get reviews (ratings endpoint only; /reviews is deprecated/unsupported)
       const endpoints = [
-        `https://graph.facebook.com/${businessId}/ratings?fields=reviewer,rating,review_text,created_time,recommendation_type`
+        `https://graph.facebook.com/${businessId}/ratings?fields=id,reviewer,rating,review_text,created_time,recommendation_type,open_graph_story`
       ];
       
       for (const endpoint of endpoints) {
@@ -1451,11 +1451,13 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               // Determine sentiment based on actual rating
               const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
-              // Ensure we always have a stable external_review_id (required, non-null)
-              const externalReviewId =
-                (review.open_graph_story && review.open_graph_story.id) ||
-                review.id ||
-                `${businessId || 'fb_page'}_${review.created_time}_${(review.review_text || '').slice(0, 50)}`;
+              // Use the actual review ID from Facebook
+              const externalReviewId = review.id || (review.open_graph_story && review.open_graph_story.id);
+              
+              if (!externalReviewId) {
+                console.warn(`⚠️ Review missing ID, skipping:`, review);
+                continue;
+              }
 
               reviews.push({
                 customer_name: review.reviewer?.name || 'Anonymous',
@@ -1577,11 +1579,13 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             // Determine sentiment based on actual rating
             const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
-            // Ensure we always have a stable external_review_id (required, non-null)
-            const externalReviewId =
-              (review.open_graph_story && review.open_graph_story.id) ||
-              review.id ||
-              `${page.id}_${review.created_time}_${(review.review_text || '').slice(0, 50)}`;
+            // Use the actual review ID from Facebook
+            const externalReviewId = review.id || (review.open_graph_story && review.open_graph_story.id);
+            
+            if (!externalReviewId) {
+              console.warn(`⚠️ Review missing ID, skipping:`, review);
+              continue;
+            }
 
             reviews.push({
               customer_name: review.reviewer?.name || 'Anonymous',
