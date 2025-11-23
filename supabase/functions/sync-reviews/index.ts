@@ -285,10 +285,13 @@ async function handleSync(platform: string, userId: string, supabase: any) {
     }
 
     if (!existsData || existsData.length === 0) {
+      const { customer_name, ...reviewData } = review;
+
       const { error: insertErr } = await supabase
         .from('reviews')
         .insert({
-          ...review,
+          ...reviewData,
+          author_name: customer_name,
           user_id: userId,
           business_id: tokenData.business_id,
         });
@@ -442,10 +445,13 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
     }
 
     if (!existsData || existsData.length === 0) {
+      const { customer_name, ...reviewData } = review;
+
       const { error: insertErr } = await supabase
         .from('reviews')
         .insert({
-          ...review,
+          ...reviewData,
+          author_name: customer_name,
           user_id: userId,
           business_id: connection.business_id,
           business_name: connection.business_name,
@@ -539,10 +545,13 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
         }
 
         if (!existsData || existsData.length === 0) {
+          const { customer_name, ...reviewData } = review;
+
           const { error: insertErr } = await supabase
             .from('reviews')
             .insert({
-              ...review,
+              ...reviewData,
+              author_name: customer_name,
               user_id: userId,
               business_id: connection.business_id,
               business_name: connection.business_name,
