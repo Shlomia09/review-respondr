@@ -1451,8 +1451,10 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               // Determine sentiment based on actual rating
               const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
-              // Use the open_graph_story.id (this is the commentable object)
-              const externalReviewId = (review.open_graph_story && review.open_graph_story.id) || review.id;
+              // Build a composite ID: {page-id}_{story-id} to avoid deprecated singular statuses API
+              const storyId = review.open_graph_story?.id;
+              const sellerId = review.open_graph_story?.data?.seller?.id || businessId;
+              const externalReviewId = storyId && sellerId ? `${sellerId}_${storyId}` : storyId || review.id;
               
               if (!externalReviewId) {
                 console.warn(`⚠️ Review missing ID, skipping:`, review);
@@ -1579,8 +1581,10 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             // Determine sentiment based on actual rating
             const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
-            // Use the open_graph_story.id (this is the commentable object)
-            const externalReviewId = (review.open_graph_story && review.open_graph_story.id) || review.id;
+            // Build a composite ID: {page-id}_{story-id} to avoid deprecated singular statuses API
+            const storyId = review.open_graph_story?.id;
+            const sellerId = review.open_graph_story?.data?.seller?.id || page.id;
+            const externalReviewId = storyId && sellerId ? `${sellerId}_${storyId}` : storyId || review.id;
             
             if (!externalReviewId) {
               console.warn(`⚠️ Review missing ID, skipping:`, review);
