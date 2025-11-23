@@ -67,20 +67,36 @@ serve(async (req) => {
       throw new Error('Review not found');
     }
 
-    console.log(`📝 Review platform: ${review.platform}, business_id: ${review.business_id}, external_review_id: ${review.external_review_id}`);
+    console.log(`📝 Review platform: ${review.platform}, business_id: ${review.business_id}, connection_id: ${review.connection_id}, external_review_id: ${review.external_review_id}`);
 
     if (!review.external_review_id) {
       throw new Error('Review does not have an external_review_id - cannot send response back to platform');
     }
 
     // Get the platform connection to fetch access token
-    const { data: connection, error: connectionError } = await supabaseAdmin
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('platform', review.platform)
-      .eq('external_business_id', review.business_id)
-      .single();
+    // First try using connection_id if available, otherwise fall back to business_id lookup
+    let connection;
+    let connectionError;
+
+    if (review.connection_id) {
+      const result = await supabaseAdmin
+        .from('platform_connections')
+        .select('*')
+        .eq('id', review.connection_id)
+        .single();
+      connection = result.data;
+      connectionError = result.error;
+    } else {
+      const result = await supabaseAdmin
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('platform', review.platform)
+        .eq('external_business_id', review.business_id)
+        .single();
+      connection = result.data;
+      connectionError = result.error;
+    }
 
     if (connectionError || !connection) {
       console.error('Connection fetch error:', connectionError);
