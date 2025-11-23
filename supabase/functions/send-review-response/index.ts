@@ -79,7 +79,7 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('platform', review.platform)
-      .eq('business_id', review.business_id)
+      .eq('external_business_id', review.business_id)
       .single();
 
     if (connectionError || !connection) {
