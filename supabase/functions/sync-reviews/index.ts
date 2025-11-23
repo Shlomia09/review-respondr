@@ -455,6 +455,7 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
           user_id: userId,
           business_id: connection.business_id,
           business_name: connection.business_name,
+          connection_id: connection.id,
         });
 
       if (insertErr) {
@@ -555,6 +556,7 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
               user_id: userId,
               business_id: connection.business_id,
               business_name: connection.business_name,
+              connection_id: connection.id,
             });
 
           if (insertErr) {
@@ -1449,6 +1451,12 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               // Determine sentiment based on actual rating
               const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
+              // Ensure we always have a stable external_review_id (required, non-null)
+              const externalReviewId =
+                (review.open_graph_story && review.open_graph_story.id) ||
+                review.id ||
+                `${businessId || 'fb_page'}_${review.created_time}_${(review.review_text || '').slice(0, 50)}`;
+
               reviews.push({
                 customer_name: review.reviewer?.name || 'Anonymous',
                 platform: 'facebook',
@@ -1459,7 +1467,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 user_id: userId,
                 business_id: businessId,
                 business_name: pageInfo?.name || null,
-                external_review_id: review.open_graph_story?.id || review.id,
+                external_review_id: externalReviewId,
               });
             }
             break; // Found reviews, stop trying other endpoints
@@ -1569,6 +1577,12 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             // Determine sentiment based on actual rating
             const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
 
+            // Ensure we always have a stable external_review_id (required, non-null)
+            const externalReviewId =
+              (review.open_graph_story && review.open_graph_story.id) ||
+              review.id ||
+              `${page.id}_${review.created_time}_${(review.review_text || '').slice(0, 50)}`;
+
             reviews.push({
               customer_name: review.reviewer?.name || 'Anonymous',
               platform: 'facebook',
@@ -1579,7 +1593,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               user_id: userId,
               business_id: page.id,
               business_name: pageInfo?.name || page.name || null,
-              external_review_id: review.open_graph_story?.id || review.id,
+              external_review_id: externalReviewId,
             });
           }
         } else {
