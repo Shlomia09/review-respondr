@@ -123,6 +123,7 @@ export type Database = {
           created_at: string
           id: string
           name: string | null
+          odoo_partner_id: number | null
           phone: string
           tags: string[] | null
           user_id: string
@@ -131,6 +132,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string | null
+          odoo_partner_id?: number | null
           phone: string
           tags?: string[] | null
           user_id: string
@@ -139,6 +141,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string | null
+          odoo_partner_id?: number | null
           phone?: string
           tags?: string[] | null
           user_id?: string
