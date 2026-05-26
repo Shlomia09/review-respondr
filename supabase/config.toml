@@ -11,7 +11,6 @@ extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-enabled = true
 port = 54322
 
 [studio]
@@ -24,11 +23,9 @@ port = 54324
 
 [storage]
 enabled = true
-port = 54325
 
 [auth]
 enabled = true
-port = 54326
 
 [functions.sync-reviews]
 verify_jwt = true

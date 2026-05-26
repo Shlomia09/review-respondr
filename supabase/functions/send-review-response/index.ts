@@ -73,6 +73,28 @@ serve(async (req) => {
       throw new Error('Review does not have an external_review_id - cannot send response back to platform');
     }
 
+    // ⚠️  Facebook Recommendations cannot be replied to via the Graph API.
+    // Attempting to do so returns Error Code 12 (Unsupported platform operation).
+    // The business owner must respond manually through the Facebook Page Manager.
+    if (
+      review.platform === 'facebook' &&
+      review.attention_reason === 'facebook_recommendation'
+    ) {
+      const pageUrl = review.review_url || `https://www.facebook.com/${review.business_id}/reviews`;
+      console.warn(`⚠️  Blocked API send for Facebook Recommendation (Code 12 prevention). Review: ${reviewId}`);
+      return new Response(
+        JSON.stringify({
+          error: 'facebook_recommendation_manual_only',
+          message: 'Facebook Recommendations cannot be replied to via the API (Error Code 12). Please respond manually on Facebook.',
+          page_url: pageUrl,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
+
     // Get the platform connection to fetch access token
     // First try using connection_id if available, otherwise fall back to business_id lookup
     let connection;

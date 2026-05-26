@@ -223,6 +223,18 @@ export function Reviews() {
     }
   };
 
+  const handleOpenInFacebook = (review: Review) => {
+    // Facebook Recommendations cannot be replied to via the API (Error Code 12).
+    // Direct the business owner to the Facebook Page reviews tab to reply manually.
+    const url = review.review_url ||
+      (review.business_id ? `https://www.facebook.com/${review.business_id}/reviews` : 'https://www.facebook.com');
+    window.open(url, '_blank', 'noopener,noreferrer');
+    toast({
+      title: 'Opening Facebook',
+      description: 'Facebook Recommendations can only be replied to manually. Redirecting you to the Facebook Page reviews tab.',
+    });
+  };
+
   const handleDeleteReview = async (reviewId: string) => {
     try {
       const { error } = await supabase
@@ -276,6 +288,7 @@ export function Reviews() {
         onDeleteReview={handleDeleteReview}
         onGenerateAIResponse={handleGenerateAIResponse}
         onSendResponse={handleSendResponse}
+        onOpenInFacebook={handleOpenInFacebook}
       />
 
       <ViewReviewModal

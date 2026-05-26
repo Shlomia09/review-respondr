@@ -27,7 +27,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Sparkles
+  Sparkles,
+  ExternalLink
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -59,6 +60,7 @@ interface ReviewsTableProps {
   onDeleteReview: (reviewId: string) => void;
   onGenerateAIResponse: (reviewId: string) => void;
   onSendResponse: (reviewId: string) => void;
+  onOpenInFacebook: (review: Review) => void;
 }
 
 export function ReviewsTable({ 
@@ -68,7 +70,8 @@ export function ReviewsTable({
   onEditResponse, 
   onDeleteReview,
   onGenerateAIResponse,
-  onSendResponse
+  onSendResponse,
+  onOpenInFacebook,
 }: ReviewsTableProps) {
   const { t } = useTranslation();
   const [selectedReviews, setSelectedReviews] = useState<Set<string>>(new Set());
@@ -91,7 +94,11 @@ export function ReviewsTable({
       (review.content || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSentiment = sentimentFilter === "all" || review.sentiment === sentimentFilter;
     const matchesPlatform = platformFilter === "all" || (review.platform || "").toLowerCase() === platformFilter;
-    const matchesStatus = statusFilter === "all" || review.response_status === statusFilter;
+    // 'manual_only' is a virtual status: reviews tagged as facebook_recommendation
+    const matchesStatus =
+      statusFilter === "all" ? true
+      : statusFilter === "manual_only" ? review.attention_reason === 'facebook_recommendation'
+      : review.response_status === statusFilter;
     const matchesBusiness = businessFilter === "all" || review.business_name === businessFilter;
     
     return matchesSearch && matchesSentiment && matchesPlatform && matchesStatus && matchesBusiness;
@@ -291,6 +298,7 @@ export function ReviewsTable({
               <SelectItem value="generated">{t('reviewCard.generated')}</SelectItem>
               <SelectItem value="approved">{t('reviewCard.approved')}</SelectItem>
               <SelectItem value="sent">{t('reviewCard.sent')}</SelectItem>
+              <SelectItem value="manual_only">📌 Manual Only (Facebook)</SelectItem>
             </SelectContent>
           </Select>
           
@@ -422,16 +430,30 @@ export function ReviewsTable({
                         </Button>
                       )}
                       
-                      {/* Send Response Button - show if response is generated or approved and we have external id */}
-                      {(review.external_review_id && (review.response_status === 'generated' || review.response_status === 'approved')) && (
-                        <Button 
-                          variant="ghost" 
+                      {/* Facebook Recommendation: show "Open in Facebook" immediately.
+                          These cannot be replied to via the API (Error Code 12). */}
+                      {review.attention_reason === 'facebook_recommendation' ? (
+                        <Button
+                          variant="ghost"
                           size="sm"
-                          onClick={() => onSendResponse(review.id)}
-                          title={t('reviews.sendResponse')}
+                          onClick={() => onOpenInFacebook(review)}
+                          title="Open in Facebook to reply manually"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
                         >
-                          <Send className="h-4 w-4 text-green-600" />
+                          <ExternalLink className="h-4 w-4" />
                         </Button>
+                      ) : (
+                        /* Regular Send Response Button for non-Facebook-Recommendation reviews */
+                        (review.external_review_id && (review.response_status === 'generated' || review.response_status === 'approved')) && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onSendResponse(review.id)}
+                            title={t('reviews.sendResponse')}
+                          >
+                            <Send className="h-4 w-4 text-green-600" />
+                          </Button>
+                        )
                       )}
                       
                       <Button 

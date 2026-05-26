@@ -19,6 +19,11 @@ interface ReviewData {
   external_review_id: string;  // Required: platform's unique review ID
   business_id?: string;
   business_name?: string;
+  // Facebook Recommendations cannot be replied to via API (Error Code 12).
+  // Tag them so the UI shows "Open in Facebook" instead of "Send Reply".
+  requires_manual_attention?: boolean;
+  attention_reason?: string;
+  review_url?: string;
 }
 
 serve(async (req) => {
@@ -462,6 +467,20 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
         console.error('Insert review failed:', insertErr);
       } else {
         newReviews.push(review);
+      }
+    } else if (existsData && existsData.length > 0) {
+      // Update existing review with manual_attention fields if they were not set
+      // (handles previously-imported reviews that predate this fix)
+      if (review.requires_manual_attention) {
+        await supabase
+          .from('reviews')
+          .update({
+            requires_manual_attention: true,
+            attention_reason: review.attention_reason,
+            review_url: review.review_url,
+          })
+          .eq('id', existsData[0].id)
+          .is('attention_reason', null);
       }
     }
   }
@@ -1459,6 +1478,10 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 continue;
               }
 
+              // ⚠️  Facebook Recommendations (fetched via /ratings) cannot be replied
+              // to through the Graph API — doing so returns Error Code 12
+              // (Unsupported platform operation). Tag every review from this endpoint
+              // as manual_only so the UI shows "Open in Facebook" instead.
               reviews.push({
                 customer_name: review.reviewer?.name || 'Anonymous',
                 platform: 'facebook',
@@ -1470,6 +1493,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 business_id: businessId,
                 business_name: pageInfo?.name || null,
                 external_review_id: externalReviewId,
+                requires_manual_attention: true,
+                attention_reason: 'facebook_recommendation',
+                review_url: `https://www.facebook.com/${businessId}/reviews`,
               });
             }
             break; // Found reviews, stop trying other endpoints
@@ -1587,6 +1613,10 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               continue;
             }
 
+            // ⚠️  Facebook Recommendations (fetched via /ratings) cannot be replied
+            // to through the Graph API — doing so returns Error Code 12
+            // (Unsupported platform operation). Tag every review from this endpoint
+            // as manual_only so the UI shows "Open in Facebook" instead.
             reviews.push({
               customer_name: review.reviewer?.name || 'Anonymous',
               platform: 'facebook',
@@ -1598,6 +1628,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               business_id: page.id,
               business_name: pageInfo?.name || page.name || null,
               external_review_id: externalReviewId,
+              requires_manual_attention: true,
+              attention_reason: 'facebook_recommendation',
+              review_url: `https://www.facebook.com/${page.id}/reviews`,
             });
           }
         } else {
