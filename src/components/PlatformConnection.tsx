@@ -411,21 +411,44 @@ const PlatformConnection = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    try {
-      const { error } = await supabase.functions.invoke('sync-reviews', {
-        body: { 
-          action: 'disconnect_account',
-          connectionId: accountId,
-          platform: platform.toLowerCase() 
-        }
-      });
+    // Optimistically remove from UI immediately
+    setConnections(prev => prev.filter(c => c.id !== accountId));
 
-      if (error) throw error;
-      
-      toast.success(t('platforms.disconnected'));
+    try {
+      // 1. Delete the specific platform_connection row directly
+      const { error: connErr } = await supabase
+        .from('platform_connections')
+        .delete()
+        .eq('id', accountId)
+        .eq('user_id', user.id);
+
+      if (connErr) {
+        console.error('Error deleting platform connection:', connErr);
+        // Revert optimistic update on error
+        checkPlatformConnections();
+        toast.error(t('errors.disconnectionFailed'));
+        return;
+      }
+
+      // 2. Delete matching platform_tokens for this platform
+      // (safe to delete all tokens for the platform — user can re-auth if needed)
+      const { error: tokenErr } = await supabase
+        .from('platform_tokens')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('platform', platform.toLowerCase());
+
+      if (tokenErr) {
+        // Non-fatal: connection is already removed, token cleanup can fail silently
+        console.warn('Could not remove platform token:', tokenErr);
+      }
+
+      toast.success(`${platform} disconnected successfully`);
+      // Refresh to ensure UI matches DB state
       checkPlatformConnections();
     } catch (error) {
       console.error('Error disconnecting account:', error);
+      checkPlatformConnections(); // revert optimistic update
       toast.error(t('errors.disconnectionFailed'));
     }
   };
