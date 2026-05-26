@@ -252,6 +252,7 @@ const PlatformConnection = () => {
         const checkClosed = setInterval(() => {
           if (popup?.closed) {
             clearInterval(checkClosed);
+            clearInterval(pollConnection); // prevent orphaned polling
             window.removeEventListener('message', messageListener);
             setConnectingPlatform(null);
           }
@@ -328,6 +329,7 @@ const PlatformConnection = () => {
         const checkClosed = setInterval(() => {
           if (popup?.closed) {
             clearInterval(checkClosed);
+            clearInterval(pollConnection); // prevent orphaned polling
             window.removeEventListener('message', messageListener);
             setConnectingPlatform(null);
           }
@@ -335,13 +337,17 @@ const PlatformConnection = () => {
 
       } else {
         toast.error(t('errors.platformNotSupported'));
+        setConnectingPlatform(null);
       }
     } catch (error) {
       console.error('Error connecting to platform:', error);
       toast.error(t('errors.connectionFailed'));
-    } finally {
       setConnectingPlatform(null);
     }
+    // Note: setConnectingPlatform(null) is NOT called here in finally —
+    // it is called inside each branch (success, error, popup-closed) because
+    // the OAuth popup is async and the try block returns immediately after
+    // setting up the intervals.
   };
 
   const handleSyncAccount = async (accountId: string, platform: string) => {
@@ -536,29 +542,29 @@ const PlatformConnection = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className={align}>
-              {t('platforms.selectBusiness') || 'בחר עסק'}
+              {t('platforms.selectBusiness')}
             </DialogTitle>
           </DialogHeader>
           
           {loadingBusinesses ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">{t('platforms.loadingBusinesses') || 'טוען עסקים...'}</span>
+              <span className="ml-2">{t('platforms.loadingBusinesses')}</span>
             </div>
           ) : businesses.length > 0 ? (
             <div className="space-y-4">
               <p className={`text-sm text-gray-600 dark:text-gray-400 ${align}`}>
-                {t('platforms.businessSelectionDescription') || 'בחר את העסק שלך מהרשימה'}
+                {t('platforms.businessSelectionDescription')}
               </p>
               
               <Select onValueChange={setSelectedBusiness} value={selectedBusiness}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('platforms.chooseBusiness') || 'בחר עסק'} />
+                  <SelectValue placeholder={t('platforms.chooseBusiness')} />
                 </SelectTrigger>
                 <SelectContent>
                   {businesses.map((business) => (
                     <SelectItem key={business.id} value={business.id}>
-                      <div className="text-right">
+                      <div className={align}>
                         <div className="font-medium">{business.name}</div>
                         <div className="text-sm text-gray-500">{business.address}</div>
                       </div>
@@ -572,27 +578,27 @@ const PlatformConnection = () => {
                   variant="outline"
                   onClick={() => setShowBusinessSelection(false)}
                 >
-                  {t('common.cancel') || 'ביטול'}
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   onClick={() => selectedBusiness && selectBusiness(selectedBusiness)}
                   disabled={!selectedBusiness}
                 >
-                  {t('common.confirm') || 'אישור'}
+                  {t('common.confirm')}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
               <p className={`text-gray-600 dark:text-gray-400 ${align}`}>
-                {t('platforms.noBusinessesFound') || 'לא נמצאו עסקים בחשבון Google הזה. ודא שלחשבון יש גישה לעסקים.'}
+                {t('platforms.noBusinessesFound')}
               </p>
               <Button
                 variant="outline"
                 onClick={() => setShowBusinessSelection(false)}
                 className="mt-4"
               >
-                {t('common.close') || 'סגור'}
+                {t('common.close')}
               </Button>
             </div>
           )}

@@ -1072,7 +1072,7 @@ const TranslationContext = React.createContext<TranslationContextType | undefine
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = React.useState<Language>(() => {
     const saved = localStorage.getItem('language');
-    return (saved as Language) || 'he';
+    return (saved as Language) || 'en';
   });
 
   const setLanguage = React.useCallback((newLanguage: Language) => {

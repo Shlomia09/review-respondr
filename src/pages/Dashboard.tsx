@@ -60,6 +60,10 @@ interface Review {
   manual_response?: string;
   ai_instructions?: string;
   response_status: 'pending' | 'generating' | 'generated' | 'approved' | 'sent';
+  external_review_id?: string;
+  attention_reason?: string;
+  review_url?: string;
+  business_id?: string;
 }
 
 const Dashboard = () => {
@@ -140,9 +144,10 @@ const Dashboard = () => {
       });
     } else {
       // Transform database reviews to match ReviewCard interface
+      // Note: DB column was renamed from customer_name → author_name in migration
       const transformedReviews: Review[] = (data || []).map((dbReview: any) => ({
         id: dbReview.id,
-        customer_name: dbReview.customer_name,
+        customer_name: dbReview.author_name || dbReview.customer_name || 'Anonymous',
         rating: dbReview.rating,
         content: dbReview.content,
         sentiment: dbReview.sentiment,
@@ -151,7 +156,11 @@ const Dashboard = () => {
         ai_response: dbReview.ai_response,
         manual_response: dbReview.manual_response,
         ai_instructions: dbReview.ai_instructions,
-        response_status: dbReview.response_status || 'pending'
+        response_status: dbReview.response_status || 'pending',
+        external_review_id: dbReview.external_review_id,
+        attention_reason: dbReview.attention_reason,
+        review_url: dbReview.review_url,
+        business_id: dbReview.business_id,
       }));
       setReviews(transformedReviews);
     }
@@ -325,29 +334,41 @@ const Dashboard = () => {
 
   const handleSendResponse = async (reviewId: string) => {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .update({ response_status: 'sent' })
-        .eq('id', reviewId);
+      const review = reviews.find(r => r.id === reviewId);
 
-      if (error) {
-        console.error('Error sending response:', error);
+      // Facebook Recommendations: open in Facebook instead of calling the API
+      if (review?.attention_reason === 'facebook_recommendation') {
+        const url = review.review_url ||
+          (review.business_id ? `https://www.facebook.com/${review.business_id}/reviews` : 'https://www.facebook.com');
+        window.open(url, '_blank', 'noopener,noreferrer');
         toast({
-          title: t('dashboard.error'),
-          description: t('dashboard.failedToSend'),
-          variant: "destructive",
+          title: 'Opening Facebook',
+          description: 'Facebook Recommendations must be replied to manually.',
         });
         return;
       }
+
+      // Call the Edge Function to post the reply to the platform
+      const { data, error } = await supabase.functions.invoke('send-review-response', {
+        body: { reviewId }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
 
       toast({
         title: t('dashboard.responseSent'),
         description: t('dashboard.responseSentSuccess'),
       });
-      
+
       await fetchReviews();
     } catch (error) {
       console.error('Error sending response:', error);
+      toast({
+        title: t('dashboard.error'),
+        description: error instanceof Error ? error.message : t('dashboard.failedToSend'),
+        variant: "destructive",
+      });
     }
   };
 
