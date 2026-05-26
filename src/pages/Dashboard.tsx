@@ -333,22 +333,24 @@ const Dashboard = () => {
   };
 
   const handleSendResponse = async (reviewId: string) => {
+    const review = reviews.find(r => r.id === reviewId);
+    if (!review) return;
+
+    // Facebook does not support replying to reviews via the Graph API.
+    // Redirect the business owner to Facebook to respond manually.
+    if (review.platform === 'facebook') {
+      const url = review.review_url ||
+        (review.business_id ? `https://www.facebook.com/${review.business_id}/reviews` : 'https://www.facebook.com');
+      window.open(url, '_blank', 'noopener,noreferrer');
+      toast({
+        title: 'Open Facebook',
+        description: 'Facebook reviews must be replied to manually on Facebook.',
+      });
+      return;
+    }
+
     try {
-      const review = reviews.find(r => r.id === reviewId);
-
-      // Facebook Recommendations: open in Facebook instead of calling the API
-      if (review?.attention_reason === 'facebook_recommendation') {
-        const url = review.review_url ||
-          (review.business_id ? `https://www.facebook.com/${review.business_id}/reviews` : 'https://www.facebook.com');
-        window.open(url, '_blank', 'noopener,noreferrer');
-        toast({
-          title: 'Opening Facebook',
-          description: 'Facebook Recommendations must be replied to manually.',
-        });
-        return;
-      }
-
-      // Call the Edge Function to post the reply to the platform
+      // Call the Edge Function to post the reply to the platform (Google, Trustpilot, etc.)
       const { data, error } = await supabase.functions.invoke('send-review-response', {
         body: { reviewId }
       });

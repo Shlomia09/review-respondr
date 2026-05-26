@@ -57,7 +57,7 @@ export function Reviews() {
 
       const transformedReviews: Review[] = (data || []).map((dbReview: any) => ({
         id: dbReview.id,
-        customer_name: dbReview.customer_name,
+        customer_name: dbReview.author_name || dbReview.customer_name || 'Unknown',
         rating: dbReview.rating,
         content: dbReview.content,
         sentiment: dbReview.sentiment,
@@ -174,38 +174,23 @@ export function Reviews() {
   };
 
   const handleSendResponse = async (reviewId: string) => {
+    const target = reviews.find(r => r.id === reviewId);
+    if (!target) return;
+
+    // Facebook does not allow replying to reviews/recommendations via the Graph API.
+    // Redirect the business owner to Facebook to respond manually.
+    if (target.platform === 'facebook') {
+      handleOpenInFacebook(target);
+      return;
+    }
+
     try {
-      const target = reviews.find(r => r.id === reviewId);
-      if (!target?.external_review_id) {
-        toast({
-          title: t('dashboard.error'),
-          description: 'Missing external review ID. Please sync your connections to enable sending responses.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Guard against old reviews that were imported with a fake external_review_id pattern
-      // Facebook object IDs are numeric (optionally with a single underscore). If it contains
-      // letters, spaces, or timestamp-like parts, we block sending and ask the user to re-sync.
-      if (!/^[0-9_]+$/.test(target.external_review_id)) {
-        toast({
-          title: t('dashboard.error'),
-          description: 'This review was imported with an invalid ID. Please re-sync your connections and try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       const { data, error } = await supabase.functions.invoke('send-review-response', {
         body: { reviewId }
       });
 
       if (error) throw error;
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: t('reviews.success'),
