@@ -430,20 +430,21 @@ export function ReviewsTable({
                         </Button>
                       )}
                       
-                      {/* Facebook Recommendation: show "Open in Facebook" immediately.
-                          These cannot be replied to via the API (Error Code 12). */}
-                      {review.attention_reason === 'facebook_recommendation' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onOpenInFacebook(review)}
-                          title="Open in Facebook to reply manually"
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
+                      {/* For Facebook: always open in Facebook (Graph API replies not supported).
+                          For other platforms: use the Send Response button. */}
+                      {review.platform === 'facebook' ? (
+                        (review.response_status === 'generated' || review.response_status === 'approved') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onOpenInFacebook(review)}
+                            title="Open in Facebook to reply manually"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )
                       ) : (
-                        /* Regular Send Response Button for non-Facebook-Recommendation reviews */
                         (review.external_review_id && (review.response_status === 'generated' || review.response_status === 'approved')) && (
                           <Button 
                             variant="ghost" 
