@@ -504,10 +504,10 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
     }
   }
 
-  // Update last_sync timestamp
+  // Update last_sync_at timestamp
   await supabase
     .from('platform_connections')
-    .update({ last_sync: new Date().toISOString() })
+    .update({ last_sync_at: new Date().toISOString() })
     .eq('id', connectionId);
 
   console.log(`Imported ${newReviews.length} new reviews for ${connection.business_name}`);
@@ -625,10 +625,10 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
 
       totalReviews += reviews.length;
 
-      // Update last_sync
+      // Update last_sync_at
       await supabase
         .from('platform_connections')
-        .update({ last_sync: new Date().toISOString() })
+        .update({ last_sync_at: new Date().toISOString() })
         .eq('id', connection.id);
 
     } catch (error) {
@@ -1471,8 +1471,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
       }
       
       // Try endpoint to get reviews (ratings endpoint only; /reviews is deprecated/unsupported)
+      // Use reviewer{id,name} to explicitly request both subfields
       const endpoints = [
-        `https://graph.facebook.com/${businessId}/ratings?fields=id,reviewer,rating,review_text,created_time,recommendation_type,open_graph_story`
+        `https://graph.facebook.com/${businessId}/ratings?fields=id,reviewer{id,name},rating,review_text,created_time,recommendation_type,open_graph_story`
       ];
       
       for (const endpoint of endpoints) {
@@ -1628,7 +1629,7 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
 
         // Now fetch ratings for this page
         const reviewsResponse = await fetch(
-          `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer,rating,review_text,created_time,recommendation_type`
+          `https://graph.facebook.com/${page.id}/ratings?access_token=${page.access_token}&appsecret_proof=${pageAppsecretProof}&fields=reviewer{id,name},rating,review_text,created_time,recommendation_type`
         );
 
         if (reviewsResponse.ok) {

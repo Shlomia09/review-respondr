@@ -49,7 +49,55 @@ export function Reviews() {
 
   useEffect(() => {
     fetchReviews();
+    autoSyncIfStale();
   }, []);
+
+  // Auto-sync: if any connection hasn't synced in 4+ hours, sync silently in background
+  const autoSyncIfStale = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+      const { data: staleConnections } = await supabase
+        .from('platform_connections')
+        .select('id, platform, business_name, last_sync_at')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .or(`last_sync_at.is.null,last_sync_at.lt.${fourHoursAgo}`);
+
+      if (!staleConnections || staleConnections.length === 0) return;
+
+      console.log(`🔄 Auto-syncing ${staleConnections.length} stale connection(s)...`);
+
+      let newReviewsTotal = 0;
+      for (const conn of staleConnections) {
+        try {
+          const { data } = await supabase.functions.invoke('sync-reviews', {
+            body: {
+              action: 'sync_by_connection',
+              connectionId: conn.id,
+              platform: conn.platform,
+            }
+          });
+          newReviewsTotal += data?.newReviews || 0;
+        } catch (err) {
+          console.warn(`Auto-sync failed for ${conn.business_name}:`, err);
+        }
+      }
+
+      if (newReviewsTotal > 0) {
+        toast({
+          title: t('platformConnection.syncSuccess') || 'Auto-sync complete',
+          description: `${newReviewsTotal} new reviews imported`,
+          duration: 4000,
+        });
+        fetchReviews(); // Refresh the list
+      }
+    } catch (err) {
+      console.warn('Auto-sync check failed:', err);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
