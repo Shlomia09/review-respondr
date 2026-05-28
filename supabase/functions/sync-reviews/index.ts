@@ -483,6 +483,11 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
         business_id: connection.business_id || connection.external_business_id,
         connection_id: connection.id,
       };
+      // Update reviewer name only if we now have a real name (not Anonymous/fallback)
+      const newName = review.customer_name;
+      if (newName && newName !== 'Anonymous' && newName !== 'Facebook User' && newName !== '') {
+        updatePayload.author_name = newName;
+      }
       // Update avatar/profile only if we now have data
       if (review.author_id) updatePayload.author_id = review.author_id;
       if (review.reviewer_avatar_url) updatePayload.reviewer_avatar_url = review.reviewer_avatar_url;
@@ -590,6 +595,9 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
               business_id: connection.business_id,
               business_name: connection.business_name,
               connection_id: connection.id,
+              author_id: review.author_id || null,
+              reviewer_avatar_url: review.reviewer_avatar_url || null,
+              reviewer_profile_url: review.reviewer_profile_url || null,
             });
 
           if (insertErr) {
@@ -597,6 +605,21 @@ async function handleSyncAllPlatform(platform: string, userId: string, supabase:
           } else {
             totalNewReviews++;
           }
+        } else if (existsData && existsData.length > 0) {
+          // Backfill: update existing reviews with better data
+          const backfill: any = {
+            business_name: connection.business_name,
+            business_id: connection.business_id || connection.external_business_id,
+            connection_id: connection.id,
+          };
+          const newName = review.customer_name;
+          if (newName && newName !== 'Anonymous' && newName !== 'Facebook User' && newName !== '') {
+            backfill.author_name = newName;
+          }
+          if (review.author_id) backfill.author_id = review.author_id;
+          if (review.reviewer_avatar_url) backfill.reviewer_avatar_url = review.reviewer_avatar_url;
+          if (review.reviewer_profile_url) backfill.reviewer_profile_url = review.reviewer_profile_url;
+          await supabase.from('reviews').update(backfill).eq('id', existsData[0].id);
         }
       }
 
@@ -1641,8 +1664,15 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
             // to through the Graph API — doing so returns Error Code 12
             // (Unsupported platform operation). Tag every review from this endpoint
             // as manual_only so the UI shows "Open in Facebook" instead.
+            // CRM fields for this sync path
+            const revId = review.reviewer?.id || null;
+            const revName = review.reviewer?.name || null;
+            const avatarUrl = revId
+              ? `https://graph.facebook.com/${revId}/picture?type=large&redirect=true`
+              : null;
+
             reviews.push({
-              customer_name: review.reviewer?.name || 'Anonymous',
+              customer_name: revName || 'Facebook User',
               platform: 'facebook',
               rating: rating,
               content: review.review_text || '',
@@ -1655,6 +1685,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               requires_manual_attention: true,
               attention_reason: 'facebook_recommendation',
               review_url: `https://www.facebook.com/${page.id}/reviews`,
+              author_id: revId,
+              reviewer_avatar_url: avatarUrl,
+              reviewer_profile_url: revId ? `https://www.facebook.com/${revId}` : null,
             });
           }
         } else {
