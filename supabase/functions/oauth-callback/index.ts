@@ -99,40 +99,19 @@ serve(async (req) => {
     const expiresInSeconds = tokenData.expires_in || 5184000; // 60 days default
     const expiresAt = new Date(Date.now() + (expiresInSeconds * 1000)).toISOString();
     
-    console.log('💾 Storing tokens (encrypted) in database...', { 
+    console.log('💾 Storing tokens in database...', { 
       expiresInSeconds, 
       expiresAt,
       hasRefreshToken: !!tokenData.refresh_token 
     });
-    
-    // Encrypt tokens before storing
-    const { data: encryptedAccess, error: encryptAccessError } = await supabaseClient
-      .rpc('encrypt_token', { token_value: tokenData.access_token });
-    
-    if (encryptAccessError || !encryptedAccess) {
-      console.error('❌ Access token encryption error:', encryptAccessError);
-      throw new Error('Failed to encrypt access token');
-    }
-    
-    let encryptedRefresh = null;
-    if (tokenData.refresh_token) {
-      const { data: encryptedRefreshData, error: encryptRefreshError } = await supabaseClient
-        .rpc('encrypt_token', { token_value: tokenData.refresh_token });
-      
-      if (encryptRefreshError || !encryptedRefreshData) {
-        console.warn('⚠️ Refresh token encryption failed:', encryptRefreshError);
-      } else {
-        encryptedRefresh = encryptedRefreshData;
-      }
-    }
     
     const { error: dbError } = await supabaseClient
       .from('platform_tokens')
       .upsert({
         user_id: userId,
         platform: platform,
-        access_token: encryptedAccess,
-        refresh_token: encryptedRefresh,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token || null,
         expires_at: expiresAt,
       }, {
         onConflict: 'user_id,platform'
@@ -143,7 +122,7 @@ serve(async (req) => {
       throw new Error('Failed to store tokens: ' + dbError.message);
     }
 
-    console.log('✅ Tokens encrypted and stored successfully');
+    console.log('✅ Tokens stored successfully');
 
     // Return success page that closes the popup
     return new Response(`
