@@ -30,7 +30,7 @@ interface Review {
 }
 
 export function Reviews() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewReviewModal, setViewReviewModal] = useState<{ open: boolean; review: Review | null }>({
@@ -99,7 +99,7 @@ export function Reviews() {
         // Generate AI responses for all selected reviews
         const promises = selectedIds.map(id => 
           supabase.functions.invoke('generate-review-response', {
-            body: { reviewId: id }
+            body: { reviewId: id, userLanguage: language }
           })
         );
         
@@ -153,7 +153,7 @@ export function Reviews() {
   const handleGenerateAIResponse = async (reviewId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-review-response', {
-        body: { reviewId }
+        body: { reviewId, userLanguage: language }
       });
 
       if (error) throw error;

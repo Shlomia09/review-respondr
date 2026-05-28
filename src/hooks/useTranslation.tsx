@@ -280,6 +280,9 @@ const translations: Translations = {
       bulkGenerateAI: 'יצירת תגובות AI',
       bulkAIGenerated: 'תגובות AI נוצרו בהצלחה',
       requiresAttention: 'דורש טיפול ידני',
+      facebookReplyRequired: 'נדרשת תגובה בפייסבוק',
+      facebookReplyDescription: 'המלצות פייסבוק ניתן להשיב עליהן רק ידנית דרך מנהל הדפים בפייסבוק. לחץ על הכפתור כדי לפתוח את לשונית הביקורות ולפרסם את תגובתך.',
+      openInFacebook: 'פתח בפייסבוק',
       priority: {
         low: 'נמוך',
         medium: 'בינוני',
@@ -804,6 +807,9 @@ const translations: Translations = {
       bulkGenerateAI: 'Generate AI Responses',
       bulkAIGenerated: 'AI responses generated successfully',
       requiresAttention: 'Requires Manual Attention',
+      facebookReplyRequired: 'Reply Required on Facebook',
+      facebookReplyDescription: 'Facebook Recommendations can only be replied to manually through the Facebook Page Manager. Click the button below to open the reviews tab and post your reply there.',
+      openInFacebook: 'Open in Facebook',
       priority: {
         low: 'Low',
         medium: 'Medium',

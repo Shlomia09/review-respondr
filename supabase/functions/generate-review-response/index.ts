@@ -12,8 +12,14 @@ serve(async (req) => {
   }
 
   try {
-    const { reviewId } = await req.json();
+    const { reviewId, userLanguage } = await req.json();
     
+    const uiLanguageName: Record<string, string> = {
+      'he': 'Hebrew', 'en': 'English', 'es': 'Spanish',
+      'de': 'German', 'ar': 'Arabic', 'ru': 'Russian'
+    };
+    const ownerLanguage = uiLanguageName[userLanguage] || 'English';
+
     if (!reviewId) {
       throw new Error('Review ID is required');
     }
@@ -98,7 +104,8 @@ Guidelines:
 - For positive reviews: Express gratitude and encourage future visits
 - For negative reviews: Apologize, show understanding, and offer to resolve the issue
 - Maintain a professional and warm tone
-- Write in the same language as the review
+- CRITICAL: Write the "response" field in the SAME language as the review (the language the customer wrote in)
+- CRITICAL: Write the "attention_reason" field in ${ownerLanguage} — this is shown to the business owner who manages the system in ${ownerLanguage}, NOT to the customer
 - CRITICAL: Always sign your response with "${businessName}" at the end (e.g., "Sincerely, ${businessName}" or "Best regards, ${businessName} Team")
 - Never use generic placeholders - you are representing ${businessName} specifically
 - Use the business details provided above to make your response more personal and relevant`;

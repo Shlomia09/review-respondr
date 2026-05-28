@@ -114,11 +114,10 @@ export function ViewReviewModal({ review, open, onOpenChange }: ViewReviewModalP
               // Show a clear info banner with a direct link to the Facebook Page reviews tab.
               <div className="border border-blue-300 rounded-lg p-4 bg-blue-50 dark:bg-blue-950 dark:border-blue-700">
                 <h4 className="font-semibold mb-1 flex items-center gap-2 text-blue-800 dark:text-blue-300">
-                  <span>📌</span> Reply Required on Facebook
+                  <span>📌</span> {t('reviews.facebookReplyRequired')}
                 </h4>
                 <p className="text-sm text-blue-700 dark:text-blue-400 mb-3">
-                  Facebook Recommendations can only be replied to manually through the Facebook Page Manager.
-                  Click the button below to open the reviews tab and post your reply there.
+                  {t('reviews.facebookReplyDescription')}
                 </p>
                 <Button
                   size="sm"
@@ -131,7 +130,7 @@ export function ViewReviewModal({ review, open, onOpenChange }: ViewReviewModalP
                   }}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in Facebook
+                  {t('reviews.openInFacebook')}
                 </Button>
               </div>
             ) : (
