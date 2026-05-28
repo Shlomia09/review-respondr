@@ -24,6 +24,10 @@ interface ReviewData {
   requires_manual_attention?: boolean;
   attention_reason?: string;
   review_url?: string;
+  // CRM fields
+  author_id?: string;             // Platform reviewer ID (Facebook UID, Google reviewer ID)
+  reviewer_avatar_url?: string;   // Profile picture URL
+  reviewer_profile_url?: string;  // Link to reviewer's profile
 }
 
 serve(async (req) => {
@@ -461,6 +465,9 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
           business_id: connection.business_id,
           business_name: connection.business_name,
           connection_id: connection.id,
+          author_id: review.author_id || null,
+          reviewer_avatar_url: review.reviewer_avatar_url || null,
+          reviewer_profile_url: review.reviewer_profile_url || null,
         });
 
       if (insertErr) {
@@ -469,13 +476,17 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
         newReviews.push(review);
       }
     } else if (existsData && existsData.length > 0) {
-      // Backfill business_name / business_id / connection_id for reviews that
-      // were imported before the business-selection feature existed.
+      // Backfill business_name / business_id / connection_id / reviewer data for reviews that
+      // were imported before the business-selection or CRM feature existed.
       const updatePayload: any = {
         business_name: connection.business_name,
         business_id: connection.business_id || connection.external_business_id,
         connection_id: connection.id,
       };
+      // Update avatar/profile only if we now have data
+      if (review.author_id) updatePayload.author_id = review.author_id;
+      if (review.reviewer_avatar_url) updatePayload.reviewer_avatar_url = review.reviewer_avatar_url;
+      if (review.reviewer_profile_url) updatePayload.reviewer_profile_url = review.reviewer_profile_url;
       if (review.requires_manual_attention) {
         updatePayload.requires_manual_attention = true;
         updatePayload.attention_reason = review.attention_reason;
@@ -1485,8 +1496,15 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
               // to through the Graph API — doing so returns Error Code 12
               // (Unsupported platform operation). Tag every review from this endpoint
               // as manual_only so the UI shows "Open in Facebook" instead.
+              const reviewerId = review.reviewer?.id;
+              const reviewerName = review.reviewer?.name || null; // null = will show as Anonymous
+              // Build Facebook profile picture URL from reviewer ID (publicly accessible)
+              const avatarUrl = reviewerId
+                ? `https://graph.facebook.com/${reviewerId}/picture?type=large&redirect=true`
+                : null;
+
               reviews.push({
-                customer_name: review.reviewer?.name || 'Anonymous',
+                customer_name: reviewerName || `Facebook User`,
                 platform: 'facebook',
                 rating: rating,
                 content: review.review_text || '',
@@ -1499,6 +1517,9 @@ async function fetchFacebookReviews(accessToken: string, userId: string, busines
                 requires_manual_attention: true,
                 attention_reason: 'facebook_recommendation',
                 review_url: `https://www.facebook.com/${businessId}/reviews`,
+                author_id: reviewerId || null,
+                reviewer_avatar_url: avatarUrl,
+                reviewer_profile_url: reviewerId ? `https://www.facebook.com/${reviewerId}` : null,
               });
             }
             break; // Found reviews, stop trying other endpoints
