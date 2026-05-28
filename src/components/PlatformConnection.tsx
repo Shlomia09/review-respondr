@@ -684,11 +684,10 @@ const PlatformConnection = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              {t('platformConnection.disconnectTitle') || 'Disconnect Account'}
+              {t('platformConnection.disconnectTitle')}
             </DialogTitle>
             <DialogDescription className={align}>
-              {t('platformConnection.disconnectSubtitle') ||
-                `You are about to disconnect "${disconnectDialog?.accountName}"`}
+              {`${t('platformConnection.disconnectSubtitle')}: "${disconnectDialog?.accountName}"`}
             </DialogDescription>
           </DialogHeader>
 
@@ -713,10 +712,10 @@ const PlatformConnection = () => {
                 <Archive className="h-5 w-5 text-blue-500 flex-shrink-0" />
                 <div className={`text-start ${align}`}>
                   <div className="font-medium">
-                    {t('platformConnection.keepReviews') || 'Disconnect & keep reviews'}
+                    {t('platformConnection.keepReviews')}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {t('platformConnection.keepReviewsDesc') || 'Reviews stay in the system, account disconnected'}
+                    {t('platformConnection.keepReviewsDesc')}
                   </div>
                 </div>
               </Button>
@@ -735,10 +734,10 @@ const PlatformConnection = () => {
                 )}
                 <div className={`text-start ${align}`}>
                   <div className="font-medium text-red-600 dark:text-red-400">
-                    {t('platformConnection.deleteReviews') || 'Disconnect & delete reviews'}
+                    {t('platformConnection.deleteReviews')}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {t('platformConnection.deleteReviewsDesc') || 'Permanently deletes all reviews from this account'}
+                    {t('platformConnection.deleteReviewsDesc')}
                   </div>
                 </div>
               </Button>
@@ -750,7 +749,7 @@ const PlatformConnection = () => {
               onClick={() => setDisconnectDialog(null)}
               disabled={disconnectDialog?.deleting}
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
           </div>
         </DialogContent>

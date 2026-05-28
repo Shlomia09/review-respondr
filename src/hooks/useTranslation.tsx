@@ -369,7 +369,14 @@ const translations: Translations = {
       syncAll: 'סנכרן הכל',
       syncingAll: 'מסנכרן את כל החשבונות...',
       lastSync: 'סנכרון אחרון',
-      total: 'סה״כ'
+      total: 'סה״כ',
+      disconnectTitle: 'ניתוק חשבון',
+      disconnectSubtitle: 'אתה עומד לנתק את החשבון',
+      reviewsWillBeAffected: 'לחשבון זה יש ביקורות במערכת. מה ברצונך לעשות איתן?',
+      keepReviews: 'נתק ושמור ביקורות',
+      keepReviewsDesc: 'הביקורות ישארו במערכת, רק החיבור ינותק',
+      deleteReviews: 'נתק ומחק ביקורות',
+      deleteReviewsDesc: 'ימחק לצמיתות את כל הביקורות של חשבון זה'
     },
     errors: {
       connectionCheck: 'נכשלה בדיקת החיבורים',
@@ -896,7 +903,14 @@ const translations: Translations = {
       syncAll: 'Sync all',
       syncingAll: 'Syncing all accounts...',
       lastSync: 'Last sync',
-      total: 'Total'
+      total: 'Total',
+      disconnectTitle: 'Disconnect Account',
+      disconnectSubtitle: 'You are about to disconnect this account',
+      reviewsWillBeAffected: 'This account has reviews in the system. What would you like to do with them?',
+      keepReviews: 'Disconnect & keep reviews',
+      keepReviewsDesc: 'Reviews stay in the system, only the connection is removed',
+      deleteReviews: 'Disconnect & delete reviews',
+      deleteReviewsDesc: 'Permanently deletes all reviews from this account'
     },
     errors: {
       connectionCheck: 'Failed to check connections',
