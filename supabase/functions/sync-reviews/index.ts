@@ -469,19 +469,22 @@ async function handleSyncByConnection(connectionId: string, platform: string, us
         newReviews.push(review);
       }
     } else if (existsData && existsData.length > 0) {
-      // Update existing review with manual_attention fields if they were not set
-      // (handles previously-imported reviews that predate this fix)
+      // Backfill business_name / business_id / connection_id for reviews that
+      // were imported before the business-selection feature existed.
+      const updatePayload: any = {
+        business_name: connection.business_name,
+        business_id: connection.business_id || connection.external_business_id,
+        connection_id: connection.id,
+      };
       if (review.requires_manual_attention) {
-        await supabase
-          .from('reviews')
-          .update({
-            requires_manual_attention: true,
-            attention_reason: review.attention_reason,
-            review_url: review.review_url,
-          })
-          .eq('id', existsData[0].id)
-          .is('attention_reason', null);
+        updatePayload.requires_manual_attention = true;
+        updatePayload.attention_reason = review.attention_reason;
+        updatePayload.review_url = review.review_url;
       }
+      await supabase
+        .from('reviews')
+        .update(updatePayload)
+        .eq('id', existsData[0].id);
     }
   }
 
