@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Plus, Loader2 } from "lucide-react";
+import { ExternalLink, Plus, Loader2, AlertTriangle, Trash2, Archive } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConnectedAccountsList from "./ConnectedAccountsList";
 
@@ -46,6 +46,14 @@ const PlatformConnection = () => {
   const [currentPlatform, setCurrentPlatform] = useState<string>('');
   const [loadingBusinesses, setLoadingBusinesses] = useState(false);
   const [syncingAccount, setSyncingAccount] = useState<string | null>(null);
+  const [disconnectDialog, setDisconnectDialog] = useState<{
+    open: boolean;
+    accountId: string;
+    platform: string;
+    accountName: string;
+    reviewCount: number;
+    deleting: boolean;
+  } | null>(null);
   
   const platforms: Omit<Platform, 'connected' | 'reviewCount'>[] = [
     {
@@ -90,7 +98,13 @@ const PlatformConnection = () => {
   };
 
   const fetchBusinesses = async (platformName: string) => {
+    // Show dialog IMMEDIATELY with loading spinner — don't wait 20s
+    setBusinesses([]);
+    setCurrentPlatform(platformName);
+    setSelectedBusiness('');
     setLoadingBusinesses(true);
+    setShowBusinessSelection(true); // open NOW
+
     try {
       const { data, error } = await supabase.functions.invoke('sync-reviews', {
         body: { 
@@ -100,13 +114,11 @@ const PlatformConnection = () => {
       });
 
       if (error) throw error;
-      
       setBusinesses(data.businesses || []);
-      setCurrentPlatform(platformName);
-      setShowBusinessSelection(true);
     } catch (error) {
       console.error('Error fetching businesses:', error);
       toast.error(t('errors.businessFetchFailed'));
+      setShowBusinessSelection(false);
     } finally {
       setLoadingBusinesses(false);
     }
@@ -407,22 +419,46 @@ const PlatformConnection = () => {
     }
   };
 
-  const handleDisconnectAccount = async (accountId: string, platform: string) => {
-    const confirmed = window.confirm(
-      t('platformConnection.confirmDisconnect') || 
-      `Remove this ${platform} account? Its reviews will be kept.`
-    );
-    if (!confirmed) return;
+  const handleDisconnectAccount = (accountId: string, platform: string) => {
+    // Find the account details
+    const account = connections.find(c => c.id === accountId);
+    setDisconnectDialog({
+      open: true,
+      accountId,
+      platform,
+      accountName: account?.businessName || platform,
+      reviewCount: account?.reviewCount || 0,
+      deleting: false,
+    });
+  };
+
+  const confirmDisconnect = async (keepReviews: boolean) => {
+    if (!disconnectDialog) return;
+    const { accountId, platform } = disconnectDialog;
+
+    setDisconnectDialog(prev => prev ? { ...prev, deleting: true } : null);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Optimistically remove from UI
-    setConnections(prev => prev.filter(c => c.id !== accountId));
-
     try {
-      // Delete only this specific connection row
-      // (reviews.connection_id will be set to NULL automatically via ON DELETE SET NULL)
+      // Option 1: Delete reviews FIRST, then connection
+      if (!keepReviews) {
+        const { error: reviewsErr } = await supabase
+          .from('reviews')
+          .delete()
+          .eq('connection_id', accountId)
+          .eq('user_id', user.id);
+
+        if (reviewsErr) {
+          toast.error('Failed to delete reviews: ' + reviewsErr.message);
+          setDisconnectDialog(prev => prev ? { ...prev, deleting: false } : null);
+          return;
+        }
+        toast.success('Reviews deleted');
+      }
+
+      // Delete the connection row
       const { error: connErr } = await supabase
         .from('platform_connections')
         .delete()
@@ -430,35 +466,34 @@ const PlatformConnection = () => {
         .eq('user_id', user.id);
 
       if (connErr) {
-        console.error('Error deleting platform connection:', connErr);
-        checkPlatformConnections(); // revert optimistic update
-        toast.error(t('errors.disconnectionFailed') || 'Could not remove account: ' + connErr.message);
+        toast.error('Could not remove account: ' + connErr.message);
+        setDisconnectDialog(prev => prev ? { ...prev, deleting: false } : null);
+        checkPlatformConnections();
         return;
       }
 
-      // Only delete platform_tokens if NO other connections exist for this platform
+      // Delete token only if this was the last connection for the platform
       const remainingConnections = connections.filter(
         c => c.id !== accountId && c.platform.toLowerCase() === platform.toLowerCase()
       );
-
       if (remainingConnections.length === 0) {
-        // Safe to delete the token — no other accounts need it
-        const { error: tokenErr } = await supabase
+        await supabase
           .from('platform_tokens')
           .delete()
           .eq('user_id', user.id)
           .eq('platform', platform.toLowerCase());
-
-        if (tokenErr) {
-          console.warn('Could not remove platform token (non-fatal):', tokenErr);
-        }
       }
 
-      toast.success(`${platform} account removed`);
+      toast.success(
+        keepReviews
+          ? `${platform} account removed (reviews kept)`
+          : `${platform} account and all its reviews removed`
+      );
+      setDisconnectDialog(null);
       checkPlatformConnections();
     } catch (error) {
-      console.error('Error disconnecting account:', error);
-      checkPlatformConnections();
+      console.error('Error disconnecting:', error);
+      setDisconnectDialog(prev => prev ? { ...prev, deleting: false } : null);
       toast.error(t('errors.disconnectionFailed'));
     }
   };
@@ -637,7 +672,91 @@ const PlatformConnection = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Disconnect Confirmation Dialog */}
+      <Dialog
+        open={!!disconnectDialog?.open}
+        onOpenChange={(open) => {
+          if (!open && !disconnectDialog?.deleting) setDisconnectDialog(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              {t('platformConnection.disconnectTitle') || 'Disconnect Account'}
+            </DialogTitle>
+            <DialogDescription className={align}>
+              {t('platformConnection.disconnectSubtitle') ||
+                `You are about to disconnect "${disconnectDialog?.accountName}"`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 pt-2">
+            {(disconnectDialog?.reviewCount ?? 0) > 0 && (
+              <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  {t('platformConnection.reviewsWillBeAffected') ||
+                    `This account has ${disconnectDialog?.reviewCount} reviews in the system. What would you like to do with them?`}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-2 pt-1">
+              {/* Keep reviews */}
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-auto py-3 px-4"
+                onClick={() => confirmDisconnect(true)}
+                disabled={disconnectDialog?.deleting}
+              >
+                <Archive className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                <div className={`text-start ${align}`}>
+                  <div className="font-medium">
+                    {t('platformConnection.keepReviews') || 'Disconnect & keep reviews'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t('platformConnection.keepReviewsDesc') || 'Reviews stay in the system, account disconnected'}
+                  </div>
+                </div>
+              </Button>
+
+              {/* Delete reviews */}
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-auto py-3 px-4 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30"
+                onClick={() => confirmDisconnect(false)}
+                disabled={disconnectDialog?.deleting}
+              >
+                {disconnectDialog?.deleting ? (
+                  <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />
+                ) : (
+                  <Trash2 className="h-5 w-5 text-red-500 flex-shrink-0" />
+                )}
+                <div className={`text-start ${align}`}>
+                  <div className="font-medium text-red-600 dark:text-red-400">
+                    {t('platformConnection.deleteReviews') || 'Disconnect & delete reviews'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t('platformConnection.deleteReviewsDesc') || 'Permanently deletes all reviews from this account'}
+                  </div>
+                </div>
+              </Button>
+            </div>
+
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setDisconnectDialog(null)}
+              disabled={disconnectDialog?.deleting}
+            >
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
+
   );
 };
 
