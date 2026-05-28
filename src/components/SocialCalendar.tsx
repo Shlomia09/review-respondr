@@ -34,47 +34,18 @@ interface SocialPost {
 }
 
 export function SocialCalendar() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'list'>('month');
   const [filterPlatform, setFilterPlatform] = useState('all');
 
-  // Mock social posts data
-  const socialPosts: SocialPost[] = [
-    {
-      id: '1',
-      title: 'ביקורות לקוחות מהשבוע',
-      content: 'לקוחות מספרים על החוויה המדהימה שלהם...',
-      platforms: ['Facebook', 'Instagram'],
-      scheduledDate: new Date(),
-      status: 'published',
-      engagement: { likes: 45, comments: 12, shares: 8 }
-    },
-    {
-      id: '2',
-      title: 'טיפים לשיפור השירות',
-      content: 'כך אתם יכולים לקבל את השירות הטוב ביותר...',
-      platforms: ['LinkedIn', 'Facebook'],
-      scheduledDate: addDays(new Date(), 1),
-      status: 'scheduled'
-    },
-    {
-      id: '3',
-      title: 'מבצע סוף השבוע',
-      content: 'הנחה מיוחדת רק לסוף השבוע הזה!',
-      platforms: ['Instagram', 'WhatsApp'],
-      scheduledDate: addDays(new Date(), 3),
-      status: 'draft'
-    },
-    {
-      id: '4',
-      title: 'מאחורי הקלעים',
-      content: 'בואו לראות איך אנחנו עובדים עבורכם...',
-      platforms: ['Instagram', 'TikTok'],
-      scheduledDate: addDays(new Date(), 5),
-      status: 'scheduled'
-    }
-  ];
+  // No real backend yet for scheduled social posts — empty state
+  const socialPosts: SocialPost[] = [];
+
+  const locale = language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : language === 'de' ? 'de-DE' : 'en-US';
+  const dayNames = Array.from({ length: 7 }, (_, i) =>
+    new Date(2024, 0, i).toLocaleDateString(locale, { weekday: 'short' })
+  );
 
   const filteredPosts = socialPosts.filter(post => 
     filterPlatform === 'all' || post.platforms.includes(filterPlatform)
@@ -115,7 +86,7 @@ export function SocialCalendar() {
     return (
       <div className="grid grid-cols-7 gap-1">
         {/* Header */}
-        {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].map(day => (
+        {dayNames.map(day => (
           <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
             {day}
           </div>
