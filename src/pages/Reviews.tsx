@@ -4,6 +4,7 @@ import { MessageSquare } from "lucide-react";
 import { ReviewsTable } from "@/components/ReviewsTable";
 import { ViewReviewModal } from "@/components/ViewReviewModal";
 import { ManualResponseModal } from "@/components/ManualResponseModal";
+import { FacebookReplyModal } from "@/components/FacebookReplyModal";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,10 @@ export function Reviews() {
     review: null
   });
   const [editResponseModal, setEditResponseModal] = useState<{ open: boolean; review: Review | null }>({
+    open: false,
+    review: null
+  });
+  const [facebookModal, setFacebookModal] = useState<{ open: boolean; review: Review | null }>({
     open: false,
     review: null
   });
@@ -209,15 +214,8 @@ export function Reviews() {
   };
 
   const handleOpenInFacebook = (review: Review) => {
-    // Facebook Recommendations cannot be replied to via the API (Error Code 12).
-    // Direct the business owner to the Facebook Page reviews tab to reply manually.
-    const url = review.review_url ||
-      (review.business_id ? `https://www.facebook.com/${review.business_id}/reviews` : 'https://www.facebook.com');
-    window.open(url, '_blank', 'noopener,noreferrer');
-    toast({
-      title: 'Opening Facebook',
-      description: 'Facebook Recommendations can only be replied to manually. Redirecting you to the Facebook Page reviews tab.',
-    });
+    // Open the Facebook Reply Modal so user can copy response and publish on Facebook
+    setFacebookModal({ open: true, review });
   };
 
   const handleDeleteReview = async (reviewId: string) => {
@@ -287,6 +285,12 @@ export function Reviews() {
         isOpen={editResponseModal.open}
         onClose={() => setEditResponseModal({ open: false, review: null })}
         onSuccess={fetchReviews}
+      />
+
+      <FacebookReplyModal
+        review={facebookModal.review}
+        open={facebookModal.open}
+        onOpenChange={(open) => setFacebookModal({ open, review: open ? facebookModal.review : null })}
       />
     </div>
   );
