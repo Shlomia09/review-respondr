@@ -119,80 +119,29 @@ export function AIResponseStats({ stats }: AIResponseStatsProps) {
         ))}
       </div>
 
-      {/* Performance Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Response Time Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              {t('aiResponses.responseTimeBreakdown')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>{t('aiResponses.immediate')} (&lt;1 {t('aiResponses.minute')})</span>
-                <span>45%</span>
-              </div>
-              <Progress value={45} className="h-2" />
-              
-              <div className="flex justify-between text-sm">
-                <span>{t('aiResponses.fast')} (1-5 {t('aiResponses.minutes')})</span>
-                <span>35%</span>
-              </div>
-              <Progress value={35} className="h-2" />
-              
-              <div className="flex justify-between text-sm">
-                <span>{t('aiResponses.moderate')} (5-15 {t('aiResponses.minutes')})</span>
-                <span>15%</span>
-              </div>
-              <Progress value={15} className="h-2" />
-              
-              <div className="flex justify-between text-sm">
-                <span>{t('aiResponses.slow')} (&gt;15 {t('aiResponses.minutes')})</span>
-                <span>5%</span>
-              </div>
-              <Progress value={5} className="h-2" />
+        {/* Removed: Response Time Breakdown — not yet tracked in DB */}
+      {/* Sentiment Impact */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            {t('aiResponses.sentimentImpact')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+              {stats.sentimentImprovement}%
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Sentiment Impact */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              {t('aiResponses.sentimentImpact')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center p-4 bg-green-50 dark:bg-green-950 rounded-lg">
-              <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                +{stats.sentimentImprovement}%
-              </div>
-              <p className="text-sm text-green-600 dark:text-green-400">
-                {t('aiResponses.sentimentImprovementDesc')}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                <div className="text-lg font-semibold text-green-700 dark:text-green-300">78%</div>
-                <p className="text-xs text-green-600 dark:text-green-400">{t('dashboard.positive')}</p>
-              </div>
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                <div className="text-lg font-semibold text-yellow-700 dark:text-yellow-300">18%</div>
-                <p className="text-xs text-yellow-600 dark:text-yellow-400">{t('dashboard.neutral')}</p>
-              </div>
-              <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg">
-                <div className="text-lg font-semibold text-red-700 dark:text-red-300">4%</div>
-                <p className="text-xs text-red-600 dark:text-red-400">{t('dashboard.negative')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+              {t('aiResponses.sentimentImprovementDesc')}
+            </p>
+          </div>
+          <div className="text-center text-sm text-muted-foreground">
+            {t('aiResponses.ofAllReviews')}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

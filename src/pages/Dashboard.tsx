@@ -25,7 +25,8 @@ import {
   Plus,
   Clock,
   CheckCircle,
-  Send
+  Send,
+  Building2,
 } from "lucide-react";
 import { KPIDashboard } from "@/components/KPIDashboard";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -64,6 +65,7 @@ interface Review {
   attention_reason?: string;
   review_url?: string;
   business_id?: string;
+  business_name?: string;
 }
 
 const Dashboard = () => {
@@ -77,6 +79,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("new");
   const [generatingResponses, setGeneratingResponses] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [connectedBrands, setConnectedBrands] = useState<string[]>([]);
   
   // Modal states
   const [showBusinessSetup, setShowBusinessSetup] = useState(false);
@@ -97,13 +101,28 @@ const Dashboard = () => {
         setUser(user);
         await Promise.all([
           fetchReviews(),
-          checkBusinessProfile(user.id)
+          checkBusinessProfile(user.id),
+          fetchConnectedBrands(),
         ]);
       }
       setLoading(false);
     };
     getUser();
   }, [navigate]);
+
+  const fetchConnectedBrands = async () => {
+    try {
+      const { data } = await supabase
+        .from('platform_connections')
+        .select('business_name')
+        .eq('is_active', true)
+        .not('business_name', 'is', null);
+      const names = [...new Set((data || []).map((c: any) => c.business_name).filter(Boolean))];
+      setConnectedBrands(names);
+    } catch (e) {
+      console.error('Error fetching brands:', e);
+    }
+  };
 
   const checkBusinessProfile = async (userId: string) => {
     try {
@@ -161,6 +180,7 @@ const Dashboard = () => {
         attention_reason: dbReview.attention_reason,
         review_url: dbReview.review_url,
         business_id: dbReview.business_id,
+        business_name: dbReview.business_name,
       }));
       setReviews(transformedReviews);
     }
@@ -169,6 +189,11 @@ const Dashboard = () => {
   useEffect(() => {
     let filtered = reviews;
     
+    // Filter by brand
+    if (brandFilter !== "all") {
+      filtered = filtered.filter(r => r.business_name === brandFilter);
+    }
+
     // Filter by active tab first
     if (activeTab === "new") {
       filtered = filtered.filter(review => review.response_status === 'pending');
@@ -194,7 +219,7 @@ const Dashboard = () => {
     }
     
     setFilteredReviews(filtered);
-  }, [reviews, searchTerm, sentimentFilter, platformFilter, activeTab]);
+  }, [reviews, searchTerm, sentimentFilter, platformFilter, activeTab, brandFilter]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -495,6 +520,21 @@ const Dashboard = () => {
                     <SelectItem value="trustpilot">Trustpilot</SelectItem>
                   </SelectContent>
                 </Select>
+                {/* Brand Filter — shown only when there are multiple connected accounts */}
+                {connectedBrands.length > 1 && (
+                  <Select value={brandFilter} onValueChange={setBrandFilter}>
+                    <SelectTrigger className="w-[150px] sm:w-[180px]">
+                      <Building2 className="h-4 w-4 mr-1 text-muted-foreground" />
+                      <SelectValue placeholder={t('reviews.allBusinesses') || 'All Accounts'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('reviews.allBusinesses') || 'All Accounts'}</SelectItem>
+                      {connectedBrands.map(name => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
             </CardContent>
